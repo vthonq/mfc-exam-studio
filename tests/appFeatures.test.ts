@@ -33,6 +33,14 @@ import {
   buildSmartFocusPlan,
   daysUntilExam,
 } from '../src/utils/smartFocus';
+import {
+  buildRoomInviteUrl,
+  computeMissedHeatmap,
+  formatElapsed,
+  generateRoomCode,
+  normalizeRoomCode,
+  rankRoomLeaderboard,
+} from '../src/utils/studyRoomStats';
 import { buildGlobalSearchItems, searchGlobalItems } from '../src/utils/searchIndex';
 
 describe('Global Search Index', () => {
@@ -371,5 +379,55 @@ describe('Changelog & Cross-Subject Data Integrity', () => {
     expect(econRes.spendingMult).toBeCloseTo(5, 5);
     expect(econRes.adShift).toBeCloseTo(100, 5);
     expect(econRes.moneyMult).toBeCloseTo(10, 5);
+  });
+
+  it('normalizes room codes, builds room invite URLs, ranks live leaderboards, and aggregates missed-question heatmaps', () => {
+    expect(normalizeRoomCode(' isb-7k2m! ')).toBe('ISB-7K2M');
+    expect(generateRoomCode(() => 0.1)).toMatch(/^ISB-[A-Z2-9]{4}$/);
+    expect(formatElapsed(125)).toBe('02:05');
+    expect(formatElapsed(3665)).toBe('1:01:05');
+
+    expect(
+      buildRoomInviteUrl('https://vthonq.github.io/mfc-exam-studio/#/exam', {
+        roomCode: 'ISB-7K2M',
+        subject: 'econ',
+        seed: 'ABCD',
+        mode: 'final',
+      }),
+    ).toBe('https://vthonq.github.io/mfc-exam-studio/#/econ/exam?seed=ABCD&mode=final&room=ISB-7K2M');
+
+    const ranked = rankRoomLeaderboard([
+      {
+        uid: 'u1',
+        displayName: 'An',
+        score: 80,
+        maxScore: 100,
+        pct: 80,
+        elapsedSeconds: 900,
+        missedLabels: ['Ch. 1', 'Ch. 4'],
+      },
+      {
+        uid: 'u2',
+        displayName: 'Binh',
+        score: 80,
+        maxScore: 100,
+        pct: 80,
+        elapsedSeconds: 600,
+        missedLabels: ['Ch. 4', 'Ch. 4'],
+      },
+      {
+        uid: 'u3',
+        displayName: 'Chi',
+        score: 95,
+        maxScore: 100,
+        pct: 95,
+        elapsedSeconds: 1100,
+        missedLabels: ['Ch. 9'],
+      },
+    ]);
+    expect(ranked.map((r) => `${r.rank}:${r.uid}`)).toEqual(['1:u3', '2:u2', '3:u1']);
+
+    const heatmap = computeMissedHeatmap(ranked);
+    expect(heatmap[0]).toEqual({ label: 'Ch. 4', missCount: 2, missPct: 67 });
   });
 });

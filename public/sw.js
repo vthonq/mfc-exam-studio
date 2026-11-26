@@ -1,4 +1,4 @@
-const CACHE_NAME = 'exam-studio-v3.1';
+const CACHE_NAME = 'exam-studio-v4.0';
 const SHELL_URLS = ['./', './index.html', './logo.png', './manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {

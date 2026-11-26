@@ -27,6 +27,7 @@ import {
   Sun,
   Table2,
   Target,
+  Users,
   X,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -35,6 +36,7 @@ import { UpdatesBanner, UpdatesModal } from './UpdatesBox';
 import { LATEST_UPDATE_ID } from '../data/changelog';
 import { ASK_AI_EVENT, type AskAiPayload } from '../utils/askAiBridge';
 import { OPEN_FOCUS_EVENT } from '../utils/smartFocusPlan';
+import { OPEN_ROOM_EVENT } from '../utils/studyRoomStats';
 
 const AdminPanelModal = lazy(() =>
   import('./AdminPanelModal').then((m) => ({ default: m.AdminPanelModal })),
@@ -50,6 +52,9 @@ const FlashcardsModal = lazy(() =>
 );
 const SmartFocusModal = lazy(() =>
   import('./SmartFocusModal').then((m) => ({ default: m.SmartFocusModal })),
+);
+const StudyRoomsModal = lazy(() =>
+  import('./StudyRoomsModal').then((m) => ({ default: m.StudyRoomsModal })),
 );
 const ExamCalculatorDrawer = lazy(() =>
   import('./ExamCalculatorDrawer').then((m) => ({ default: m.ExamCalculatorDrawer })),
@@ -164,6 +169,8 @@ export const Layout: React.FC<LayoutProps> = ({
   const [flashcardsOpen, setFlashcardsOpen] = useState(false);
   const [focusOpen, setFocusOpen] = useState(false);
   const [focusSubjectOverride, setFocusSubjectOverride] = useState<SubjectId | null>(null);
+  const [roomsOpen, setRoomsOpen] = useState(false);
+  const [roomsCodeOverride, setRoomsCodeOverride] = useState<string | null>(null);
   const [calcOpen, setCalcOpen] = useState(false);
   const [introOpen, setIntroOpen] = useState(false);
   const [pendingAi, setPendingAi] = useState<{
@@ -222,6 +229,16 @@ export const Layout: React.FC<LayoutProps> = ({
     };
     window.addEventListener(OPEN_FOCUS_EVENT, onOpenFocus);
     return () => window.removeEventListener(OPEN_FOCUS_EVENT, onOpenFocus);
+  }, []);
+
+  useEffect(() => {
+    const onOpenRoom = (e: Event) => {
+      const detail = (e as CustomEvent<{ roomCode?: string }>).detail;
+      setRoomsCodeOverride(detail?.roomCode ?? null);
+      setRoomsOpen(true);
+    };
+    window.addEventListener(OPEN_ROOM_EVENT, onOpenRoom);
+    return () => window.removeEventListener(OPEN_ROOM_EVENT, onOpenRoom);
   }, []);
 
   const copyBaseUrl = async () => {
@@ -425,6 +442,23 @@ export const Layout: React.FC<LayoutProps> = ({
                   {progress.studyStreak?.count}d
                 </span>
               )}
+            </button>
+
+            <button
+              onClick={() => {
+                setRoomsCodeOverride(null);
+                setRoomsOpen(true);
+              }}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+              title="Open Live Class Study Rooms"
+            >
+              <span className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>Study Rooms</span>
+              </span>
+              <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                Live
+              </span>
             </button>
 
             <button
@@ -759,6 +793,17 @@ export const Layout: React.FC<LayoutProps> = ({
               >
                 <Calculator className="w-3.5 h-3.5" />
                 Exam Calc
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setRoomsCodeOverride(null);
+                  setRoomsOpen(true);
+                }}
+                className="px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center gap-1.5 col-span-2"
+              >
+                <Users className="w-3.5 h-3.5" />
+                Live Class Study Rooms
               </button>
             </div>
 
@@ -1181,6 +1226,21 @@ export const Layout: React.FC<LayoutProps> = ({
             open={calcOpen}
             onClose={() => setCalcOpen(false)}
             initialSubject={subject}
+          />
+        )}
+
+        {roomsOpen && (
+          <StudyRoomsModal
+            open={roomsOpen}
+            onClose={() => {
+              setRoomsOpen(false);
+              setRoomsCodeOverride(null);
+            }}
+            initialSubject={subject}
+            initialRoomCode={roomsCodeOverride}
+            onNavigateMfc={onNavigateMfc}
+            onNavigateEcon={onNavigateEcon}
+            onNavigateProb={onNavigateProb}
           />
         )}
 

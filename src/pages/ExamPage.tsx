@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Clock, Copy, RefreshCw, Sparkles } from 'lucide-react';
+import { Clock, Copy, RefreshCw, Sparkles, Users } from 'lucide-react';
 import { createRng, randomSeedCode } from '../math/prng';
 import { generateTruthTable } from '../math/logic';
 import {
@@ -25,10 +25,12 @@ import {
 import { generateKmapProblem } from '../math/booleanAlgebra';
 import { PROOF_EXERCISES } from '../data/proofs';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { CHAPTER_META, type ChapterId } from '../types';
 import { GraphSvg } from '../components/GraphSvg';
 import { gradeProofWithGemini, type ProofGradeResult } from '../services/geminiGrader';
 import { buildExplainQuestionPrompt, dispatchAskAi } from '../utils/askAiBridge';
+import { dispatchOpenRoom, normalizeRoomCode } from '../utils/studyRoomStats';
 import {
   analyzeWrittenProofOffline,
   buildCopyableGradingPrompt,
@@ -233,6 +235,8 @@ function generateExamFromSeed(seed: string, mode: 'full' | 'sprint'): ExamQuesti
 
 interface ExamPageProps {
   initialSeed?: string;
+  initialMode?: 'full' | 'sprint';
+  initialRoomCode?: string;
   onSeedChange: (seed: string) => void;
 }
 
@@ -244,12 +248,22 @@ interface MfcExamDraft {
   secondsLeft: number;
 }
 
-export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange }) => {
+export const ExamPage: React.FC<ExamPageProps> = ({
+  initialSeed,
+  initialMode,
+  initialRoomCode,
+  onSeedChange,
+}) => {
   const { settings, addExamRecord, recordPractice, recordMistake } = useApp();
+  const { firebaseUser, profile } = useAuth();
+  const [activeRoomCode, setActiveRoomCode] = useState<string | null>(() =>
+    initialRoomCode ? normalizeRoomCode(initialRoomCode) : null,
+  );
+  const [roomSyncMsg, setRoomSyncMsg] = useState<string | null>(null);
   const [initialDraft] = useState<MfcExamDraft | null>(() => {
     if (initialSeed) {
       return (
-        loadExamDraft<MfcDraftBySeed>(`mfc:${initialSeed}:full`) ??
+        loadExamDraft<MfcDraftBySeed>(`mfc:${initialSeed}:${initialMode || 'full'}`) ??
         loadExamDraft<MfcDraftBySeed>(`mfc:${initialSeed}:sprint`) ??
         null
       );
@@ -258,13 +272,15 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
   });
 
   const [seed, setSeed] = useState(initialSeed || initialDraft?.seed || randomSeedCode());
-  const [mode, setMode] = useState<'full' | 'sprint'>(initialDraft?.mode || 'full');
+  const [mode, setMode] = useState<'full' | 'sprint'>(initialMode || initialDraft?.mode || 'full');
   const [answers, setAnswers] = useState<Record<string, string>>(initialDraft?.answers || {});
   const [proofSelfCheck, setProofSelfCheck] = useState<Record<string, boolean>>(
     initialDraft?.proofSelfCheck || {},
   );
   const [submitted, setSubmitted] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(initialDraft?.secondsLeft ?? 90 * 60);
+  const [secondsLeft, setSecondsLeft] = useState(
+    initialDraft?.secondsLeft ?? ((initialMode || 'full') === 'full' ? 90 * 60 : 30 * 60),
+  );
   const [draftRestored, setDraftRestored] = useState(
     Boolean(initialDraft && Object.keys(initialDraft.answers || {}).length > 0),
   );
@@ -280,6 +296,11 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
     maxScore: number;
     byChapter: Partial<Record<ChapterId, { earned: number; total: number }>>;
   } | null>(null);
+
+  useEffect(() => {
+    setActiveRoomCode(initialRoomCode ? normalizeRoomCode(initialRoomCode) : null);
+    setRoomSyncMsg(null);
+  }, [initialRoomCode]);
 
   useEffect(() => {
     if (initialSeed && initialSeed !== seed) {
@@ -344,6 +365,8 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
     const s = randomSeedCode();
     setSeed(s);
     setMode(nextMode);
+    setActiveRoomCode(null);
+    setRoomSyncMsg(null);
     onSeedChange(s);
     setAnswers({});
     setProofSelfCheck({});
@@ -373,6 +396,7 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
     let earned = 0;
     let max = 0;
     const byChapter: Partial<Record<ChapterId, { earned: number; total: number }>> = {};
+    const missedLabels: string[] = [];
 
     for (const q of questions) {
       if (q.type !== 'proof') max += q.points;
@@ -392,6 +416,7 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
         got = ok ? q.points : 0;
         recordPractice(q.chapter, ok);
         if (!ok) {
+          missedLabels.push(`${CHAPTER_META[q.chapter].code} · ${q.title}`);
           recordMistake({
             id: `mfc-exam-${seed}-${q.id}`,
             subject: 'mfc',
@@ -431,6 +456,26 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
       dateIso: new Date().toISOString(),
       byChapter,
     });
+
+    if (activeRoomCode && firebaseUser) {
+      const totalDuration = mode === 'full' ? 90 * 60 : 30 * 60;
+      const elapsedSeconds = Math.max(0, totalDuration - secondsLeftRef.current);
+      setRoomSyncMsg('Syncing score to Study Room...');
+      void import('../services/studyRooms')
+        .then(({ submitRoomResult }) =>
+          submitRoomResult({
+            roomCode: activeRoomCode,
+            uid: firebaseUser.uid,
+            displayName: profile?.displayName || firebaseUser.email || 'Student',
+            score: roundedScore,
+            maxScore: roundedMax,
+            elapsedSeconds,
+            missedLabels,
+          }),
+        )
+        .then(() => setRoomSyncMsg(`Synced to Study Room ${activeRoomCode}!`))
+        .catch(() => setRoomSyncMsg(`Could not sync to Study Room ${activeRoomCode}.`));
+    }
   };
 
   const mins = Math.floor(secondsLeft / 60);
@@ -459,6 +504,13 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
             <Copy className="w-3.5 h-3.5" /> {copiedLink ? 'Group Link Copied!' : 'Copy Group Exam Link'}
           </button>
           <button
+            type="button"
+            onClick={() => dispatchOpenRoom(activeRoomCode ?? undefined)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold cursor-pointer"
+          >
+            <Users className="w-3.5 h-3.5" /> {activeRoomCode ? `Room ${activeRoomCode}` : 'Study Rooms'}
+          </button>
+          <button
             onClick={() => newExam('full')}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold cursor-pointer"
           >
@@ -472,6 +524,22 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
           </button>
         </div>
       </div>
+
+      {activeRoomCode && (
+        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-900 dark:text-emerald-200">
+          <span>
+            Live Study Room <code className="font-mono font-bold">{activeRoomCode}</code>:{' '}
+            {roomSyncMsg || 'Your score & missed topics sync automatically when you submit.'}
+          </span>
+          <button
+            type="button"
+            onClick={() => dispatchOpenRoom(activeRoomCode)}
+            className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 font-bold cursor-pointer"
+          >
+            View Leaderboard →
+          </button>
+        </div>
+      )}
 
       {draftRestored && !submitted && (
         <div className="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 flex flex-wrap items-center justify-between gap-2 text-xs text-sky-900 dark:text-sky-200">

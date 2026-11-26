@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ClipboardCheck, Clock, Copy, RefreshCw, Sparkles } from 'lucide-react';
+import { ClipboardCheck, Clock, Copy, RefreshCw, Sparkles, Users } from 'lucide-react';
 import { createRng, randomSeedCode } from '../../math/prng';
 import {
   computeCpiTable,
@@ -13,6 +13,7 @@ import {
 } from '../../math/economics';
 import { ECON_MCQS, ECON_SCENARIOS, type EconScenario } from '../../data/economics';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import { ECON_TOPIC_META, type EconTopicId } from '../../types';
 import { gradeProofWithGemini, type ProofGradeResult } from '../../services/geminiGrader';
 import {
@@ -22,6 +23,7 @@ import {
 } from '../../utils/offlineProofChecker';
 import { clearExamDraft, loadExamDraft, saveExamDraft } from '../../utils/examDraft';
 import { buildExplainQuestionPrompt, dispatchAskAi } from '../../utils/askAiBridge';
+import { dispatchOpenRoom, normalizeRoomCode } from '../../utils/studyRoomStats';
 import { ExamStickyBar } from '../../components/ExamStickyBar';
 
 type EconExamMode = 'final' | 'quiz3' | 'quiz4' | 'quiz5';
@@ -342,6 +344,7 @@ function buildEco101Session(seed: string, mode: EconExamMode): {
 interface EconExamPageProps {
   initialSeed?: string;
   initialMode?: EconExamMode;
+  initialRoomCode?: string;
   onSeedChange: (seed: string, mode: EconExamMode) => void;
 }
 
@@ -357,9 +360,15 @@ interface EconExamDraft {
 export const EconExamPage: React.FC<EconExamPageProps> = ({
   initialSeed,
   initialMode,
+  initialRoomCode,
   onSeedChange,
 }) => {
   const { settings, addEconExamRecord, recordEconPractice, recordMistake } = useApp();
+  const { firebaseUser, profile } = useAuth();
+  const [activeRoomCode, setActiveRoomCode] = useState<string | null>(() =>
+    initialRoomCode ? normalizeRoomCode(initialRoomCode) : null,
+  );
+  const [roomSyncMsg, setRoomSyncMsg] = useState<string | null>(null);
   const [initialDraft] = useState<EconExamDraft | null>(() => {
     if (initialSeed) {
       return loadExamDraft<EconExamDraft>(`econ:${initialSeed}:${initialMode || 'final'}`);
@@ -404,6 +413,11 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
     essayMax: number;
     byChapter: Record<string, { earned: number; total: number }>;
   } | null>(null);
+
+  useEffect(() => {
+    setActiveRoomCode(initialRoomCode ? normalizeRoomCode(initialRoomCode) : null);
+    setRoomSyncMsg(null);
+  }, [initialRoomCode]);
 
   useEffect(() => {
     if (initialSeed && (initialSeed !== seed || (initialMode && initialMode !== mode))) {
@@ -468,6 +482,8 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
     const s = randomSeedCode();
     setSeed(s);
     setMode(nextMode);
+    setActiveRoomCode(null);
+    setRoomSyncMsg(null);
     onSeedChange(s, nextMode);
     setMcqAnswers({});
     setEssayAnswers({});
@@ -499,8 +515,10 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
     let mcqEarned = 0;
     let essayEarned = 0;
     const byChapter: Record<string, { earned: number; total: number }> = {};
+    const missedLabels: string[] = [];
 
-    for (const q of mcqs) {
+    for (let qi = 0; qi < mcqs.length; qi++) {
+      const q = mcqs[qi];
       const ok = mcqAnswers[q.id] === q.correctIndex;
       const got = ok ? ptsPerMcq : 0;
       mcqEarned += got;
@@ -508,6 +526,7 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
       byChapter[q.topic] = { earned: cur.earned + got, total: cur.total + ptsPerMcq };
       recordEconPractice(q.topic, ok);
       if (!ok) {
+        missedLabels.push(`Q${qi + 1} · ${q.tag}`);
         recordMistake({
           id: `econ-exam-${seed}-${q.id}`,
           subject: 'econ',
@@ -565,6 +584,26 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
       dateIso: new Date().toISOString(),
       byChapter,
     });
+
+    if (activeRoomCode && firebaseUser) {
+      const totalDuration = mode === 'final' ? 100 * 60 : 25 * 60;
+      const elapsedSeconds = Math.max(0, totalDuration - secsLeftRef.current);
+      setRoomSyncMsg('Syncing score to Study Room...');
+      void import('../../services/studyRooms')
+        .then(({ submitRoomResult }) =>
+          submitRoomResult({
+            roomCode: activeRoomCode,
+            uid: firebaseUser.uid,
+            displayName: profile?.displayName || firebaseUser.email || 'Student',
+            score: totalScore,
+            maxScore: 100,
+            elapsedSeconds,
+            missedLabels,
+          }),
+        )
+        .then(() => setRoomSyncMsg(`Synced to Study Room ${activeRoomCode}!`))
+        .catch(() => setRoomSyncMsg(`Could not sync to Study Room ${activeRoomCode}.`));
+    }
   };
 
   const mins = Math.floor(secsLeft / 60);
@@ -600,6 +639,13 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
           >
             <Copy className="w-3.5 h-3.5" /> {copiedLink ? 'Link Copied!' : 'Copy Group Exam Link'}
           </button>
+          <button
+            type="button"
+            onClick={() => dispatchOpenRoom(activeRoomCode ?? undefined)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold cursor-pointer"
+          >
+            <Users className="w-3.5 h-3.5" /> {activeRoomCode ? `Room ${activeRoomCode}` : 'Study Rooms'}
+          </button>
           {(
             [
               { id: 'final', label: 'Final (100m)' },
@@ -622,6 +668,22 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
           ))}
         </div>
       </div>
+
+      {activeRoomCode && (
+        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-900 dark:text-emerald-200">
+          <span>
+            Live Study Room <code className="font-mono font-bold">{activeRoomCode}</code>:{' '}
+            {roomSyncMsg || 'Your score & missed MCQs sync automatically when you submit.'}
+          </span>
+          <button
+            type="button"
+            onClick={() => dispatchOpenRoom(activeRoomCode)}
+            className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 font-bold cursor-pointer"
+          >
+            View Leaderboard →
+          </button>
+        </div>
+      )}
 
       {draftRestored && !submitted && (
         <div className="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 flex flex-wrap items-center justify-between gap-2 text-xs text-sky-900 dark:text-sky-200">

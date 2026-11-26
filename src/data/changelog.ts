@@ -7,9 +7,26 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v3.1';
+export const LATEST_UPDATE_ID = 'v4.0';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v4.0',
+    version: 'v4.0',
+    date: 'Nov 2026',
+    title: 'Live Class Study Rooms, Leaderboards & Hardest-Question Heatmap',
+    titleVi: 'Phòng Thi Nhóm Trực Tiếp (Study Rooms), Bảng Xếp Hạng & Câu Sai Nhiều Nhất',
+    items: [
+      {
+        en: 'Host or join a Live Study Room (code like ISB-7K2M) across MFC, Economics, and ProbStat — every classmate solves the exact same seeded paper.',
+        vi: 'Tạo hoặc vào Phòng Học Nhóm trực tiếp (mã như ISB-7K2M) cho cả 3 môn MFC, Kinh tế & XSTK — cả nhóm giải chung đề và tự động đồng bộ điểm.',
+      },
+      {
+        en: 'Real-time Firestore Leaderboard ranked by accuracy & speed, plus a Hardest-Question Heatmap showing which questions tripped up the group with 1-click "Explain with AI".',
+        vi: 'Bảng xếp hạng theo thời gian thực + Biểu đồ câu bị sai nhiều nhất trong phòng kèm nút 1-click "Explain with AI" để cả nhóm ôn lại ngay.',
+      },
+    ],
+  },
   {
     id: 'v3.1',
     version: 'v3.1',

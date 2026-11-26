@@ -35,6 +35,31 @@ rules_version = '2';
 //   - updatedAt: timestamp (required) - server timestamp of last cloud sync
 //   - updatedAtMs: int | float (required, >= 0) - client epoch milliseconds of last sync
 //
+// Collection: study_rooms
+// Document ID: {roomCode} (matches ^[A-Z0-9-]{4,16}$)
+// Fields:
+//   - roomCode: string (required, immutable, length 4..16, matches ^[A-Z0-9-]{4,16}$, must equal document {roomCode})
+//   - title: string (required, length 1..80) - study room title
+//   - subject: string (required, immutable, 'mfc' | 'econ' | 'probstat') - exam subject ID
+//   - mode: string (required, immutable, length 1..24) - study room exam/practice mode
+//   - seed: string (required, immutable, length 2..24) - deterministic problem generation seed
+//   - hostUid: string (required, immutable, length 1..128) - creator's Firebase Auth UID
+//   - hostName: string (required, length 1..100) - creator's display name
+//   - status: string (required, 'open' | 'closed') - room open/closed status
+//   - createdAt: timestamp (required, immutable) - server timestamp of room creation
+//
+// Subcollection: study_rooms/{roomCode}/submissions
+// Document ID: {uid} (matches Firebase Auth UID)
+// Fields:
+//   - uid: string (required, length 1..128, must equal document {uid})
+//   - displayName: string (required, length 1..100) - participant display name
+//   - score: int | float (required, 0 <= score <= 200) - achieved score
+//   - maxScore: int | float (required, 1 <= maxScore <= 200) - maximum possible score
+//   - pct: int | float (required, 0 <= pct <= 100) - percentage score
+//   - elapsedSeconds: int (required, 0 <= elapsedSeconds <= 86400) - completion time in seconds
+//   - missedLabels: list (required, size <= 40) - labels of missed items
+//   - submittedAt: timestamp (required) - server timestamp of submission
+//
 // ===============================================================
 
 service cloud.firestore {
@@ -59,6 +84,15 @@ service cloud.firestore {
                'nguyenvanvietthong@gmail.com',
                'thongnguyen.31261028903@st.ueh.edu.vn'
              ];
+    }
+
+    // Check if the caller is an admin or an approved member in users/{uid}
+    function isApprovedMember() {
+      return isAdmin() || (
+        isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved'
+      );
     }
 
     // Check if user owns the resource (for user-owned documents)
@@ -155,6 +189,60 @@ service cloud.firestore {
              data.status in ['approved', 'waitlist', 'banned'] &&
              data.createdAt is timestamp &&
              data.lastSeenAt is timestamp;
+    }
+
+    function isValidStudyRoom(data, roomCode) {
+      return roomCode.matches('^[A-Z0-9-]{4,16}$') &&
+             hasRequiredFields(data, ['roomCode', 'title', 'subject', 'mode', 'seed', 'hostUid', 'hostName', 'status', 'createdAt']) &&
+             hasOnlyAllowedFields(data, ['roomCode', 'title', 'subject', 'mode', 'seed', 'hostUid', 'hostName', 'status', 'createdAt']) &&
+             data.roomCode is string &&
+             data.roomCode == roomCode &&
+             data.roomCode.matches('^[A-Z0-9-]{4,16}$') &&
+             data.title is string &&
+             data.title.size() >= 1 &&
+             data.title.size() <= 80 &&
+             data.subject in ['mfc', 'econ', 'probstat'] &&
+             data.mode is string &&
+             data.mode.size() >= 1 &&
+             data.mode.size() <= 24 &&
+             data.seed is string &&
+             data.seed.size() >= 2 &&
+             data.seed.size() <= 24 &&
+             data.hostUid is string &&
+             data.hostUid.size() >= 1 &&
+             data.hostUid.size() <= 128 &&
+             data.hostName is string &&
+             data.hostName.size() >= 1 &&
+             data.hostName.size() <= 100 &&
+             data.status in ['open', 'closed'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidRoomSubmission(data, docUid) {
+      return hasRequiredFields(data, ['uid', 'displayName', 'score', 'maxScore', 'pct', 'elapsedSeconds', 'missedLabels', 'submittedAt']) &&
+             hasOnlyAllowedFields(data, ['uid', 'displayName', 'score', 'maxScore', 'pct', 'elapsedSeconds', 'missedLabels', 'submittedAt']) &&
+             data.uid is string &&
+             data.uid == docUid &&
+             data.uid.size() >= 1 &&
+             data.uid.size() <= 128 &&
+             data.displayName is string &&
+             data.displayName.size() >= 1 &&
+             data.displayName.size() <= 100 &&
+             (data.score is int || data.score is float) &&
+             data.score >= 0 &&
+             data.score <= 200 &&
+             (data.maxScore is int || data.maxScore is float) &&
+             data.maxScore >= 1 &&
+             data.maxScore <= 200 &&
+             (data.pct is int || data.pct is float) &&
+             data.pct >= 0 &&
+             data.pct <= 100 &&
+             data.elapsedSeconds is int &&
+             data.elapsedSeconds >= 0 &&
+             data.elapsedSeconds <= 86400 &&
+             data.missedLabels is list &&
+             data.missedLabels.size() <= 40 &&
+             data.submittedAt is timestamp;
     }
 
     // ===============================================================
@@ -263,6 +351,27 @@ service cloud.firestore {
                                    exists(/databases/$(database)/documents/users/$(uid)) &&
                                    get(/databases/$(database)/documents/users/$(uid)).data.status == 'approved'
                                  ));
+        allow delete: if isOwner(uid) || isAdmin();
+      }
+    }
+
+    match /study_rooms/{roomCode} {
+      allow read: if isApprovedMember();
+      allow create: if isApprovedMember() &&
+                       request.resource.data.hostUid == request.auth.uid &&
+                       isValidStudyRoom(request.resource.data, roomCode);
+      allow update: if isApprovedMember() &&
+                       (resource.data.hostUid == request.auth.uid || isAdmin()) &&
+                       isValidStudyRoom(request.resource.data, roomCode) &&
+                       areImmutableFieldsUnchanged(['roomCode', 'subject', 'mode', 'seed', 'hostUid', 'createdAt']);
+      allow delete: if isAdmin() || (isApprovedMember() && resource.data.hostUid == request.auth.uid);
+
+      match /submissions/{uid} {
+        allow read: if isApprovedMember();
+        allow create, update: if isApprovedMember() &&
+                                 isOwner(uid) &&
+                                 exists(/databases/$(database)/documents/study_rooms/$(roomCode)) &&
+                                 isValidRoomSubmission(request.resource.data, uid);
         allow delete: if isOwner(uid) || isAdmin();
       }
     }

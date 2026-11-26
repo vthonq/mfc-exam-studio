@@ -181,6 +181,8 @@ function AppShell() {
   const proofId = nav.params.get('id') ?? undefined;
   const knowledgeChap = (nav.params.get('chapter') as 'all' | 'glossary' | ChapterId) || undefined;
   const examSeed = nav.params.get('seed') ?? undefined;
+  const examRoom = nav.params.get('room') ?? undefined;
+  const mfcExamMode = (nav.params.get('mode') as 'full' | 'sprint' | null) ?? undefined;
 
   const econLabTab = (nav.params.get('tab') as EconLabTab) || 'part6';
   const econTopic = (nav.params.get('topic') as 'all' | 'glossary' | EconTopicId) || undefined;
@@ -234,6 +236,8 @@ function AppShell() {
             {nav.mfcRoute === 'exam' && (
               <ExamPage
                 initialSeed={examSeed}
+                initialMode={mfcExamMode}
+                initialRoomCode={examRoom}
                 onSeedChange={(s) => navigateMfc('exam', `seed=${encodeURIComponent(s)}`)}
               />
             )}
@@ -257,6 +261,7 @@ function AppShell() {
               <EconExamPage
                 initialSeed={examSeed}
                 initialMode={econExamMode}
+                initialRoomCode={examRoom}
                 onSeedChange={(s, m) =>
                   navigateEcon('exam', `seed=${encodeURIComponent(s)}&mode=${m}`)
                 }
@@ -283,6 +288,7 @@ function AppShell() {
               <ProbExamPage
                 initialSeed={examSeed}
                 initialMode={probExamMode}
+                initialRoomCode={examRoom}
                 onSeedChange={(s, m) =>
                   navigateProb('exam', `seed=${encodeURIComponent(s)}&mode=${m}`)
                 }
