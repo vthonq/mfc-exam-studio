@@ -109,7 +109,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search formulas, terms, labs, proofs, SB tables (e.g. Warshall, MV=PY, Appendix D)..."
-            className="flex-1 bg-transparent text-sm outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+            className="flex-1 bg-transparent text-sm outline-none focus:!shadow-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
           />
           <button
             onClick={onClose}

@@ -44,34 +44,31 @@ export const EconDashboardPage: React.FC<EconDashboardProps> = ({ onNavigate }) 
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-800 text-white p-6 shadow-md">
+      <div className="rounded-2xl bg-gradient-to-br from-emerald-50/70 via-white to-white dark:from-emerald-950/30 dark:via-slate-900 dark:to-slate-900 border border-emerald-200/70 dark:border-emerald-900/60 text-slate-900 dark:text-slate-100 p-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 text-xs font-medium">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100/80 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
               <TrendingUp className="w-3.5 h-3.5" /> ECO101 Final Exam · Macroeconomics (Ch. 23–26, 28–35)
             </div>
-            <div className="flex items-center gap-3">
-              <img
-                src="./logo.gif"
-                alt="Exam Studio Logo"
-                className="w-12 h-12 rounded-2xl object-cover ring-2 ring-white/40 shadow-md shrink-0"
-              />
-              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-                Macroeconomics Final Studio
-              </h1>
-            </div>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+              Macroeconomics Final Studio
+            </h1>
             <BiText
               en="Built strictly for your UEH-ISB Final Exam (40%): 100 minutes · 30 Multiple-Choice Questions (50%) + 4 Short-Answer Policy Questions (50%) across Parts 6–9."
               vi="Tối ưu theo đề thi cuối kỳ ECO101 (40%): 100 phút · 30 câu trắc nghiệm (50%) + 4 câu tự luận phân tích chính sách (50%) thuộc Phần 6–9."
-              className="text-sm text-emerald-50"
-              viClassName="text-xs text-emerald-100/90 mt-1"
+              className="text-sm text-slate-600 dark:text-slate-300"
+              viClassName="text-xs text-slate-500 dark:text-slate-400 mt-1"
             />
           </div>
 
-          <div className="bg-white/10 backdrop-blur rounded-2xl p-4 min-w-[200px] text-center border border-white/15">
-            <div className="text-xs uppercase tracking-wider text-emerald-100">Macro Readiness</div>
-            <div className="text-4xl font-extrabold mt-1">{readiness}%</div>
-            <div className="text-[11px] text-emerald-100 mt-1">
+          <div className="bg-white/90 dark:bg-slate-950/60 rounded-2xl p-4 min-w-[200px] text-center border border-slate-200 dark:border-slate-800">
+            <div className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Macro Readiness
+            </div>
+            <div className="text-4xl font-extrabold mt-1 text-emerald-600 dark:text-emerald-400">
+              {readiness}%
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
               12 Chapters · {ECON_MCQS.length} MCQs · {ECON_SCENARIOS.length} Policy Cases
             </div>
           </div>
@@ -80,13 +77,13 @@ export const EconDashboardPage: React.FC<EconDashboardProps> = ({ onNavigate }) 
         <div className="mt-5 flex flex-wrap gap-2.5">
           <button
             onClick={() => onNavigate('exam', `seed=${randomSeedCode()}&mode=final`)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-emerald-800 font-semibold text-sm hover:bg-emerald-50 cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm cursor-pointer shadow-xs transition-colors"
           >
             <Share2 className="w-4 h-4" /> Start 100m Final Exam (30 MCQ + 4 Essay)
           </button>
           <button
             onClick={() => onNavigate('labs', `tab=${weakest.id as EconLabTab}`)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/40 hover:bg-emerald-500/60 border border-white/20 text-white font-semibold text-sm cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm cursor-pointer transition-colors"
           >
             Practice Weakest: {ECON_TOPIC_META[weakest.id].code} <ArrowRight className="w-4 h-4" />
           </button>

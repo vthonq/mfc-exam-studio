@@ -85,15 +85,11 @@
   animation: slideInRight 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Animated Website Intro Keyframes */
-@keyframes introLogoPop {
+/* Animated Website Intro Keyframes (Calm & Minimal) */
+@keyframes introLogoFade {
   0% {
     opacity: 0;
-    transform: scale(0.72);
-  }
-  65% {
-    opacity: 1;
-    transform: scale(1.04);
+    transform: scale(0.92);
   }
   100% {
     opacity: 1;
@@ -101,36 +97,14 @@
   }
 }
 
-@keyframes introRevealUp {
+@keyframes introTextRise {
   0% {
     opacity: 0;
-    transform: translateY(18px);
-    filter: blur(8px);
+    transform: translateY(10px);
   }
   100% {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
-  }
-}
-
-@keyframes introFloatSymbol {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-  50% {
-    transform: translate3d(6px, -16px, 0) rotate(3deg);
-  }
-}
-
-@keyframes introOrbDrift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(18px, -14px, 0) scale(1.08);
   }
 }
 
@@ -143,47 +117,23 @@
   }
 }
 
-@keyframes introRingSpin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+.intro-logo-fade {
+  animation: introLogoFade 480ms ease-out both;
 }
 
-.intro-logo-pop {
-  animation: introLogoPop 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.intro-reveal-up {
-  animation: introRevealUp 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.intro-float-symbol {
-  animation: introFloatSymbol 6.5s ease-in-out infinite;
-}
-
-.intro-orb {
-  animation: introOrbDrift 8s ease-in-out infinite;
+.intro-text-rise {
+  animation: introTextRise 480ms ease-out both;
 }
 
 .intro-progress-fill {
   transform-origin: left center;
-  animation: introProgressFill 2500ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.intro-ring-spin {
-  animation: introRingSpin 9s linear infinite;
+  animation: introProgressFill 1700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .intro-logo-pop,
-  .intro-reveal-up,
-  .intro-float-symbol,
-  .intro-orb,
-  .intro-progress-fill,
-  .intro-ring-spin {
+  .intro-logo-fade,
+  .intro-text-rise,
+  .intro-progress-fill {
     animation: none !important;
   }
 }

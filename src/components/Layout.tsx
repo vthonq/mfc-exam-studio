@@ -1,6 +1,5 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import {
-  BarChart3,
   BookOpen,
   BookmarkCheck,
   Check,
@@ -25,7 +24,6 @@ import {
   Sparkles,
   Sun,
   Table2,
-  TrendingUp,
   X,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -149,13 +147,7 @@ export const Layout: React.FC<LayoutProps> = ({
   const [updatesOpen, setUpdatesOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [tutorOpen, setTutorOpen] = useState(false);
-  const [introOpen, setIntroOpen] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(INTRO_SEEN_KEY) !== '1';
-    } catch {
-      return false;
-    }
-  });
+  const [introOpen, setIntroOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [keyTestLoading, setKeyTestLoading] = useState(false);
   const [keyTestResult, setKeyTestResult] = useState<{ ok: boolean; message: string } | null>(null);
@@ -178,11 +170,13 @@ export const Layout: React.FC<LayoutProps> = ({
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setSearchOpen((v) => !v);
+      } else if (e.key === 'Escape' && settingsOpen) {
+        setSettingsOpen(false);
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [settingsOpen]);
 
   const copyBaseUrl = async () => {
     try {
@@ -213,171 +207,60 @@ export const Layout: React.FC<LayoutProps> = ({
           </div>
         </div>
 
-        {/* Subject Switcher */}
-        <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-800 space-y-1">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">
-            Select Subject
-          </div>
-          <div className="grid grid-cols-1 gap-1">
+        {/* Calm 1-Row Subject Segmented Switcher + Search Bar */}
+        <div className="px-3 py-2.5 border-b border-slate-100 dark:border-slate-800 space-y-2">
+          <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80">
             <button
               onClick={() => onSelectSubject('mfc')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left flex items-center justify-between transition-all cursor-pointer ${
+              className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 !isGuide && subject === 'mfc'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'bg-slate-100/90 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-300'
+                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
+              title="Math for Computing (MFC)"
             >
-              <span className="flex items-center gap-1.5">
-                <Scale className="w-3.5 h-3.5" /> Math for Computing
-              </span>
-              <span className="text-[10px] opacity-80">MFC</span>
+              MFC
             </button>
             <button
               onClick={() => onSelectSubject('econ')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left flex items-center justify-between transition-all cursor-pointer ${
+              className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 !isGuide && subject === 'econ'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-slate-100/90 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-300'
+                  ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
+              title="Principles of Economics (ECO101)"
             >
-              <span className="flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5" /> Principles of Econ
-              </span>
-              <span className="text-[10px] opacity-80">Macro Final</span>
+              Econ
             </button>
             <button
               onClick={() => onSelectSubject('probstat')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left flex items-center justify-between transition-all cursor-pointer ${
+              className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 !isGuide && subject === 'probstat'
-                  ? 'bg-sky-600 text-white shadow-sm'
-                  : 'bg-slate-100/90 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-300'
+                  ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
+              title="Probability & Statistics (Ch. 1–5 · SB)"
             >
-              <span className="flex items-center gap-1.5">
-                <BarChart3 className="w-3.5 h-3.5" /> Prob &amp; Statistics
-              </span>
-              <span className="text-[10px] opacity-80">Ch.1–5 · SB</span>
+              Prob
             </button>
           </div>
-        </div>
-
-        {/* Compact Utility Cluster: Search + Review + Guide + Admin */}
-        <div className="px-3 py-2 border-b border-slate-200/80 dark:border-slate-800 space-y-1.5">
-          <div className="grid grid-cols-2 gap-1.5">
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between transition-colors cursor-pointer"
-              title="Search all 3 subjects (Ctrl+K)"
-            >
-              <span className="flex items-center gap-1">
-                <Search className="w-3.5 h-3.5 text-slate-500" />
-                Search
-              </span>
-              <kbd className="text-[9px] font-mono px-1 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500">
-                ⌘K
-              </kbd>
-            </button>
-            <button
-              onClick={() => setReviewOpen(true)}
-              className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between transition-colors cursor-pointer"
-              title="Open Mistakes & Review Bank"
-            >
-              <span className="flex items-center gap-1">
-                <BookmarkCheck className="w-3.5 h-3.5 text-rose-500" />
-                Review
-              </span>
-              <span
-                className={`text-[10px] font-mono px-1.5 rounded-full ${
-                  progress.mistakes.length > 0
-                    ? 'bg-rose-500 text-white font-bold'
-                    : 'bg-white dark:bg-slate-900 text-slate-400'
-                }`}
-              >
-                {progress.mistakes.length}
-              </span>
-            </button>
-          </div>
-
-          {isAdmin ? (
-            <div className="grid grid-cols-2 gap-1.5">
-              <button
-                onClick={onNavigateGuide}
-                className={`px-2 py-1.5 rounded-lg text-[11px] flex items-center justify-between transition-all cursor-pointer ${
-                  isGuide
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow-xs ring-2 ring-amber-400/50'
-                    : 'bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/70 hover:bg-amber-100 dark:hover:bg-amber-900/60 font-semibold'
-                }`}
-                title="Hướng dẫn sử dụng 3 môn"
-              >
-                <span className="flex items-center gap-1">
-                  <Compass className="w-3.5 h-3.5 shrink-0" />
-                  Guide
-                </span>
-                <span
-                  className={`text-[9px] px-1 py-0.5 rounded font-bold ${
-                    isGuide ? 'bg-slate-950/15 text-slate-950' : 'bg-amber-500/20 text-amber-800 dark:text-amber-200'
-                  }`}
-                >
-                  VI
-                </span>
-              </button>
-              <button
-                onClick={() => setAdminOpen(true)}
-                className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs flex items-center justify-between transition-colors cursor-pointer"
-                title="Open Admin Panel"
-              >
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                  Admin
-                </span>
-                <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/20">
-                  {accessConfig ? `${accessConfig.approvedCount}/${accessConfig.maxUsers}` : 'Ctrl'}
-                </span>
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={onNavigateGuide}
-              className={`w-full px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-all cursor-pointer ${
-                isGuide
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow-xs ring-2 ring-amber-400/50'
-                  : 'bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/70 hover:bg-amber-100 dark:hover:bg-amber-900/60 font-semibold'
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                <Compass className="w-3.5 h-3.5 shrink-0" />
-                <span>Guide · Hướng dẫn 3 môn</span>
-              </span>
-              <span
-                className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
-                  isGuide ? 'bg-slate-950/15 text-slate-950' : 'bg-amber-500/20 text-amber-800 dark:text-amber-200'
-                }`}
-              >
-                VI
-              </span>
-            </button>
-          )}
 
           <button
-            onClick={() => setTutorOpen(true)}
-            className="w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-xs flex items-center justify-between transition-all cursor-pointer"
-            title="Open My Gemini AI Tutor"
+            onClick={() => setSearchOpen(true)}
+            className="w-full px-2.5 py-1.5 rounded-lg text-xs bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/60 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-between transition-colors cursor-pointer"
+            title="Search all 3 subjects (Ctrl+K)"
           >
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 shrink-0" />
-              <span>Ask My Gemini AI</span>
+            <span className="flex items-center gap-1.5 truncate">
+              <Search className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Search formulas, labs...</span>
             </span>
-            <span
-              className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full ${
-                hasGeminiKey ? 'bg-emerald-400/25 text-emerald-100' : 'bg-white/20 text-white'
-              }`}
-            >
-              {hasGeminiKey ? 'ON' : 'BYOK'}
-            </span>
+            <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-400 shrink-0">
+              ⌘K
+            </kbd>
           </button>
         </div>
 
-        <nav className="flex-1 px-2.5 py-2 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 px-2.5 py-2.5 space-y-0.5 overflow-y-auto">
           {subject === 'mfc' &&
             MFC_NAV.map((item) => {
               const Icon = item.icon;
@@ -388,8 +271,8 @@ export const Layout: React.FC<LayoutProps> = ({
                   onClick={() => onNavigateMfc(item.id)}
                   className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-[13px] border-l-[3px] transition-all cursor-pointer ${
                     active
-                      ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-semibold shadow-2xs dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-400'
-                      : 'border-transparent text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/70'
+                      ? 'border-indigo-600 bg-indigo-50/80 text-indigo-700 font-semibold dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-400'
+                      : 'border-transparent text-slate-600 hover:bg-slate-100/80 dark:text-slate-300 dark:hover:bg-slate-800/60'
                   }`}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
@@ -413,8 +296,8 @@ export const Layout: React.FC<LayoutProps> = ({
                   onClick={() => onNavigateEcon(item.id)}
                   className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-[13px] border-l-[3px] transition-all cursor-pointer ${
                     active
-                      ? 'border-emerald-600 bg-emerald-50 text-emerald-700 font-semibold shadow-2xs dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-400'
-                      : 'border-transparent text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/70'
+                      ? 'border-emerald-600 bg-emerald-50/80 text-emerald-700 font-semibold dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-400'
+                      : 'border-transparent text-slate-600 hover:bg-slate-100/80 dark:text-slate-300 dark:hover:bg-slate-800/60'
                   }`}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
@@ -438,8 +321,8 @@ export const Layout: React.FC<LayoutProps> = ({
                   onClick={() => onNavigateProb(item.id)}
                   className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-[13px] border-l-[3px] transition-all cursor-pointer ${
                     active
-                      ? 'border-sky-600 bg-sky-50 text-sky-700 font-semibold shadow-2xs dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-400'
-                      : 'border-transparent text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/70'
+                      ? 'border-sky-600 bg-sky-50/80 text-sky-700 font-semibold dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-400'
+                      : 'border-transparent text-slate-600 hover:bg-slate-100/80 dark:text-slate-300 dark:hover:bg-slate-800/60'
                   }`}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
@@ -452,6 +335,82 @@ export const Layout: React.FC<LayoutProps> = ({
                 </button>
               );
             })}
+
+          {/* Calm Tools Section */}
+          <div className="pt-2.5 mt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-0.5">
+            <div className="px-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Tools
+            </div>
+
+            <button
+              onClick={() => setReviewOpen(true)}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+              title="Open Mistakes & Review Bank"
+            >
+              <span className="flex items-center gap-2">
+                <BookmarkCheck className="w-4 h-4 text-rose-500/90 shrink-0" />
+                <span>Review Bank</span>
+              </span>
+              <span
+                className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+                  progress.mistakes.length > 0
+                    ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300 font-bold'
+                    : 'text-slate-400'
+                }`}
+              >
+                {progress.mistakes.length}
+              </span>
+            </button>
+
+            <button
+              onClick={onNavigateGuide}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                isGuide
+                  ? 'bg-amber-50 text-amber-800 font-semibold dark:bg-amber-950/50 dark:text-amber-200'
+                  : 'text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
+              }`}
+              title="Hướng dẫn sử dụng 3 môn"
+            >
+              <span className="flex items-center gap-2">
+                <Compass className="w-4 h-4 text-amber-500 shrink-0" />
+                <span>Study Guide</span>
+              </span>
+              <span className="text-[10px] font-mono text-slate-400">VI</span>
+            </button>
+
+            <button
+              onClick={() => setTutorOpen(true)}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+              title="Open My Gemini AI Tutor"
+            >
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-500 shrink-0" />
+                <span>My Gemini AI</span>
+              </span>
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  hasGeminiKey ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
+                }`}
+                aria-hidden="true"
+              />
+            </button>
+
+            {isAdmin && (
+              <button
+                onClick={() => setAdminOpen(true)}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+                title="Open Admin Panel"
+              >
+                <span className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>Admin Panel</span>
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">
+                  {accessConfig ? `${accessConfig.approvedCount}/${accessConfig.maxUsers}` : 'Ctrl'}
+                </span>
+              </button>
+            )}
+          </div>
         </nav>
 
         <div className="px-3 py-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2">
@@ -841,8 +800,14 @@ export const Layout: React.FC<LayoutProps> = ({
 
       {/* Settings Modal */}
       {settingsOpen && (
-        <div className="no-print fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div
+          className="no-print fixed inset-0 z-50 bg-black/50 backdrop-blur-[1px] flex items-center justify-center p-4"
+          onClick={() => setSettingsOpen(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold flex items-center gap-2">
                 <Settings className="w-5 h-5 text-indigo-600" />
@@ -1077,14 +1042,14 @@ export const Layout: React.FC<LayoutProps> = ({
         <button
           type="button"
           onClick={() => setTutorOpen(true)}
-          className="no-print fixed bottom-16 md:bottom-5 right-4 md:right-6 z-30 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-600 hover:from-indigo-700 hover:via-violet-700 hover:to-sky-700 text-white shadow-lg ring-2 ring-white/80 dark:ring-slate-900 text-xs font-bold transition-transform hover:scale-105 cursor-pointer"
+          className="no-print fixed bottom-16 md:bottom-5 right-4 md:right-6 z-30 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-slate-900/90 hover:bg-slate-900 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 shadow-md border border-slate-700/40 dark:border-slate-300/60 text-xs font-semibold transition-all cursor-pointer"
           title="Ask My Gemini AI Tutor"
           aria-label="Open My Gemini AI Tutor"
         >
-          <Sparkles className="w-4 h-4" />
+          <Sparkles className="w-4 h-4 text-indigo-400 dark:text-indigo-600" />
           <span className="hidden sm:inline">Gemini AI</span>
           {hasGeminiKey && (
-            <span className="w-2 h-2 rounded-full bg-emerald-400" aria-hidden="true" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />
           )}
         </button>
       )}

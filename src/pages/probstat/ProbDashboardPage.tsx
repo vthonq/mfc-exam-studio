@@ -52,34 +52,31 @@ export const ProbDashboardPage: React.FC<ProbDashboardProps> = ({ onNavigate }) 
   return (
     <div className="space-y-6">
       {/* Hero Banner */}
-      <div className="rounded-2xl bg-gradient-to-br from-sky-600 via-blue-700 to-indigo-800 text-white p-6 shadow-md">
+      <div className="rounded-2xl bg-gradient-to-br from-sky-50/70 via-white to-white dark:from-sky-950/30 dark:via-slate-900 dark:to-slate-900 border border-sky-200/70 dark:border-sky-900/60 text-slate-900 dark:text-slate-100 p-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 text-xs font-medium">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sky-100/80 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300 text-xs font-semibold">
               <BarChart3 className="w-3.5 h-3.5" /> UEH-ISB · Dr. Trần Minh Hoàng · Chapters 1–5 + SB Tables
             </div>
-            <div className="flex items-center gap-3">
-              <img
-                src="./logo.gif"
-                alt="Exam Studio Logo"
-                className="w-12 h-12 rounded-2xl object-cover ring-2 ring-white/40 shadow-md shrink-0"
-              />
-              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-                Probability &amp; Statistical Methods
-              </h1>
-            </div>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+              Probability &amp; Statistical Methods
+            </h1>
             <BiText
               en="Final Exam: 100 min · 5 Written Step-by-Step Questions (NO MCQs — partial credit for methodology; 2 A4 formula sheets + SB Tables allowed). Midterm: 60 min · 20 MCQs (Ch. 1–3)."
               vi="Thi Cuối kỳ: 100 phút · 5 câu tự luận trình bày đủ bước (không trắc nghiệm; được mang 2 tờ A4 viết tay + bảng SB). Giữa kỳ: 60 phút · 20 câu trắc nghiệm (Ch. 1–3)."
-              className="text-sm text-sky-50"
-              viClassName="text-xs text-sky-100/90 mt-1"
+              className="text-sm text-slate-600 dark:text-slate-300"
+              viClassName="text-xs text-slate-500 dark:text-slate-400 mt-1"
             />
           </div>
 
-          <div className="bg-white/10 backdrop-blur rounded-2xl p-4 min-w-[210px] text-center border border-white/15">
-            <div className="text-xs uppercase tracking-wider text-sky-100">Course Readiness</div>
-            <div className="text-4xl font-extrabold mt-1">{readiness}%</div>
-            <div className="text-[11px] text-sky-100 mt-1">
+          <div className="bg-white/90 dark:bg-slate-950/60 rounded-2xl p-4 min-w-[210px] text-center border border-slate-200 dark:border-slate-800">
+            <div className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Course Readiness
+            </div>
+            <div className="text-4xl font-extrabold mt-1 text-sky-600 dark:text-sky-400">
+              {readiness}%
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
               {PROB_PROBLEM_SETS.length} Key PS Problems · {PROB_MIDTERM_MCQS.length} Midterm MCQs
             </div>
           </div>
@@ -88,19 +85,19 @@ export const ProbDashboardPage: React.FC<ProbDashboardProps> = ({ onNavigate }) 
         <div className="mt-5 flex flex-wrap gap-2.5">
           <button
             onClick={() => onNavigate('tables')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 text-slate-950 font-bold text-sm hover:bg-amber-300 cursor-pointer shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 text-slate-950 font-bold text-sm hover:bg-amber-300 cursor-pointer shadow-xs transition-colors"
           >
             <Table2 className="w-4 h-4" /> Open Easy SB Statistical Tables
           </button>
           <button
             onClick={() => onNavigate('exam', `seed=${randomSeedCode()}&mode=final`)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-sky-900 font-semibold text-sm hover:bg-sky-50 cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm cursor-pointer shadow-xs transition-colors"
           >
             <Share2 className="w-4 h-4" /> Start 100m Written Final (5 Qs)
           </button>
           <button
             onClick={() => onNavigate('exam', `seed=${randomSeedCode()}&mode=midterm`)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500/40 hover:bg-sky-500/60 border border-white/20 text-white font-semibold text-sm cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm cursor-pointer transition-colors"
           >
             60m Midterm (20 MCQs) <ArrowRight className="w-4 h-4" />
           </button>

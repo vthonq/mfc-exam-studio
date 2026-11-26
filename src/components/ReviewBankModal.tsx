@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { BookmarkCheck, CheckCircle2, Trash2, X, XCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import type { SubjectId } from '../types';
@@ -37,6 +37,17 @@ export const ReviewBankModal: React.FC<ReviewBankModalProps> = ({ open, onClose 
         : progress.mistakes.filter((m) => m.subject === filter),
     [progress.mistakes, filter],
   );
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open, onClose]);
 
   if (!open) return null;
 
