@@ -15,6 +15,7 @@ interface DistributionCurveSvgProps {
   areaLabel?: string;
   markerLabel?: string;
   height?: number;
+  showLegend?: boolean;
 }
 
 export const DistributionCurveSvg: React.FC<DistributionCurveSvgProps> = ({
@@ -27,14 +28,15 @@ export const DistributionCurveSvg: React.FC<DistributionCurveSvgProps> = ({
   boundB = 1.96,
   areaLabel,
   markerLabel,
-  height = 175,
+  height = 190,
+  showLegend = true,
 }) => {
-  const W = 460;
+  const W = 480;
   const H = height;
-  const padL = 32;
+  const padL = 42;
   const padR = 20;
-  const padT = 22;
-  const padB = 34;
+  const padT = 26;
+  const padB = 46;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
   const baseY = padT + plotH;
@@ -102,12 +104,10 @@ export const DistributionCurveSvg: React.FC<DistributionCurveSvgProps> = ({
       const hi = Math.max(boundA, boundB);
       return x >= lo && x <= hi;
     }
-    // two-tail
     const cutoff = Math.abs(boundA);
     return x <= -cutoff || x >= cutoff;
   };
 
-  // Build contiguous shaded polygon segments
   const shadePolys: string[] = [];
   let currentSeg: Array<{ x: number; y: number }> = [];
   for (const p of pts) {
@@ -164,97 +164,161 @@ export const DistributionCurveSvg: React.FC<DistributionCurveSvgProps> = ({
       ? [-3, -2, -1, 0, 1, 2, 3].filter((t) => t >= xMin && t <= xMax)
       : [0, Math.round(xMax * 0.25), Math.round(xMax * 0.5), Math.round(xMax * 0.75), Math.round(xMax)];
 
+  const distAxisLabel =
+    distribution === 'normal'
+      ? 'Standard Normal z'
+      : distribution === 't'
+        ? `t-value (df = ${df})`
+        : distribution === 'chisq'
+          ? `χ² value (df = ${df})`
+          : `F value (df₁=${df1}, df₂=${df2})`;
+
   return (
-    <svg
-      viewBox={`0 0 ${W} ${H}`}
-      className="w-full max-w-[460px] mx-auto select-none"
-      role="img"
-      aria-label="Probability distribution curve"
-    >
-      {/* Shaded regions */}
-      {shadePolys.map((d, idx) => (
-        <path key={idx} d={d} className="fill-sky-500/35 dark:fill-sky-400/35" />
-      ))}
+    <div className="space-y-2">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full max-w-[480px] mx-auto select-none"
+        role="img"
+        aria-label="Probability distribution curve"
+      >
+        {/* Shaded regions */}
+        {shadePolys.map((d, idx) => (
+          <path key={idx} d={d} className="fill-sky-500/35 dark:fill-sky-400/35" />
+        ))}
 
-      {/* Axis */}
-      <line
-        x1={padL}
-        y1={baseY}
-        x2={W - padR}
-        y2={baseY}
-        className="stroke-slate-400 dark:stroke-slate-600"
-        strokeWidth={1.5}
-      />
+        {/* Axes */}
+        <line
+          x1={padL}
+          y1={padT}
+          x2={padL}
+          y2={baseY}
+          className="stroke-slate-300 dark:stroke-slate-700"
+          strokeWidth={1.2}
+        />
+        <line
+          x1={padL}
+          y1={baseY}
+          x2={W - padR}
+          y2={baseY}
+          className="stroke-slate-400 dark:stroke-slate-600"
+          strokeWidth={1.5}
+        />
+        <text
+          x={14}
+          y={(padT + baseY) / 2}
+          textAnchor="middle"
+          transform={`rotate(-90 14 ${(padT + baseY) / 2})`}
+          className="fill-slate-400 dark:fill-slate-500 text-[9px] font-semibold"
+        >
+          Density f(x)
+        </text>
+        <text
+          x={W - padR}
+          y={baseY + 38}
+          textAnchor="end"
+          className="fill-slate-400 dark:fill-slate-500 text-[9px] font-semibold"
+        >
+          {distAxisLabel}
+        </text>
 
-      {/* Baseline ticks */}
-      {ticks.map((t) => (
-        <g key={t} transform={`translate(${toSx(t)}, ${baseY})`}>
-          <line y2={4} className="stroke-slate-400 dark:stroke-slate-600" strokeWidth={1} />
-          <text
-            y={15}
-            textAnchor="middle"
-            className="fill-slate-500 dark:fill-slate-400 text-[10px] font-mono"
-          >
-            {t}
-          </text>
-        </g>
-      ))}
-
-      {/* PDF Curve */}
-      <path
-        d={curvePath}
-        fill="none"
-        className="stroke-sky-600 dark:stroke-sky-400"
-        strokeWidth={2.4}
-      />
-
-      {/* Critical markers */}
-      {markers.map((m, idx) => {
-        const mx = toSx(m.val);
-        return (
-          <g key={idx}>
-            <line
-              x1={mx}
-              y1={padT + 4}
-              x2={mx}
-              y2={baseY}
-              className="stroke-amber-600 dark:stroke-amber-400"
-              strokeWidth={1.5}
-              strokeDasharray="4 3"
-            />
+        {/* Baseline ticks */}
+        {ticks.map((t) => (
+          <g key={t} transform={`translate(${toSx(t)}, ${baseY})`}>
+            <line y2={4} className="stroke-slate-400 dark:stroke-slate-600" strokeWidth={1} />
             <text
-              x={mx}
-              y={baseY + 27}
+              y={14}
               textAnchor="middle"
-              className="fill-amber-700 dark:fill-amber-300 text-[10px] font-bold font-mono"
+              className="fill-slate-500 dark:fill-slate-400 text-[9.5px] font-mono"
             >
-              {m.text}
+              {t}
             </text>
           </g>
-        );
-      })}
+        ))}
 
-      {/* Area Pill */}
-      {areaLabel && (
-        <g>
-          <rect
-            x={W - 168}
-            y={6}
-            width={154}
-            height={22}
-            rx={6}
-            className="fill-sky-50 dark:fill-sky-950/90 stroke-sky-300 dark:stroke-sky-700"
-          />
-          <text
-            x={W - 91}
-            y={20}
-            textAnchor="middle"
-            className="fill-sky-800 dark:fill-sky-200 text-[11px] font-bold font-mono"
-          >
-            {areaLabel}
-          </text>
-        </g>
+        {/* PDF Curve */}
+        <path
+          d={curvePath}
+          fill="none"
+          className="stroke-sky-600 dark:stroke-sky-400"
+          strokeWidth={2.5}
+        />
+
+        {/* Critical markers */}
+        {markers.map((m, idx) => {
+          const mx = toSx(m.val);
+          return (
+            <g key={idx}>
+              <line
+                x1={mx}
+                y1={padT + 4}
+                x2={mx}
+                y2={baseY}
+                className="stroke-amber-600 dark:stroke-amber-400"
+                strokeWidth={1.7}
+                strokeDasharray="4 3"
+              />
+              <rect
+                x={mx - 22}
+                y={baseY + 18}
+                width={44}
+                height={15}
+                rx={4}
+                className="fill-amber-50 dark:fill-amber-950/90 stroke-amber-300 dark:stroke-amber-700"
+                strokeWidth={1}
+              />
+              <text
+                x={mx}
+                y={baseY + 29}
+                textAnchor="middle"
+                className="fill-amber-700 dark:fill-amber-300 text-[9.5px] font-bold font-mono"
+              >
+                {m.text}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Area Pill */}
+        {areaLabel && (
+          <g>
+            <rect
+              x={W - 172}
+              y={4}
+              width={158}
+              height={22}
+              rx={6}
+              className="fill-sky-50 dark:fill-sky-950/90 stroke-sky-300 dark:stroke-sky-700"
+            />
+            <text
+              x={W - 93}
+              y={18}
+              textAnchor="middle"
+              className="fill-sky-800 dark:fill-sky-200 text-[10.5px] font-bold font-mono"
+            >
+              {areaLabel}
+            </text>
+          </g>
+        )}
+      </svg>
+
+      {showLegend && (
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[10.5px] text-slate-500 dark:text-slate-400 px-2">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-4 h-0.5 bg-sky-600 dark:bg-sky-400 inline-block" />
+            Density curve <span className="font-mono">f(x)</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-xs bg-sky-500/35 border border-sky-400 inline-block" />
+            Shaded probability{areaLabel ? ` (${areaLabel})` : ''}
+          </span>
+          {markers.length > 0 && (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-4 border-t-2 border-dashed border-amber-500 inline-block" />
+              Cutoff / Critical value ({markers.map((m) => m.text).join(', ')})
+            </span>
+          )}
+        </div>
       )}
-    </svg>
+    </div>
   );
 };

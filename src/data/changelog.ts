@@ -7,9 +7,26 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v2.9';
+export const LATEST_UPDATE_ID = 'v2.10';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v2.10',
+    version: 'v2.10',
+    date: 'Nov 2026',
+    title: 'Clearer Economic & Stat Figures with Interactive Line Guides',
+    titleVi: 'Làm Rõ Biểu Đồ Kinh Tế & XSTK Kèm Giải Thích Từng Đường Tương Tác',
+    items: [
+      {
+        en: 'Redesigned AD–AS, Phillips Curve, Loanable Funds, Money Market, and Open-Economy Twin Markets figures with wider spacing, non-clipped curves, consistent dashed→solid shift arrows, and full axis projections (E₁ → E₂).',
+        vi: 'Thiết kế lại biểu đồ AD–AS, Đường Phillips, Vốn vay, Thị trường Tiền tệ và Kinh tế Mở thoáng dễ nhìn hơn: không bị cắt đường, thống nhất nét đứt (cũ) → nét liền (mới) kèm mũi tên dịch chuyển & chiếu trục E₁ → E₂.',
+      },
+      {
+        en: 'Added interactive "Line Guide (hover or tap)" explanations on every macro graph and a clear Density / Shaded Area / Critical Cutoff legend under every ProbStat curve.',
+        vi: 'Thêm bảng "Line Guide" (chạm hoặc rê chuột để làm nổi bật từng đường và đọc ý nghĩa EN/VI) cho mọi hình Kinh tế & chú thích rõ đường/vùng cho biểu đồ XSTK.',
+      },
+    ],
+  },
   {
     id: 'v2.9',
     version: 'v2.9',
