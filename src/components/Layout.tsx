@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import {
+  BarChart3,
   BookOpen,
   ClipboardCheck,
   FileText,
   FlaskConical,
+  HelpCircle,
   KeyRound,
   LayoutDashboard,
   Moon,
@@ -11,18 +13,23 @@ import {
   Settings,
   Share2,
   Sun,
+  TrendingUp,
   X,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import type { GeminiModelId, PageRoute } from '../types';
+import type { EconPageRoute, GeminiModelId, PageRoute, SubjectId } from '../types';
 
 interface LayoutProps {
-  route: PageRoute;
-  onNavigate: (route: PageRoute) => void;
+  subject: SubjectId;
+  onSelectSubject: (subject: SubjectId) => void;
+  mfcRoute: PageRoute;
+  econRoute: EconPageRoute;
+  onNavigateMfc: (route: PageRoute) => void;
+  onNavigateEcon: (route: EconPageRoute) => void;
   children: React.ReactNode;
 }
 
-const NAV_ITEMS: Array<{
+const MFC_NAV: Array<{
   id: PageRoute;
   label: string;
   labelVi: string;
@@ -36,7 +43,28 @@ const NAV_ITEMS: Array<{
   { id: 'exam', label: 'Mock Final Exam', labelVi: 'Thi thử cuối kỳ', icon: ClipboardCheck },
 ];
 
-export const Layout: React.FC<LayoutProps> = ({ route, onNavigate, children }) => {
+const ECON_NAV: Array<{
+  id: EconPageRoute;
+  label: string;
+  labelVi: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { id: 'dashboard', label: 'Econ Dashboard', labelVi: 'Tổng quan Kinh tế', icon: LayoutDashboard },
+  { id: 'labs', label: 'Econ Simulators', labelVi: 'Mô phỏng & Đồ thị', icon: FlaskConical },
+  { id: 'drill', label: 'MCQs & Policy Drills', labelVi: 'Trắc nghiệm & Tự luận', icon: HelpCircle },
+  { id: 'knowledge', label: 'Cheat Sheets & Terms', labelVi: 'Công thức & Từ điển', icon: BookOpen },
+  { id: 'exam', label: 'Mock Econ Exam', labelVi: 'Thi thử Kinh tế', icon: ClipboardCheck },
+];
+
+export const Layout: React.FC<LayoutProps> = ({
+  subject,
+  onSelectSubject,
+  mfcRoute,
+  econRoute,
+  onNavigateMfc,
+  onNavigateEcon,
+  children,
+}) => {
   const {
     settings,
     setLang,
@@ -71,41 +99,115 @@ export const Layout: React.FC<LayoutProps> = ({ route, onNavigate, children }) =
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2.5">
           <img
             src="./logo.gif"
-            alt="MFC Exam Studio Logo"
+            alt="Exam Studio Logo"
             className="w-10 h-10 rounded-xl object-cover shadow-sm ring-2 ring-indigo-500/30 shrink-0"
           />
           <div>
-            <div className="font-bold text-sm tracking-tight">MFC Exam Studio</div>
+            <div className="font-bold text-sm tracking-tight">Exam Studio Hub</div>
             <div className="text-[11px] text-slate-500 dark:text-slate-400">
-              Mathematics for Computing
+              MFC · Economics · Prob &amp; Stat
             </div>
           </div>
         </div>
 
+        {/* Subject Switcher */}
+        <div className="p-3 border-b border-slate-200 dark:border-slate-800 space-y-1.5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">
+            Select Subject
+          </div>
+          <div className="grid grid-cols-1 gap-1">
+            <button
+              onClick={() => onSelectSubject('mfc')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left flex items-center justify-between cursor-pointer ${
+                subject === 'mfc'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <Scale className="w-3.5 h-3.5" /> Math for Computing
+              </span>
+              <span className="text-[10px] opacity-80">MFC</span>
+            </button>
+            <button
+              onClick={() => onSelectSubject('econ')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left flex items-center justify-between cursor-pointer ${
+                subject === 'econ'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <TrendingUp className="w-3.5 h-3.5" /> Principles of Econ
+              </span>
+              <span className="text-[10px] opacity-80">Macro+Micro</span>
+            </button>
+            <button
+              onClick={() => onSelectSubject('probstat')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left flex items-center justify-between cursor-pointer ${
+                subject === 'probstat'
+                  ? 'bg-sky-600 text-white'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <BarChart3 className="w-3.5 h-3.5" /> Prob &amp; Statistics
+              </span>
+              <span className="text-[10px] opacity-80">Soon</span>
+            </button>
+          </div>
+        </div>
+
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const active = route === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onNavigate(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-colors cursor-pointer ${
-                  active
-                    ? 'bg-indigo-50 text-indigo-700 font-semibold dark:bg-indigo-950/60 dark:text-indigo-300'
-                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/70'
-                }`}
-              >
-                <Icon className="w-4 h-4 shrink-0" />
-                <div className="leading-tight">
-                  <div>{item.label}</div>
-                  {settings.lang === 'bilingual' && (
-                    <div className="text-[11px] font-normal opacity-75">{item.labelVi}</div>
-                  )}
-                </div>
-              </button>
-            );
-          })}
+          {subject === 'mfc' &&
+            MFC_NAV.map((item) => {
+              const Icon = item.icon;
+              const active = mfcRoute === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onNavigateMfc(item.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-colors cursor-pointer ${
+                    active
+                      ? 'bg-indigo-50 text-indigo-700 font-semibold dark:bg-indigo-950/60 dark:text-indigo-300'
+                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <div className="leading-tight">
+                    <div>{item.label}</div>
+                    {settings.lang === 'bilingual' && (
+                      <div className="text-[11px] font-normal opacity-75">{item.labelVi}</div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+
+          {subject === 'econ' &&
+            ECON_NAV.map((item) => {
+              const Icon = item.icon;
+              const active = econRoute === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onNavigateEcon(item.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-colors cursor-pointer ${
+                    active
+                      ? 'bg-emerald-50 text-emerald-700 font-semibold dark:bg-emerald-950/60 dark:text-emerald-300'
+                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <div className="leading-tight">
+                    <div>{item.label}</div>
+                    {settings.lang === 'bilingual' && (
+                      <div className="text-[11px] font-normal opacity-75">{item.labelVi}</div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
         </nav>
 
         <div className="p-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
@@ -149,35 +251,63 @@ export const Layout: React.FC<LayoutProps> = ({ route, onNavigate, children }) =
       </aside>
 
       {/* Mobile Header */}
-      <header className="md:hidden sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-3 py-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <img
-            src="./logo.gif"
-            alt="MFC Exam Studio Logo"
-            className="w-8 h-8 rounded-lg object-cover ring-1 ring-indigo-500/30 shrink-0"
-          />
-          <span className="font-bold text-sm">MFC Exam Studio</span>
+      <header className="md:hidden sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-3 py-2 space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img
+              src="./logo.gif"
+              alt="Exam Studio Logo"
+              className="w-8 h-8 rounded-lg object-cover ring-1 ring-indigo-500/30 shrink-0"
+            />
+            <span className="font-bold text-sm">Exam Studio Hub</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setLang(settings.lang === 'en' ? 'bilingual' : 'en')}
+              className="px-2 py-1 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-700"
+            >
+              {settings.lang === 'bilingual' ? 'EN+VI' : 'EN'}
+            </button>
+            <button
+              onClick={() => setTheme(settings.theme === 'dark' ? 'light' : 'dark')}
+              className="p-1.5 rounded-md border border-slate-200 dark:border-slate-700"
+              aria-label="Toggle theme"
+            >
+              {settings.theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="p-1.5 rounded-md border border-slate-200 dark:border-slate-700"
+              aria-label="Settings"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="grid grid-cols-3 gap-1">
           <button
-            onClick={() => setLang(settings.lang === 'en' ? 'bilingual' : 'en')}
-            className="px-2 py-1 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-700"
+            onClick={() => onSelectSubject('mfc')}
+            className={`py-1 rounded-md text-xs font-semibold ${
+              subject === 'mfc' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'
+            }`}
           >
-            {settings.lang === 'bilingual' ? 'EN+VI' : 'EN'}
+            MFC
           </button>
           <button
-            onClick={() => setTheme(settings.theme === 'dark' ? 'light' : 'dark')}
-            className="p-1.5 rounded-md border border-slate-200 dark:border-slate-700"
-            aria-label="Toggle theme"
+            onClick={() => onSelectSubject('econ')}
+            className={`py-1 rounded-md text-xs font-semibold ${
+              subject === 'econ' ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800'
+            }`}
           >
-            {settings.theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+            Economics
           </button>
           <button
-            onClick={() => setSettingsOpen(true)}
-            className="p-1.5 rounded-md border border-slate-200 dark:border-slate-700"
-            aria-label="Settings"
+            onClick={() => onSelectSubject('probstat')}
+            className={`py-1 rounded-md text-xs font-semibold ${
+              subject === 'probstat' ? 'bg-sky-600 text-white' : 'bg-slate-100 dark:bg-slate-800'
+            }`}
           >
-            <Settings className="w-4 h-4" />
+            Prob &amp; Stat
           </button>
         </div>
       </header>
@@ -188,24 +318,30 @@ export const Layout: React.FC<LayoutProps> = ({ route, onNavigate, children }) =
       </main>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around py-1.5">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const active = route === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onNavigate(item.id)}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] ${
-                active ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-slate-500'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span className="truncate max-w-[56px]">{item.label.split(' ')[0]}</span>
-            </button>
-          );
-        })}
-      </nav>
+      {subject !== 'probstat' && (
+        <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around py-1.5">
+          {(subject === 'mfc' ? MFC_NAV : ECON_NAV).map((item) => {
+            const Icon = item.icon;
+            const active = subject === 'mfc' ? mfcRoute === item.id : econRoute === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() =>
+                  subject === 'mfc'
+                    ? onNavigateMfc(item.id as PageRoute)
+                    : onNavigateEcon(item.id as EconPageRoute)
+                }
+                className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] ${
+                  active ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-slate-500'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="truncate max-w-[56px]">{item.label.split(' ')[0]}</span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
 
       {/* Settings Modal */}
       {settingsOpen && (
@@ -227,12 +363,11 @@ export const Layout: React.FC<LayoutProps> = ({ route, onNavigate, children }) =
             <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
               <label className="text-sm font-semibold flex items-center gap-1.5">
                 <KeyRound className="w-4 h-4 text-indigo-500" />
-                Optional Gemini API Key (For Free-Form Proof Grading)
+                Optional Gemini API Key (For Direct In-App AI Grading)
               </label>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Stored ONLY in your own browser&apos;s localStorage. When you share the app with
-                friends, each friend can optionally enter their own key — or use the built-in
-                offline rubric grader with zero API key.
+                No API key? Use the built-in <strong>Instant Offline Check</strong> or click{' '}
+                <strong>Copy Prompt for Free ChatGPT / Gemini</strong> inside Proofs &amp; Policy Drills!
               </p>
               <input
                 type="password"
@@ -252,7 +387,7 @@ export const Layout: React.FC<LayoutProps> = ({ route, onNavigate, children }) =
                 >
                   <option value="gemini-4-hydrogen">Gemini 4 Hydrogen (Fast &amp; Balanced — Default)</option>
                   <option value="gemini-4-argon">Gemini 4 Argon (Deeper Reasoning)</option>
-                  <option value="gemini-4-carbon">Gemini 4 Carbon (Strict Proof Verification)</option>
+                  <option value="gemini-4-carbon">Gemini 4 Carbon (Strict Verification)</option>
                 </select>
               </div>
             </div>
@@ -266,7 +401,7 @@ export const Layout: React.FC<LayoutProps> = ({ route, onNavigate, children }) =
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'mfc-study-progress.json';
+                    a.download = 'exam-studio-progress.json';
                     a.click();
                     URL.revokeObjectURL(url);
                   }}

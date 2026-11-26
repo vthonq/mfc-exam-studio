@@ -1,11 +1,16 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, CheckCircle2, Eye, Sparkles } from 'lucide-react';
+import { ArrowDown, ArrowUp, CheckCircle2, ClipboardCheck, Copy, Eye, Sparkles } from 'lucide-react';
 import { PROOF_EXERCISES, type ParsonsStep, type ProofExercise } from '../data/proofs';
 import { createRng } from '../math/prng';
 import { useApp } from '../context/AppContext';
 import { CHAPTER_META, type ChapterId } from '../types';
 import { BiText } from '../components/BiText';
 import { gradeProofWithGemini, type ProofGradeResult } from '../services/geminiGrader';
+import {
+  analyzeWrittenProofOffline,
+  buildCopyableGradingPrompt,
+  type OfflineCheckResult,
+} from '../utils/offlineProofChecker';
 
 interface ProofsPageProps {
   initialProofId?: string;
@@ -42,6 +47,8 @@ export const ProofsPage: React.FC<ProofsPageProps> = ({ initialProofId }) => {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiResult, setAiResult] = useState<ProofGradeResult | null>(null);
+  const [offlineResult, setOfflineResult] = useState<OfflineCheckResult | null>(null);
+  const [promptCopied, setPromptCopied] = useState(false);
 
   const selectProof = (next: ProofExercise) => {
     setSelectedId(next.id);
@@ -53,6 +60,8 @@ export const ProofsPage: React.FC<ProofsPageProps> = ({ initialProofId }) => {
     setShowSolution(false);
     setAiError(null);
     setAiResult(null);
+    setOfflineResult(null);
+    setPromptCopied(false);
   };
 
   const filtered = PROOF_EXERCISES.filter(
@@ -310,6 +319,38 @@ export const ProofsPage: React.FC<ProofsPageProps> = ({ initialProofId }) => {
 
               <div className="flex flex-wrap gap-2">
                 <button
+                  onClick={() => {
+                    const res = analyzeWrittenProofOffline(proof.id, writtenText, proof.rubric);
+                    setOfflineResult(res);
+                    if (res.estimatedScore >= res.maxScore * 0.75) {
+                      markProofDone(proof.id);
+                    }
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <ClipboardCheck className="w-3.5 h-3.5" /> Instant Offline Check (No Key)
+                </button>
+                <button
+                  onClick={async () => {
+                    const text = buildCopyableGradingPrompt({
+                      subject: 'Mathematics for Computing',
+                      title: proof.title,
+                      prompt: proof.prompt,
+                      studentAnswer: writtenText,
+                      modelSolution: proof.modelSolution,
+                      rubric: proof.rubric,
+                      bilingual: settings.lang === 'bilingual',
+                    });
+                    await navigator.clipboard.writeText(text);
+                    setPromptCopied(true);
+                    setTimeout(() => setPromptCopied(false), 2500);
+                  }}
+                  className="px-3.5 py-2 rounded-xl border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 text-xs font-semibold inline-flex items-center gap-1.5 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 cursor-pointer"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  {promptCopied ? 'Copied! Paste in ChatGPT / Gemini' : 'Copy Prompt for Free ChatGPT / Gemini'}
+                </button>
+                <button
                   onClick={() => setShowSolution((s) => !s)}
                   className="px-3.5 py-2 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                 >
@@ -321,9 +362,30 @@ export const ProofsPage: React.FC<ProofsPageProps> = ({ initialProofId }) => {
                   className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  {aiLoading ? 'Grading with Gemini...' : 'Grade with Gemini AI (Optional)'}
+                  {aiLoading ? 'Grading with Gemini...' : 'Grade with Gemini AI (API Key)'}
                 </button>
               </div>
+
+              {offlineResult && (
+                <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/30 space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between font-bold text-sm">
+                    <span>Offline Structural Check</span>
+                    <span className="text-emerald-700 dark:text-emerald-300">
+                      Est. {offlineResult.estimatedScore} / {offlineResult.maxScore} pts
+                    </span>
+                  </div>
+                  {offlineResult.matched.length > 0 && (
+                    <div className="text-emerald-700 dark:text-emerald-300">
+                      <strong>Detected:</strong> {offlineResult.matched.join(' · ')}
+                    </div>
+                  )}
+                  {offlineResult.missing.length > 0 && (
+                    <div className="text-amber-700 dark:text-amber-300">
+                      <strong>Check / Add:</strong> {offlineResult.missing.join(' · ')}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {aiError && (
                 <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs">

@@ -28,6 +28,11 @@ import { useApp } from '../context/AppContext';
 import { CHAPTER_META, type ChapterId } from '../types';
 import { GraphSvg } from '../components/GraphSvg';
 import { gradeProofWithGemini, type ProofGradeResult } from '../services/geminiGrader';
+import {
+  analyzeWrittenProofOffline,
+  buildCopyableGradingPrompt,
+  type OfflineCheckResult,
+} from '../utils/offlineProofChecker';
 
 interface ExamQuestion {
   id: string;
@@ -238,6 +243,8 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
   const [aiProofGrade, setAiProofGrade] = useState<ProofGradeResult | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [offlineProofCheck, setOfflineProofCheck] = useState<OfflineCheckResult | null>(null);
+  const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialSeed && initialSeed !== seed) {
@@ -435,7 +442,43 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
                     placeholder="Write your bonus proof here..."
                     className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-mono text-xs"
                   />
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <button
+                      onClick={() => {
+                        const res = analyzeWrittenProofOffline(
+                          q.proofRef!.id,
+                          answers[q.id] ?? '',
+                          q.proofRef!.rubric,
+                        );
+                        setOfflineProofCheck(res);
+                        if (res.estimatedScore >= res.maxScore * 0.75) {
+                          setProofSelfCheck((prev) => ({ ...prev, [q.id]: true }));
+                        }
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold cursor-pointer"
+                    >
+                      Offline Check (No Key)
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const txt = buildCopyableGradingPrompt({
+                          subject: 'Mathematics for Computing',
+                          title: q.proofRef!.title,
+                          prompt: q.proofRef!.prompt,
+                          studentAnswer: answers[q.id] ?? '',
+                          modelSolution: q.proofRef!.modelSolution,
+                          rubric: q.proofRef!.rubric,
+                          bilingual: settings.lang === 'bilingual',
+                        });
+                        await navigator.clipboard.writeText(txt);
+                        setCopiedPromptId(q.id);
+                        setTimeout(() => setCopiedPromptId(null), 2500);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 text-xs font-semibold cursor-pointer"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      {copiedPromptId === q.id ? 'Copied!' : 'Copy Prompt for Free AI'}
+                    </button>
                     <button
                       onClick={async () => {
                         setAiLoading(true);
@@ -461,7 +504,7 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold cursor-pointer"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      {aiLoading ? 'Grading...' : 'AI Grade Proof (Optional)'}
+                      {aiLoading ? 'Grading...' : 'AI Grade (API Key)'}
                     </button>
                     <label className="text-xs flex items-center gap-1.5 cursor-pointer">
                       <input
@@ -471,9 +514,23 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
                           setProofSelfCheck((prev) => ({ ...prev, [q.id]: e.target.checked }))
                         }
                       />
-                      Self-check: my proof covers all steps cleanly (+1 bonus pt)
+                      Self-check (+1 bonus pt)
                     </label>
                   </div>
+                  {offlineProofCheck && (
+                    <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-xs space-y-1">
+                      <div>
+                        <strong>
+                          Offline Est: {offlineProofCheck.estimatedScore}/{offlineProofCheck.maxScore}
+                        </strong>
+                      </div>
+                      {offlineProofCheck.missing.length > 0 && (
+                        <div className="text-amber-700 dark:text-amber-300">
+                          Missing/Check: {offlineProofCheck.missing.join(' · ')}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {aiError && <div className="text-xs text-rose-500">{aiError}</div>}
                   {aiProofGrade && (
                     <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-xs">

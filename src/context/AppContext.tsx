@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import type {
   AppSettings,
   ChapterId,
+  EconTopicId,
   ExamAttemptRecord,
   GeminiModelId,
   LangMode,
@@ -19,6 +20,16 @@ const DEFAULT_SETTINGS: AppSettings = {
   geminiModel: 'gemini-4-hydrogen',
 };
 
+const DEFAULT_ECON_MASTERY: ProgressState['econMastery'] = {
+  'macro-gdp-cpi': { correct: 0, attempts: 0 },
+  'macro-growth-saving-unemp': { correct: 0, attempts: 0 },
+  'macro-money-inflation': { correct: 0, attempts: 0 },
+  'macro-open-econ': { correct: 0, attempts: 0 },
+  'macro-adas-policy-phillips': { correct: 0, attempts: 0 },
+  'micro-supply-elasticity-tax': { correct: 0, attempts: 0 },
+  'micro-costs-markets': { correct: 0, attempts: 0 },
+};
+
 const DEFAULT_PROGRESS: ProgressState = {
   mastery: {
     ch1: { correct: 0, attempts: 0 },
@@ -28,9 +39,12 @@ const DEFAULT_PROGRESS: ProgressState = {
     ch11: { correct: 0, attempts: 0 },
     ch12: { correct: 0, attempts: 0 },
   },
+  econMastery: { ...DEFAULT_ECON_MASTERY },
   completedAssignments: [],
   completedProofs: [],
+  completedEconScenarios: [],
   examHistory: [],
+  econExamHistory: [],
 };
 
 interface AppContextValue {
@@ -41,15 +55,35 @@ interface AppContextValue {
   setGeminiKey: (key: string) => void;
   setGeminiModel: (model: GeminiModelId) => void;
   recordPractice: (chapter: ChapterId, isCorrect: boolean) => void;
+  recordEconPractice: (topic: EconTopicId, isCorrect: boolean) => void;
   toggleAssignmentDone: (id: string) => void;
   markProofDone: (id: string) => void;
+  markEconScenarioDone: (id: string) => void;
   addExamRecord: (record: ExamAttemptRecord) => void;
+  addEconExamRecord: (record: ExamAttemptRecord) => void;
   exportProgressJson: () => string;
   importProgressJson: (json: string) => boolean;
   resetProgress: () => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
+
+function hydrateProgress(rawObj: Partial<ProgressState> | null | undefined): ProgressState {
+  if (!rawObj || typeof rawObj !== 'object') return DEFAULT_PROGRESS;
+  return {
+    mastery: { ...DEFAULT_PROGRESS.mastery, ...(rawObj.mastery || {}) },
+    econMastery: { ...DEFAULT_ECON_MASTERY, ...(rawObj.econMastery || {}) },
+    completedAssignments: Array.isArray(rawObj.completedAssignments)
+      ? rawObj.completedAssignments
+      : [],
+    completedProofs: Array.isArray(rawObj.completedProofs) ? rawObj.completedProofs : [],
+    completedEconScenarios: Array.isArray(rawObj.completedEconScenarios)
+      ? rawObj.completedEconScenarios
+      : [],
+    examHistory: Array.isArray(rawObj.examHistory) ? rawObj.examHistory : [],
+    econExamHistory: Array.isArray(rawObj.econExamHistory) ? rawObj.econExamHistory : [],
+  };
+}
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<AppSettings>(() => {
@@ -68,12 +102,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const raw = localStorage.getItem(PROGRESS_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw);
-        return {
-          ...DEFAULT_PROGRESS,
-          ...parsed,
-          mastery: { ...DEFAULT_PROGRESS.mastery, ...(parsed.mastery || {}) },
-        };
+        return hydrateProgress(JSON.parse(raw));
       }
     } catch {
       // ignore malformed storage
@@ -122,6 +151,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  const recordEconPractice = (topic: EconTopicId, isCorrect: boolean) => {
+    setProgress((p) => ({
+      ...p,
+      econMastery: {
+        ...p.econMastery,
+        [topic]: {
+          correct: (p.econMastery[topic]?.correct ?? 0) + (isCorrect ? 1 : 0),
+          attempts: (p.econMastery[topic]?.attempts ?? 0) + 1,
+        },
+      },
+    }));
+  };
+
   const toggleAssignmentDone = (id: string) => {
     setProgress((p) => {
       const exists = p.completedAssignments.includes(id);
@@ -141,10 +183,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const markEconScenarioDone = (id: string) => {
+    setProgress((p) => {
+      if (p.completedEconScenarios.includes(id)) return p;
+      return { ...p, completedEconScenarios: [...p.completedEconScenarios, id] };
+    });
+  };
+
   const addExamRecord = (record: ExamAttemptRecord) => {
     setProgress((p) => ({
       ...p,
       examHistory: [record, ...p.examHistory].slice(0, 20),
+    }));
+  };
+
+  const addEconExamRecord = (record: ExamAttemptRecord) => {
+    setProgress((p) => ({
+      ...p,
+      econExamHistory: [record, ...p.econExamHistory].slice(0, 20),
     }));
   };
 
@@ -154,11 +210,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const parsed = JSON.parse(json);
       if (!parsed || typeof parsed !== 'object' || !parsed.mastery) return false;
-      setProgress({
-        ...DEFAULT_PROGRESS,
-        ...parsed,
-        mastery: { ...DEFAULT_PROGRESS.mastery, ...parsed.mastery },
-      });
+      setProgress(hydrateProgress(parsed));
       return true;
     } catch {
       return false;
@@ -177,9 +229,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setGeminiKey,
         setGeminiModel,
         recordPractice,
+        recordEconPractice,
         toggleAssignmentDone,
         markProofDone,
+        markEconScenarioDone,
         addExamRecord,
+        addEconExamRecord,
         exportProgressJson,
         importProgressJson,
         resetProgress,
