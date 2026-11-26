@@ -11,12 +11,11 @@ import {
   buildCopyableGradingPrompt,
   type OfflineCheckResult,
 } from '../utils/offlineProofChecker';
+import { MathKeypad } from '../components/MathKeypad';
 
 interface ProofsPageProps {
   initialProofId?: string;
 }
-
-const SYMBOLS = ['∀', '∃', '¬', '∧', '∨', '→', '↔', '≡', '∈', '∉', '⊆', '∣', '∤', 'ℤ', 'ℕ', '⇒', '∴'];
 
 export const ProofsPage: React.FC<ProofsPageProps> = ({ initialProofId }) => {
   const { settings, progress, recordPractice, markProofDone } = useApp();
@@ -305,17 +304,7 @@ export const ProofsPage: React.FC<ProofsPageProps> = ({ initialProofId }) => {
 
           {mode === 'written' && (
             <div className="space-y-3">
-              <div className="flex flex-wrap gap-1">
-                {SYMBOLS.map((sym) => (
-                  <button
-                    key={sym}
-                    onClick={() => setWrittenText((t) => t + sym)}
-                    className="px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-mono text-xs hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                  >
-                    {sym}
-                  </button>
-                ))}
-              </div>
+              <MathKeypad preset="mfc" onInsert={(sym) => setWrittenText((t) => t + sym)} />
               <textarea
                 value={writtenText}
                 onChange={(e) => setWrittenText(e.target.value)}

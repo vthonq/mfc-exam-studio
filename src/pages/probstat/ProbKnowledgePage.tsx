@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BookOpen, Printer, Search, Table2 } from 'lucide-react';
 import { PROB_CHAPTER_NOTES, PROB_GLOSSARY } from '../../data/probStat';
 import { PROB_TOPIC_META, type ProbLabTab, type ProbPageRoute, type ProbTopicId } from '../../types';
@@ -24,6 +24,10 @@ export const ProbKnowledgePage: React.FC<ProbKnowledgePageProps> = ({
 }) => {
   const [filter, setFilter] = useState<'all' | 'glossary' | ProbTopicId>(initialTopic ?? 'all');
   const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    if (initialTopic) setFilter(initialTopic);
+  }, [initialTopic]);
 
   const q = query.trim().toLowerCase();
   const notes = PROB_CHAPTER_NOTES.filter((n) => {
@@ -59,7 +63,7 @@ export const ProbKnowledgePage: React.FC<ProbKnowledgePageProps> = ({
             className="text-sm text-slate-500 mt-0.5"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="no-print flex gap-2">
           <button
             onClick={() => onNavigate('tables')}
             className="px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs inline-flex items-center gap-1 cursor-pointer"
@@ -68,14 +72,14 @@ export const ProbKnowledgePage: React.FC<ProbKnowledgePageProps> = ({
           </button>
           <button
             onClick={() => window.print()}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
+            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
           >
-            <Printer className="w-3.5 h-3.5" /> Print Reference
+            <Printer className="w-3.5 h-3.5" /> Print / A4 PDF
           </button>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1.5">
           <button
             onClick={() => setFilter('all')}
@@ -128,7 +132,7 @@ export const ProbKnowledgePage: React.FC<ProbKnowledgePageProps> = ({
           {notes.map((c) => (
             <div
               key={c.topic}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3"
+              className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
@@ -139,7 +143,7 @@ export const ProbKnowledgePage: React.FC<ProbKnowledgePageProps> = ({
                 </div>
                 <button
                   onClick={() => onNavigate('labs', `tab=${LAB_MAP[c.topic]}`)}
-                  className="px-3 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 text-xs font-semibold cursor-pointer"
+                  className="no-print px-3 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 text-xs font-semibold cursor-pointer"
                 >
                   Open Interactive Lab →
                 </button>
@@ -168,7 +172,7 @@ export const ProbKnowledgePage: React.FC<ProbKnowledgePageProps> = ({
           {glossary.map((g) => (
             <div
               key={g.term}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-1"
+              className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-1"
             >
               <div className="flex items-center justify-between">
                 <div className="font-bold text-sm">{g.term}</div>

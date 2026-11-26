@@ -1,0 +1,126 @@
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { CHANGELOG_ENTRIES, LATEST_UPDATE_ID } from '../src/data/changelog';
+import { ECON_MCQS } from '../src/data/economics';
+import { KNOWLEDGE_ITEMS } from '../src/data/knowledge';
+import { generateProbFinalExam, PROB_MIDTERM_MCQS } from '../src/data/probStat';
+import { clearExamDraft, loadExamDraft, saveExamDraft } from '../src/utils/examDraft';
+import { buildGlobalSearchItems, searchGlobalItems } from '../src/utils/searchIndex';
+
+describe('Global Search Index', () => {
+  it('indexes all 3 subjects plus the Guide and finds key concepts', () => {
+    const all = buildGlobalSearchItems();
+    expect(all.length).toBeGreaterThan(40);
+
+    const warshall = searchGlobalItems('Warshall');
+    expect(warshall.some((x) => x.subject === 'mfc')).toBe(true);
+
+    const sacrifice = searchGlobalItems('Sacrifice');
+    expect(sacrifice.some((x) => x.subject === 'econ')).toBe(true);
+
+    const appD = searchGlobalItems('Appendix D');
+    expect(appD.some((x) => x.subject === 'probstat' && x.route === 'tables')).toBe(true);
+
+    const binomial = searchGlobalItems('Binomial');
+    expect(binomial.some((x) => x.subject === 'probstat')).toBe(true);
+
+    const guide = searchGlobalItems('Guide');
+    expect(guide.some((x) => x.subject === 'guide')).toBe(true);
+  });
+});
+
+describe('Exam Auto-Save Draft Helper', () => {
+  const originalStorage = globalThis.localStorage;
+
+  beforeEach(() => {
+    const store = new Map<string, string>();
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: {
+        getItem: (k: string) => store.get(k) ?? null,
+        setItem: (k: string, v: string) => {
+          store.set(k, v);
+        },
+        removeItem: (k: string) => {
+          store.delete(k);
+        },
+        clear: () => store.clear(),
+        key: (i: number) => Array.from(store.keys())[i] ?? null,
+        get length() {
+          return store.size;
+        },
+      },
+    });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: originalStorage,
+    });
+  });
+
+  it('saves, loads, expires, and clears exam drafts cleanly', () => {
+    saveExamDraft('test:seed1', { answers: { q1: 'A' }, secondsLeft: 1200 });
+    const loaded = loadExamDraft<{ answers: Record<string, string>; secondsLeft: number }>(
+      'test:seed1',
+    );
+    expect(loaded).not.toBeNull();
+    expect(loaded?.answers.q1).toBe('A');
+    expect(loaded?.secondsLeft).toBe(1200);
+
+    // Expired draft should return null
+    const expired = loadExamDraft('test:seed1', -1);
+    expect(expired).toBeNull();
+    expect(loadExamDraft('test:seed1')).toBeNull();
+
+    saveExamDraft('test:seed2', { ok: true });
+    clearExamDraft('test:seed2');
+    expect(loadExamDraft('test:seed2')).toBeNull();
+  });
+});
+
+describe('Changelog & Cross-Subject Data Integrity', () => {
+  it('keeps LATEST_UPDATE_ID aligned with the newest changelog entry', () => {
+    expect(CHANGELOG_ENTRIES.length).toBeGreaterThan(0);
+    expect(CHANGELOG_ENTRIES[0].id).toBe(LATEST_UPDATE_ID);
+    for (const entry of CHANGELOG_ENTRIES) {
+      expect(entry.items.length).toBeGreaterThan(0);
+      for (const it of entry.items) {
+        expect(it.en.trim().length).toBeGreaterThan(0);
+        expect(it.vi.trim().length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('validates every MCQ in Economics and Prob & Stat', () => {
+    for (const q of [...ECON_MCQS, ...PROB_MIDTERM_MCQS]) {
+      expect(q.choices.length).toBeGreaterThanOrEqual(4);
+      expect(q.correctIndex).toBeGreaterThanOrEqual(0);
+      expect(q.correctIndex).toBeLessThan(q.choices.length);
+      expect(new Set(q.choices).size).toBe(q.choices.length);
+    }
+  });
+
+  it('generates valid ProbStat Final papers with balanced KaTeX $ delimiters', () => {
+    for (const seed of ['SEED1', 'SEED2']) {
+      const paper = generateProbFinalExam(seed);
+      expect(paper).toHaveLength(5);
+      for (const q of paper) {
+        expect(q.numericChecks.length).toBeGreaterThan(0);
+        for (const nc of q.numericChecks) {
+          expect(Number.isFinite(nc.expected)).toBe(true);
+        }
+        const dollarCount = (q.prompt.match(/(?<!\\)\$/g) ?? []).length;
+        expect(dollarCount % 2).toBe(0);
+      }
+    }
+  });
+
+  it('ensures MFC KNOWLEDGE_ITEMS plain summaries do not leak raw LaTeX braces', () => {
+    const rawLatexPattern = /\\text\{|\\frac\{|_\{|\^\{/;
+    for (const item of KNOWLEDGE_ITEMS) {
+      expect(rawLatexPattern.test(item.summary)).toBe(false);
+      expect(rawLatexPattern.test(item.summaryVi)).toBe(false);
+    }
+  });
+});

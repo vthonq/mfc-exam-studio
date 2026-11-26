@@ -9,6 +9,8 @@
 - **Select Subject:** Chuyển nhanh 3 môn ở menu trái (trên điện thoại nằm ở thanh trên cùng): `Math for Computing` (MFC), `Principles of Econ` (Macro Final), `Prob & Statistics` (Ch.1–5 · SB).
 - **🌐 EN + VI / EN Only:** Bật/tắt phụ đề tiếng Việt.
 - **Sáng / Tối (☀️/🌙) & Share Study App URL:** Đổi giao diện và sao chép link chia sẻ.
+- **Tìm kiếm (`Ctrl+K` / `⌘K`) & Kho câu sai (`Review`):** Tìm nhanh công thức, lab, bảng SB ở cả 3 môn; mở `Review` để làm lại các câu thi sai hoặc đã đánh dấu (`Bookmark`).
+- **Tự động lưu bài thi, Chèn ký hiệu, In A4 PDF & What's New:** Bài thi thử tự lưu khi đang làm (không mất bài nếu F5); ô tự luận có thanh chèn ký hiệu Toán/XSTK; mục Công thức có nút `Print / A4 PDF`; và mục `What's New` hiển thị các cập nhật mới nhất.
 - **Settings (⚙️):**
   - **Chấm tự luận / chứng minh (3 cách):**
     1. **Instant Offline Check:** Chấm nhanh theo rubric ngay trên web, không cần API key.

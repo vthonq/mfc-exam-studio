@@ -196,9 +196,9 @@ function AppShell() {
       probRoute={nav.probRoute}
       isGuide={nav.isGuide}
       onNavigateGuide={navigateGuide}
-      onNavigateMfc={(r) => navigateMfc(r)}
-      onNavigateEcon={(r) => navigateEcon(r)}
-      onNavigateProb={(r) => navigateProb(r)}
+      onNavigateMfc={(r, q) => navigateMfc(r, q)}
+      onNavigateEcon={(r, q) => navigateEcon(r, q)}
+      onNavigateProb={(r, q) => navigateProb(r, q)}
     >
       <Suspense
         fallback={

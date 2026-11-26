@@ -20,6 +20,7 @@ import {
   buildCopyableGradingPrompt,
   type OfflineCheckResult,
 } from '../../utils/offlineProofChecker';
+import { clearExamDraft, loadExamDraft, saveExamDraft } from '../../utils/examDraft';
 
 type EconExamMode = 'final' | 'quiz3' | 'quiz4' | 'quiz5';
 
@@ -342,17 +343,39 @@ interface EconExamPageProps {
   onSeedChange: (seed: string, mode: EconExamMode) => void;
 }
 
+interface EconExamDraft {
+  seed: string;
+  mode: EconExamMode;
+  mcqAnswers: Record<string, number>;
+  essayAnswers: Record<string, string>;
+  essaySelfChecks: Record<string, Record<number, boolean>>;
+  secsLeft: number;
+}
+
 export const EconExamPage: React.FC<EconExamPageProps> = ({
   initialSeed,
   initialMode,
   onSeedChange,
 }) => {
-  const { settings, addEconExamRecord, recordEconPractice } = useApp();
-  const [seed, setSeed] = useState(initialSeed || randomSeedCode());
-  const [mode, setMode] = useState<EconExamMode>(initialMode || 'final');
-  const [mcqAnswers, setMcqAnswers] = useState<Record<string, number>>({});
-  const [essayAnswers, setEssayAnswers] = useState<Record<string, string>>({});
-  const [essaySelfChecks, setEssaySelfChecks] = useState<Record<string, Record<number, boolean>>>({});
+  const { settings, addEconExamRecord, recordEconPractice, recordMistake } = useApp();
+  const [initialDraft] = useState<EconExamDraft | null>(() => {
+    if (initialSeed) {
+      return loadExamDraft<EconExamDraft>(`econ:${initialSeed}:${initialMode || 'final'}`);
+    }
+    return loadExamDraft<EconExamDraft>('econ:active');
+  });
+
+  const [seed, setSeed] = useState(initialSeed || initialDraft?.seed || randomSeedCode());
+  const [mode, setMode] = useState<EconExamMode>(initialMode || initialDraft?.mode || 'final');
+  const [mcqAnswers, setMcqAnswers] = useState<Record<string, number>>(
+    initialDraft?.mcqAnswers || {},
+  );
+  const [essayAnswers, setEssayAnswers] = useState<Record<string, string>>(
+    initialDraft?.essayAnswers || {},
+  );
+  const [essaySelfChecks, setEssaySelfChecks] = useState<Record<string, Record<number, boolean>>>(
+    initialDraft?.essaySelfChecks || {},
+  );
   const [offlineResults, setOfflineResults] = useState<Record<string, OfflineCheckResult>>({});
   const [aiResults, setAiResults] = useState<Record<string, ProofGradeResult>>({});
   const [aiLoadingId, setAiLoadingId] = useState<string | null>(null);
@@ -360,7 +383,16 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const [submitted, setSubmitted] = useState(false);
-  const [secsLeft, setSecsLeft] = useState(mode === 'final' ? 100 * 60 : 25 * 60);
+  const [secsLeft, setSecsLeft] = useState(
+    initialDraft?.secsLeft ?? ((initialMode || initialDraft?.mode || 'final') === 'final' ? 100 * 60 : 25 * 60),
+  );
+  const [draftRestored, setDraftRestored] = useState(
+    Boolean(
+      initialDraft &&
+        (Object.keys(initialDraft.mcqAnswers || {}).length > 0 ||
+          Object.keys(initialDraft.essayAnswers || {}).length > 0),
+    ),
+  );
   const [copiedLink, setCopiedLink] = useState(false);
   const [lastResult, setLastResult] = useState<{
     score: number;
@@ -372,9 +404,34 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
   } | null>(null);
 
   useEffect(() => {
-    if (initialSeed && initialSeed !== seed) setSeed(initialSeed);
-    if (initialMode && initialMode !== mode) setMode(initialMode);
+    if (initialSeed && (initialSeed !== seed || (initialMode && initialMode !== mode))) {
+      const m = initialMode || mode;
+      const saved = loadExamDraft<EconExamDraft>(`econ:${initialSeed}:${m}`);
+      setSeed(initialSeed);
+      if (initialMode) setMode(initialMode);
+      if (saved && (Object.keys(saved.mcqAnswers || {}).length > 0 || Object.keys(saved.essayAnswers || {}).length > 0)) {
+        setMcqAnswers(saved.mcqAnswers || {});
+        setEssayAnswers(saved.essayAnswers || {});
+        setEssaySelfChecks(saved.essaySelfChecks || {});
+        setSecsLeft(saved.secsLeft);
+        setDraftRestored(true);
+      } else {
+        setMcqAnswers({});
+        setEssayAnswers({});
+        setEssaySelfChecks({});
+        setDraftRestored(false);
+      }
+      setSubmitted(false);
+    }
   }, [initialSeed, initialMode]);
+
+  useEffect(() => {
+    if (submitted) return;
+    if (Object.keys(mcqAnswers).length === 0 && Object.keys(essayAnswers).length === 0) return;
+    const draft: EconExamDraft = { seed, mode, mcqAnswers, essayAnswers, essaySelfChecks, secsLeft };
+    saveExamDraft(`econ:${seed}:${mode}`, draft);
+    saveExamDraft('econ:active', draft);
+  }, [mcqAnswers, essayAnswers, essaySelfChecks, secsLeft, seed, mode, submitted]);
 
   useEffect(() => {
     if (submitted) return;
@@ -385,6 +442,8 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
   const { mcqs, essays } = useMemo(() => buildEco101Session(seed, mode), [seed, mode]);
 
   const startSession = (nextMode: EconExamMode) => {
+    clearExamDraft(`econ:${seed}:${mode}`);
+    clearExamDraft('econ:active');
     const s = randomSeedCode();
     setSeed(s);
     setMode(nextMode);
@@ -397,6 +456,7 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
     setAiErrors({});
     setSubmitted(false);
     setLastResult(null);
+    setDraftRestored(false);
     setSecsLeft(nextMode === 'final' ? 100 * 60 : 25 * 60);
   };
 
@@ -426,6 +486,20 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
       const cur = byChapter[q.topic] ?? { earned: 0, total: 0 };
       byChapter[q.topic] = { earned: cur.earned + got, total: cur.total + ptsPerMcq };
       recordEconPractice(q.topic, ok);
+      if (!ok) {
+        recordMistake({
+          id: `econ-exam-${seed}-${q.id}`,
+          subject: 'econ',
+          topicLabel: `${ECON_TOPIC_META[q.topic].code} (${q.tag})`,
+          question: q.question,
+          choices: q.choices,
+          correctIndex: q.correctIndex,
+          userAnswerText:
+            mcqAnswers[q.id] !== undefined ? q.choices[mcqAnswers[q.id]] : '(blank)',
+          explanation: q.explanation,
+          source: 'mistake',
+        });
+      }
     }
 
     for (const es of essays) {
@@ -456,6 +530,10 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
       essayMax: mode === 'final' ? 50 : 0,
       byChapter,
     });
+
+    clearExamDraft(`econ:${seed}:${mode}`);
+    clearExamDraft('econ:active');
+    setDraftRestored(false);
 
     addEconExamRecord({
       id: `eco101-${seed}-${Date.now()}`,
@@ -519,6 +597,20 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
           ))}
         </div>
       </div>
+
+      {draftRestored && !submitted && (
+        <div className="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 flex flex-wrap items-center justify-between gap-2 text-xs text-sky-900 dark:text-sky-200">
+          <span>
+            Auto-saved draft restored for Seed <code className="font-mono font-bold">{seed}</code>.
+          </span>
+          <button
+            onClick={() => startSession(mode)}
+            className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-sky-300 dark:border-sky-700 font-semibold cursor-pointer"
+          >
+            Discard Draft
+          </button>
+        </div>
+      )}
 
       {!submitted && secsLeft === 0 && (
         <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-xs font-semibold text-rose-800 dark:text-rose-200">

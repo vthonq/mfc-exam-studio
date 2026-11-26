@@ -269,9 +269,9 @@ export const KNOWLEDGE_ITEMS: KnowledgeItem[] = [
     title: 'Euler vs. Hamilton & Dijkstra’s Shortest Path',
     titleVi: 'Đường đi Euler / Hamilton & Thuật toán Dijkstra',
     summary:
-      'Euler circuit: connected + every vertex has even degree (uses every EDGE once). Euler path (not circuit): connected + exactly 2 odd-degree vertices. Hamilton circuit visits every VERTEX once (no simple degree characterization; for K_{m,n}, requires m = n ≥ 2). Dijkstra finds shortest paths from a single source in non-negative weighted graphs.',
+      'Euler circuit: connected + every vertex has even degree (uses every EDGE once). Euler path (not circuit): connected + exactly 2 odd-degree vertices. Hamilton circuit visits every VERTEX once (no simple degree characterization; for K(m,n), requires m = n ≥ 2). Dijkstra finds shortest paths from a single source in non-negative weighted graphs.',
     summaryVi:
-      'Chu trình Euler đi qua mọi CẠNH đúng 1 lần (mọi đỉnh bậc chẵn). Chu trình Hamilton đi qua mọi ĐỈNH đúng 1 lần (với K_{m,n} cần m = n ≥ 2). Dijkstra tìm đường đi ngắn nhất từ 1 đỉnh nguồn.',
+      'Chu trình Euler đi qua mọi CẠNH đúng 1 lần (mọi đỉnh bậc chẵn). Chu trình Hamilton đi qua mọi ĐỈNH đúng 1 lần (với K(m,n) cần m = n ≥ 2). Dijkstra tìm đường đi ngắn nhất từ 1 đỉnh nguồn.',
     formulas: [
       'K_{m,n} \\text{ has Euler circuit} \\iff m, n \\text{ both even } (m,n \\ge 2)',
       'K_{m,n} \\text{ has Hamilton circuit} \\iff m = n \\ge 2',
@@ -320,9 +320,9 @@ export const KNOWLEDGE_ITEMS: KnowledgeItem[] = [
     title: 'Boolean Identities, Duality & Sum-of-Products (DNF)',
     titleVi: 'Hằng đẳng thức Boolean, Nguyên lý đối ngẫu & Dạng tuyển chuẩn (SOP)',
     summary:
-      'There are 2^{2^n} Boolean functions of degree n. The dual of an expression swaps + with · and 0 with 1. Every Boolean function has a unique Sum-of-Products expansion obtained by summing the minterms for every row where F = 1. {NAND} and {NOR} are each functionally complete.',
+      'There are 2^(2ⁿ) Boolean functions of degree n. The dual of an expression swaps + with · and 0 with 1. Every Boolean function has a unique Sum-of-Products expansion obtained by summing the minterms for every row where F = 1. {NAND} and {NOR} are each functionally complete.',
     summaryVi:
-      'Có 2^{2^n} hàm Boolean n biến. Biểu thức đối ngẫu đổi + ↔ · và 0 ↔ 1. Dạng tổng các tích (SOP) lấy tổng các minterm tại các dòng có F = 1. Cổng {NAND} hoặc {NOR} đơn lẻ đã đầy đủ hàm.',
+      'Có 2^(2ⁿ) hàm Boolean n biến. Biểu thức đối ngẫu đổi + ↔ · và 0 ↔ 1. Dạng tổng các tích (SOP) lấy tổng các minterm tại các dòng có F = 1. Cổng {NAND} hoặc {NOR} đơn lẻ đã đầy đủ hàm.',
     formulas: [
       '\\text{Count of } n\\text{-var Boolean functions} = 2^{2^n}',
       'x \\mid y = \\overline{xy}, \\quad \\bar{x} = x \\mid x, \\quad x \\downarrow y = \\overline{x+y}',

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   BarChart3,
   BookOpen,
+  BookmarkCheck,
   ClipboardCheck,
   Compass,
   FileText,
@@ -11,6 +12,7 @@ import {
   LayoutDashboard,
   Moon,
   Scale,
+  Search,
   Settings,
   Share2,
   Sun,
@@ -19,6 +21,10 @@ import {
   X,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { GlobalSearchModal } from './GlobalSearchModal';
+import { ReviewBankModal } from './ReviewBankModal';
+import { UpdatesBanner, UpdatesModal } from './UpdatesBox';
+import { LATEST_UPDATE_ID } from '../data/changelog';
 import type {
   EconPageRoute,
   GeminiModelId,
@@ -35,9 +41,9 @@ interface LayoutProps {
   probRoute: ProbPageRoute;
   isGuide: boolean;
   onNavigateGuide: () => void;
-  onNavigateMfc: (route: PageRoute) => void;
-  onNavigateEcon: (route: EconPageRoute) => void;
-  onNavigateProb: (route: ProbPageRoute) => void;
+  onNavigateMfc: (route: PageRoute, query?: string) => void;
+  onNavigateEcon: (route: EconPageRoute, query?: string) => void;
+  onNavigateProb: (route: ProbPageRoute, query?: string) => void;
   children: React.ReactNode;
 }
 
@@ -97,6 +103,7 @@ export const Layout: React.FC<LayoutProps> = ({
 }) => {
   const {
     settings,
+    progress,
     setLang,
     setTheme,
     setGeminiKey,
@@ -107,9 +114,23 @@ export const Layout: React.FC<LayoutProps> = ({
   } = useApp();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [updatesOpen, setUpdatesOpen] = useState(false);
   const [importText, setImportText] = useState('');
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [copiedAppLink, setCopiedAppLink] = useState(false);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const copyBaseUrl = async () => {
     try {
@@ -125,7 +146,7 @@ export const Layout: React.FC<LayoutProps> = ({
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-20">
+      <aside className="no-print hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-20">
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2.5">
           <img
             src="./logo.gif"
@@ -188,8 +209,8 @@ export const Layout: React.FC<LayoutProps> = ({
           </div>
         </div>
 
-        {/* Highlighted Guide Button */}
-        <div className="px-3 pt-2.5">
+        {/* Highlighted Guide Button + Search & Review Bank */}
+        <div className="px-3 pt-2.5 space-y-1.5">
           <button
             onClick={onNavigateGuide}
             className={`w-full px-3 py-2 rounded-xl text-xs flex items-center justify-between cursor-pointer transition-all ${
@@ -213,6 +234,41 @@ export const Layout: React.FC<LayoutProps> = ({
               VI
             </span>
           </button>
+
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between cursor-pointer"
+              title="Search all 3 subjects (Ctrl+K)"
+            >
+              <span className="flex items-center gap-1">
+                <Search className="w-3.5 h-3.5 text-slate-500" />
+                Search
+              </span>
+              <kbd className="text-[9px] font-mono px-1 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500">
+                ⌘K
+              </kbd>
+            </button>
+            <button
+              onClick={() => setReviewOpen(true)}
+              className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between cursor-pointer"
+              title="Open Mistakes & Review Bank"
+            >
+              <span className="flex items-center gap-1">
+                <BookmarkCheck className="w-3.5 h-3.5 text-rose-500" />
+                Review
+              </span>
+              <span
+                className={`text-[10px] font-mono px-1.5 rounded-full ${
+                  progress.mistakes.length > 0
+                    ? 'bg-rose-500 text-white font-bold'
+                    : 'bg-white dark:bg-slate-900 text-slate-400'
+                }`}
+              >
+                {progress.mistakes.length}
+              </span>
+            </button>
+          </div>
         </div>
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
@@ -322,18 +378,27 @@ export const Layout: React.FC<LayoutProps> = ({
               <Settings className="w-4 h-4" />
             </button>
           </div>
-          <button
-            onClick={copyBaseUrl}
-            className="w-full flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 cursor-pointer"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            {copiedAppLink ? 'Link Copied!' : 'Share Study App URL'}
-          </button>
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              onClick={() => setUpdatesOpen(true)}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 flex items-center justify-center gap-1 cursor-pointer"
+            >
+              <span>What&apos;s New</span>
+              <span className="text-[10px] font-mono font-bold">{LATEST_UPDATE_ID}</span>
+            </button>
+            <button
+              onClick={copyBaseUrl}
+              className="flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 cursor-pointer"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              {copiedAppLink ? 'Copied!' : 'Share URL'}
+            </button>
+          </div>
         </div>
       </aside>
 
       {/* Mobile Header */}
-      <header className="md:hidden sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-3 py-2 space-y-2">
+      <header className="no-print md:hidden sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-3 py-2 space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img
@@ -343,7 +408,7 @@ export const Layout: React.FC<LayoutProps> = ({
             />
             <span className="font-bold text-sm">Exam Studio Hub</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <button
               onClick={onNavigateGuide}
               className={`px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 cursor-pointer ${
@@ -354,6 +419,25 @@ export const Layout: React.FC<LayoutProps> = ({
             >
               <Compass className="w-3.5 h-3.5" />
               Guide
+            </button>
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="p-1.5 rounded-md border border-slate-200 dark:border-slate-700"
+              aria-label="Global Search"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setReviewOpen(true)}
+              className="relative p-1.5 rounded-md border border-slate-200 dark:border-slate-700"
+              aria-label="Review Bank"
+            >
+              <BookmarkCheck className="w-4 h-4 text-rose-500" />
+              {progress.mistakes.length > 0 && (
+                <span className="absolute -top-1 -right-1 text-[9px] font-bold px-1 rounded-full bg-rose-500 text-white leading-tight">
+                  {progress.mistakes.length}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setLang(settings.lang === 'en' ? 'bilingual' : 'en')}
@@ -407,11 +491,14 @@ export const Layout: React.FC<LayoutProps> = ({
 
       {/* Main Content */}
       <main className="flex-1 md:pl-64 pb-20 md:pb-8">
-        <div className="max-w-5xl mx-auto p-4 md:p-6 lg:p-8">{children}</div>
+        <div className="max-w-5xl mx-auto p-4 md:p-6 lg:p-8">
+          <UpdatesBanner onOpenHistory={() => setUpdatesOpen(true)} />
+          {children}
+        </div>
       </main>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around py-1.5">
+      <nav className="no-print md:hidden fixed bottom-0 inset-x-0 z-20 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around py-1.5">
         {(subject === 'mfc' ? MFC_NAV : subject === 'econ' ? ECON_NAV : PROB_NAV).map((item) => {
           const Icon = item.icon;
           const active =
@@ -444,7 +531,7 @@ export const Layout: React.FC<LayoutProps> = ({
 
       {/* Settings Modal */}
       {settingsOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div className="no-print fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold flex items-center gap-2">
@@ -542,6 +629,19 @@ export const Layout: React.FC<LayoutProps> = ({
           </div>
         </div>
       )}
+
+      <GlobalSearchModal
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onNavigateMfc={onNavigateMfc}
+        onNavigateEcon={onNavigateEcon}
+        onNavigateProb={onNavigateProb}
+        onNavigateGuide={onNavigateGuide}
+      />
+
+      <ReviewBankModal open={reviewOpen} onClose={() => setReviewOpen(false)} />
+
+      <UpdatesModal open={updatesOpen} onClose={() => setUpdatesOpen(false)} />
     </div>
   );
 };

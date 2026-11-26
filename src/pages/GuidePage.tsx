@@ -89,6 +89,14 @@ export const GuidePage: React.FC<GuidePageProps> = ({
             <code className="font-mono text-xs">Gemini API Key</code> (chọn <code className="font-mono text-xs">Gemini 4 Hydrogen / Argon / Carbon</code>).
           </li>
           <li>
+            <strong>Tìm kiếm nhanh (`Search` / Ctrl+K) &amp; Kho câu sai (`Review`):</strong>{' '}
+            Nhấn <code className="font-mono text-xs">Ctrl+K</code> (hoặc <code className="font-mono text-xs">⌘K</code>) để tìm công thức, lab, bảng SB ở cả 3 môn; bấm <strong>Review</strong> để luyện lại các câu làm sai hoặc đã đánh dấu.
+          </li>
+          <li>
+            <strong>Tự động lưu bài thi, Chèn ký hiệu &amp; In A4 PDF:</strong>{' '}
+            Đáp án &amp; đồng hồ thi thử tự lưu nếu lỡ F5; có thanh chèn ký hiệu Toán/XSTK khi gõ tự luận, nút <strong>Print / A4 PDF</strong> ở mục Công thức và hộp <strong>What&apos;s New</strong> xem cập nhật mới.
+          </li>
+          <li>
             <strong>Sao lưu tiến độ:</strong> Dùng <code className="font-mono text-xs">Export JSON</code> /{' '}
             <code className="font-mono text-xs">Import JSON</code> / <code className="font-mono text-xs">Reset Progress</code> vì điểm và lịch sử chỉ lưu cục bộ trên trình duyệt.
           </li>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AlertTriangle, Search } from 'lucide-react';
+import { AlertTriangle, Printer, Search } from 'lucide-react';
 import { GLOSSARY_TERMS, KNOWLEDGE_ITEMS } from '../data/knowledge';
 import { CHAPTER_META, type ChapterId, type PageRoute } from '../types';
 import { MathFormula } from '../components/Math';
@@ -49,16 +49,24 @@ export const KnowledgePage: React.FC<KnowledgePageProps> = ({
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">Knowledge Base &amp; Exam Cheat Sheets</h1>
-        <BiText
-          en="Distilled from all 8 lecture slide decks (Chapters 1, 4, 9, 10, 11, 12) plus a searchable EN–VI glossary."
-          vi="Tổng hợp công thức, định lý, bẫy thường gặp từ toàn bộ 8 bộ slide bài giảng và từ điển thuật ngữ Anh–Việt."
-          className="text-sm text-slate-500 dark:text-slate-400 mt-1"
-        />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight">Knowledge Base &amp; Exam Cheat Sheets</h1>
+          <BiText
+            en="Distilled from all 8 lecture slide decks (Chapters 1, 4, 9, 10, 11, 12) plus a searchable EN–VI glossary."
+            vi="Tổng hợp công thức, định lý, bẫy thường gặp từ toàn bộ 8 bộ slide bài giảng và từ điển thuật ngữ Anh–Việt."
+            className="text-sm text-slate-500 dark:text-slate-400 mt-1"
+          />
+        </div>
+        <button
+          onClick={() => window.print()}
+          className="no-print px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+        >
+          <Printer className="w-3.5 h-3.5" /> Print / A4 PDF
+        </button>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1.5">
           <button
             onClick={() => setChapter('all')}
@@ -109,7 +117,7 @@ export const KnowledgePage: React.FC<KnowledgePageProps> = ({
           {filteredItems.map((item) => (
             <div
               key={item.id}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3"
+              className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
@@ -121,7 +129,7 @@ export const KnowledgePage: React.FC<KnowledgePageProps> = ({
                 {item.relatedLab && (
                   <button
                     onClick={() => onNavigate('labs', `tab=${item.relatedLab}`)}
-                    className="px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-semibold cursor-pointer"
+                    className="no-print px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-semibold cursor-pointer"
                   >
                     Practice in Lab →
                   </button>
@@ -157,7 +165,7 @@ export const KnowledgePage: React.FC<KnowledgePageProps> = ({
           ))}
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+        <div className="print-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-left text-xs uppercase text-slate-500">

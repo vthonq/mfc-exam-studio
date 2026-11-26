@@ -33,6 +33,10 @@ import {
   buildCopyableGradingPrompt,
   type OfflineCheckResult,
 } from '../utils/offlineProofChecker';
+import { clearExamDraft, loadExamDraft, saveExamDraft } from '../utils/examDraft';
+import { MathKeypad } from '../components/MathKeypad';
+
+type MfcDraftBySeed = MfcExamDraft;
 
 interface ExamQuestion {
   id: string;
@@ -230,14 +234,38 @@ interface ExamPageProps {
   onSeedChange: (seed: string) => void;
 }
 
+interface MfcExamDraft {
+  seed: string;
+  mode: 'full' | 'sprint';
+  answers: Record<string, string>;
+  proofSelfCheck: Record<string, boolean>;
+  secondsLeft: number;
+}
+
 export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange }) => {
-  const { settings, addExamRecord, recordPractice } = useApp();
-  const [seed, setSeed] = useState(initialSeed || randomSeedCode());
-  const [mode, setMode] = useState<'full' | 'sprint'>('full');
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [proofSelfCheck, setProofSelfCheck] = useState<Record<string, boolean>>({});
+  const { settings, addExamRecord, recordPractice, recordMistake } = useApp();
+  const [initialDraft] = useState<MfcExamDraft | null>(() => {
+    if (initialSeed) {
+      return (
+        loadExamDraft<MfcDraftBySeed>(`mfc:${initialSeed}:full`) ??
+        loadExamDraft<MfcDraftBySeed>(`mfc:${initialSeed}:sprint`) ??
+        null
+      );
+    }
+    return loadExamDraft<MfcExamDraft>('mfc:active');
+  });
+
+  const [seed, setSeed] = useState(initialSeed || initialDraft?.seed || randomSeedCode());
+  const [mode, setMode] = useState<'full' | 'sprint'>(initialDraft?.mode || 'full');
+  const [answers, setAnswers] = useState<Record<string, string>>(initialDraft?.answers || {});
+  const [proofSelfCheck, setProofSelfCheck] = useState<Record<string, boolean>>(
+    initialDraft?.proofSelfCheck || {},
+  );
   const [submitted, setSubmitted] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(90 * 60);
+  const [secondsLeft, setSecondsLeft] = useState(initialDraft?.secondsLeft ?? 90 * 60);
+  const [draftRestored, setDraftRestored] = useState(
+    Boolean(initialDraft && Object.keys(initialDraft.answers || {}).length > 0),
+  );
   const [copiedLink, setCopiedLink] = useState(false);
 
   const [aiProofGrade, setAiProofGrade] = useState<ProofGradeResult | null>(null);
@@ -253,11 +281,32 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
 
   useEffect(() => {
     if (initialSeed && initialSeed !== seed) {
+      const saved =
+        loadExamDraft<MfcExamDraft>(`mfc:${initialSeed}:full`) ??
+        loadExamDraft<MfcExamDraft>(`mfc:${initialSeed}:sprint`);
       setSeed(initialSeed);
-      setAnswers({});
+      if (saved && Object.keys(saved.answers || {}).length > 0) {
+        setMode(saved.mode);
+        setAnswers(saved.answers);
+        setProofSelfCheck(saved.proofSelfCheck || {});
+        setSecondsLeft(saved.secondsLeft);
+        setDraftRestored(true);
+      } else {
+        setAnswers({});
+        setProofSelfCheck({});
+        setDraftRestored(false);
+      }
       setSubmitted(false);
     }
   }, [initialSeed]);
+
+  useEffect(() => {
+    if (submitted) return;
+    if (Object.keys(answers).length === 0 && !Object.values(proofSelfCheck).some(Boolean)) return;
+    const draft: MfcExamDraft = { seed, mode, answers, proofSelfCheck, secondsLeft };
+    saveExamDraft(`mfc:${seed}:${mode}`, draft);
+    saveExamDraft('mfc:active', draft);
+  }, [answers, proofSelfCheck, secondsLeft, seed, mode, submitted]);
 
   useEffect(() => {
     if (submitted) return;
@@ -270,6 +319,8 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
   const questions = useMemo(() => generateExamFromSeed(seed, mode), [seed, mode]);
 
   const newExam = (nextMode: 'full' | 'sprint' = mode) => {
+    clearExamDraft(`mfc:${seed}:${mode}`);
+    clearExamDraft('mfc:active');
     const s = randomSeedCode();
     setSeed(s);
     setMode(nextMode);
@@ -281,6 +332,7 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
     setAiError(null);
     setOfflineProofCheck(null);
     setLastResult(null);
+    setDraftRestored(false);
     setSecondsLeft(nextMode === 'full' ? 90 * 60 : 30 * 60);
   };
 
@@ -315,15 +367,36 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
           got = q.points;
         }
       } else {
-        const ok =
-          (answers[q.id] ?? '').trim().toLowerCase() === (q.expected ?? '').toLowerCase();
+        const userAns = (answers[q.id] ?? '').trim();
+        const ok = userAns.toLowerCase() === (q.expected ?? '').toLowerCase();
         got = ok ? q.points : 0;
         recordPractice(q.chapter, ok);
+        if (!ok) {
+          recordMistake({
+            id: `mfc-exam-${seed}-${q.id}`,
+            subject: 'mfc',
+            topicLabel: `${CHAPTER_META[q.chapter].code} · ${q.title}`,
+            question: q.prompt,
+            choices: q.choices,
+            correctIndex:
+              q.type === 'choice' && q.choices && q.expected
+                ? q.choices.indexOf(q.expected)
+                : undefined,
+            expectedText: q.expected,
+            userAnswerText: userAns || '(blank)',
+            explanation: q.solutionText,
+            source: 'mistake',
+          });
+        }
       }
       earned += got;
       cur.earned += got;
       byChapter[q.chapter] = cur;
     }
+
+    clearExamDraft(`mfc:${seed}:${mode}`);
+    clearExamDraft('mfc:active');
+    setDraftRestored(false);
 
     const roundedScore = Math.round(earned * 10) / 10;
     const roundedMax = Math.round(max * 10) / 10;
@@ -378,6 +451,20 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
           </button>
         </div>
       </div>
+
+      {draftRestored && !submitted && (
+        <div className="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 flex flex-wrap items-center justify-between gap-2 text-xs text-sky-900 dark:text-sky-200">
+          <span>
+            Auto-saved draft restored for Seed <code className="font-mono font-bold">{seed}</code>.
+          </span>
+          <button
+            onClick={() => newExam(mode)}
+            className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-sky-300 dark:border-sky-700 font-semibold cursor-pointer"
+          >
+            Discard Draft
+          </button>
+        </div>
+      )}
 
       {!submitted && secondsLeft === 0 && (
         <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-xs font-semibold text-rose-800 dark:text-rose-200">
@@ -482,6 +569,10 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
 
               {q.type === 'proof' && q.proofRef && (
                 <div className="space-y-2.5">
+                  <MathKeypad
+                    preset="mfc"
+                    onInsert={(sym) => setAnswers((a) => ({ ...a, [q.id]: (a[q.id] ?? '') + sym }))}
+                  />
                   <textarea
                     value={answers[q.id] ?? ''}
                     onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}

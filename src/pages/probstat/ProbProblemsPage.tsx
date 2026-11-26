@@ -11,6 +11,7 @@ import {
   type OfflineCheckResult,
 } from '../../utils/offlineProofChecker';
 import { SbTableModal } from '../../components/probstat/SbTableModal';
+import { MathKeypad } from '../../components/MathKeypad';
 
 export const ProbProblemsPage: React.FC = () => {
   const { settings, progress, markProbProblemDone, recordProbPractice } = useApp();
@@ -252,6 +253,12 @@ export const ProbProblemsPage: React.FC = () => {
                     <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
                       2. Full Written Solution Practice (Required for Final Exam Partial Credit!)
                     </div>
+                    <MathKeypad
+                      preset="probstat"
+                      onInsert={(sym) =>
+                        setWrittenDrafts((p) => ({ ...p, [prob.id]: (p[prob.id] ?? '') + sym }))
+                      }
+                    />
                     <textarea
                       rows={4}
                       value={writtenDrafts[prob.id] ?? ''}

@@ -6,8 +6,10 @@ import type {
   ExamAttemptRecord,
   GeminiModelId,
   LangMode,
+  MistakeItem,
   ProbTopicId,
   ProgressState,
+  SubjectId,
   ThemeMode,
 } from '../types';
 
@@ -54,6 +56,7 @@ const DEFAULT_PROGRESS: ProgressState = {
   examHistory: [],
   econExamHistory: [],
   probExamHistory: [],
+  mistakes: [],
 };
 
 interface AppContextValue {
@@ -73,6 +76,9 @@ interface AppContextValue {
   addExamRecord: (record: ExamAttemptRecord) => void;
   addEconExamRecord: (record: ExamAttemptRecord) => void;
   addProbExamRecord: (record: ExamAttemptRecord) => void;
+  recordMistake: (item: Omit<MistakeItem, 'savedAtIso'>) => void;
+  removeMistake: (id: string) => void;
+  clearMistakes: (subject?: SubjectId) => void;
   exportProgressJson: () => string;
   importProgressJson: (json: string) => boolean;
   resetProgress: () => void;
@@ -99,6 +105,7 @@ function hydrateProgress(rawObj: Partial<ProgressState> | null | undefined): Pro
     examHistory: Array.isArray(rawObj.examHistory) ? rawObj.examHistory : [],
     econExamHistory: Array.isArray(rawObj.econExamHistory) ? rawObj.econExamHistory : [],
     probExamHistory: Array.isArray(rawObj.probExamHistory) ? rawObj.probExamHistory : [],
+    mistakes: Array.isArray(rawObj.mistakes) ? rawObj.mistakes : [],
   };
 }
 
@@ -248,6 +255,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  const recordMistake = (item: Omit<MistakeItem, 'savedAtIso'>) => {
+    const nextItem: MistakeItem = {
+      ...item,
+      savedAtIso: new Date().toISOString(),
+    };
+    setProgress((p) => ({
+      ...p,
+      mistakes: [nextItem, ...p.mistakes.filter((m) => m.id !== item.id)].slice(0, 120),
+    }));
+  };
+
+  const removeMistake = (id: string) => {
+    setProgress((p) => ({
+      ...p,
+      mistakes: p.mistakes.filter((m) => m.id !== id),
+    }));
+  };
+
+  const clearMistakes = (subject?: SubjectId) => {
+    setProgress((p) => ({
+      ...p,
+      mistakes: subject ? p.mistakes.filter((m) => m.subject !== subject) : [],
+    }));
+  };
+
   const exportProgressJson = () => JSON.stringify(progress, null, 2);
 
   const importProgressJson = (json: string): boolean => {
@@ -282,6 +314,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addExamRecord,
         addEconExamRecord,
         addProbExamRecord,
+        recordMistake,
+        removeMistake,
+        clearMistakes,
         exportProgressJson,
         importProgressJson,
         resetProgress,

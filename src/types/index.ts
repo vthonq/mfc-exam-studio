@@ -54,6 +54,20 @@ export interface ExamAttemptRecord {
   byChapter: Record<string, { earned: number; total: number }>;
 }
 
+export interface MistakeItem {
+  id: string;
+  subject: SubjectId;
+  topicLabel: string;
+  question: string;
+  choices?: string[];
+  correctIndex?: number;
+  expectedText?: string;
+  userAnswerText?: string;
+  explanation: string;
+  savedAtIso: string;
+  source: 'mistake' | 'bookmark';
+}
+
 export interface ProgressState {
   mastery: Record<ChapterId, ChapterMastery>;
   econMastery: Record<EconTopicId, ChapterMastery>;
@@ -65,6 +79,7 @@ export interface ProgressState {
   examHistory: ExamAttemptRecord[];
   econExamHistory: ExamAttemptRecord[];
   probExamHistory: ExamAttemptRecord[];
+  mistakes: MistakeItem[];
 }
 
 export interface AppSettings {

@@ -17,8 +17,20 @@ import {
 } from '../../utils/offlineProofChecker';
 import { SbTableModal } from '../../components/probstat/SbTableModal';
 import { RichMathText } from '../../components/Math';
+import { clearExamDraft, loadExamDraft, saveExamDraft } from '../../utils/examDraft';
+import { MathKeypad } from '../../components/MathKeypad';
 
 type ProbExamMode = 'final' | 'midterm';
+
+interface ProbExamDraft {
+  seed: string;
+  mode: ProbExamMode;
+  started: boolean;
+  mcqAnswers: Record<string, number>;
+  numInputs: Record<string, string>;
+  writtenAnswers: Record<string, string>;
+  secondsLeft: number;
+}
 
 interface ProbExamPageProps {
   initialSeed?: string;
@@ -31,22 +43,38 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
   initialMode = 'final',
   onSeedChange,
 }) => {
-  const { settings, addProbExamRecord, recordProbPractice } = useApp();
-  const [seedInput, setSeedInput] = useState(initialSeed || 'STAT26');
-  const [activeSeed, setActiveSeed] = useState(initialSeed || 'STAT26');
-  const [mode, setMode] = useState<ProbExamMode>(initialMode);
+  const { settings, addProbExamRecord, recordProbPractice, recordMistake } = useApp();
+  const [initialDraft] = useState<ProbExamDraft | null>(() => {
+    if (initialSeed) {
+      return loadExamDraft<ProbExamDraft>(`probstat:${initialSeed}:${initialMode}`);
+    }
+    return loadExamDraft<ProbExamDraft>('probstat:active');
+  });
+
+  const [seedInput, setSeedInput] = useState(initialSeed || initialDraft?.seed || 'STAT26');
+  const [activeSeed, setActiveSeed] = useState(initialSeed || initialDraft?.seed || 'STAT26');
+  const [mode, setMode] = useState<ProbExamMode>(initialDraft?.mode || initialMode);
   const [sbOpen, setSbOpen] = useState(false);
 
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(Boolean(initialDraft?.started));
   const [submitted, setSubmitted] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(mode === 'final' ? 100 * 60 : 60 * 60);
+  const [secondsLeft, setSecondsLeft] = useState(
+    initialDraft?.secondsLeft ?? ((initialDraft?.mode || initialMode) === 'final' ? 100 * 60 : 60 * 60),
+  );
+  const [draftRestored, setDraftRestored] = useState(Boolean(initialDraft?.started));
 
   // Midterm MCQ answers
-  const [mcqAnswers, setMcqAnswers] = useState<Record<string, number>>({});
+  const [mcqAnswers, setMcqAnswers] = useState<Record<string, number>>(
+    initialDraft?.mcqAnswers || {},
+  );
 
   // Final Written answers & grading states
-  const [numInputs, setNumInputs] = useState<Record<string, string>>({});
-  const [writtenAnswers, setWrittenAnswers] = useState<Record<string, string>>({});
+  const [numInputs, setNumInputs] = useState<Record<string, string>>(
+    initialDraft?.numInputs || {},
+  );
+  const [writtenAnswers, setWrittenAnswers] = useState<Record<string, string>>(
+    initialDraft?.writtenAnswers || {},
+  );
   const [offlineResults, setOfflineResults] = useState<Record<string, OfflineCheckResult>>({});
   const [aiResults, setAiResults] = useState<Record<string, ProofGradeResult>>({});
   const [aiErrors, setAiErrors] = useState<Record<string, string>>({});
@@ -89,6 +117,21 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
 
   useEffect(() => {
     if (!started || submitted) return;
+    const draft: ProbExamDraft = {
+      seed: activeSeed,
+      mode,
+      started,
+      mcqAnswers,
+      numInputs,
+      writtenAnswers,
+      secondsLeft,
+    };
+    saveExamDraft(`probstat:${activeSeed}:${mode}`, draft);
+    saveExamDraft('probstat:active', draft);
+  }, [started, submitted, activeSeed, mode, mcqAnswers, numInputs, writtenAnswers, secondsLeft]);
+
+  useEffect(() => {
+    if (!started || submitted) return;
     const timer = window.setInterval(() => {
       setSecondsLeft((s) => {
         if (s <= 1) {
@@ -102,12 +145,15 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
   }, [started, submitted]);
 
   const startPaper = (nextSeed: string, nextMode: ProbExamMode) => {
+    clearExamDraft(`probstat:${activeSeed}:${mode}`);
+    clearExamDraft('probstat:active');
     const clean = nextSeed.trim().toUpperCase() || randomSeedCode();
     setSeedInput(clean);
     setActiveSeed(clean);
     setMode(nextMode);
     setStarted(true);
     setSubmitted(false);
+    setDraftRestored(false);
     setSecondsLeft(nextMode === 'final' ? 100 * 60 : 60 * 60);
     setMcqAnswers({});
     setNumInputs({});
@@ -133,6 +179,9 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
 
   const submitExam = () => {
     setSubmitted(true);
+    clearExamDraft(`probstat:${activeSeed}:${mode}`);
+    clearExamDraft('probstat:active');
+    setDraftRestored(false);
     if (mode === 'midterm') {
       let score = 0;
       const byChapter: Record<string, { earned: number; total: number }> = {};
@@ -143,6 +192,19 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
         if (ok) {
           score += 1;
           byChapter[q.topic].earned += 1;
+        } else {
+          recordMistake({
+            id: `ps-mid-${q.id}`,
+            subject: 'probstat',
+            topicLabel: `${PROB_TOPIC_META[q.topic].code} · ${PROB_TOPIC_META[q.topic].title}`,
+            question: q.question,
+            choices: q.choices,
+            correctIndex: q.correctIndex,
+            userAnswerText:
+              mcqAnswers[q.id] !== undefined ? q.choices[mcqAnswers[q.id]] : '(blank)',
+            explanation: q.explanation,
+            source: 'mistake',
+          });
         }
         recordProbPractice(q.topic, ok);
       }
@@ -175,6 +237,17 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
         earnedTotal += qEarned;
         byChapter[q.topic] = { earned: qEarned, total: 20 };
         recordProbPractice(q.topic, qEarned >= 13);
+        if (qEarned < 13) {
+          recordMistake({
+            id: `ps-fin-${activeSeed}-${q.id}`,
+            subject: 'probstat',
+            topicLabel: q.title,
+            question: q.prompt,
+            expectedText: q.numericChecks.map((nc) => `${nc.label}: ${nc.expected}`).join(' | '),
+            explanation: q.modelSolution,
+            source: 'mistake',
+          });
+        }
       }
       const roundedScore = Math.round(earnedTotal);
       setOfflineResults(nextOffline);
@@ -322,6 +395,20 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
       </div>
 
       {/* Timer & Submitted Score Banners */}
+      {draftRestored && started && !submitted && (
+        <div className="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 flex flex-wrap items-center justify-between gap-2 text-xs text-sky-900 dark:text-sky-200">
+          <span>
+            Auto-saved draft restored for Seed <code className="font-mono font-bold">{activeSeed}</code>.
+          </span>
+          <button
+            onClick={() => startPaper(activeSeed, mode)}
+            className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-sky-300 dark:border-sky-700 font-semibold cursor-pointer"
+          >
+            Reset / Clear Draft
+          </button>
+        </div>
+      )}
+
       {started && !submitted && secondsLeft === 0 && (
         <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-xs font-semibold text-rose-800 dark:text-rose-200">
           Time&apos;s up! Review your answers and click &quot;Submit &amp; Grade Exam&quot; below.
@@ -480,6 +567,12 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
                   })}
                 </div>
 
+                <MathKeypad
+                  preset="probstat"
+                  onInsert={(sym) =>
+                    setWrittenAnswers((p) => ({ ...p, [q.id]: (p[q.id] ?? '') + sym }))
+                  }
+                />
                 <textarea
                   rows={4}
                   value={writtenAnswers[q.id] ?? ''}
