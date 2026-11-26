@@ -3,6 +3,7 @@ import { CHANGELOG_ENTRIES, LATEST_UPDATE_ID } from '../src/data/changelog';
 import { ECON_MCQS } from '../src/data/economics';
 import { KNOWLEDGE_ITEMS } from '../src/data/knowledge';
 import { generateProbFinalExam, PROB_MIDTERM_MCQS } from '../src/data/probStat';
+import { isAdminEmail } from '../src/services/firebase';
 import { clearExamDraft, loadExamDraft, saveExamDraft } from '../src/utils/examDraft';
 import { buildGlobalSearchItems, searchGlobalItems } from '../src/utils/searchIndex';
 
@@ -114,6 +115,15 @@ describe('Changelog & Cross-Subject Data Integrity', () => {
         expect(dollarCount % 2).toBe(0);
       }
     }
+  });
+
+  it('matches configured admin emails case-insensitively and rejects students', () => {
+    expect(isAdminEmail('nguyenvanvietthong@gmail.com')).toBe(true);
+    expect(isAdminEmail('NguyenVanVietThong@gmail.com')).toBe(true);
+    expect(isAdminEmail('thongnguyen.31261028903@st.ueh.edu.vn')).toBe(true);
+    expect(isAdminEmail('  THONGNGUYEN.31261028903@ST.UEH.EDU.VN  ')).toBe(true);
+    expect(isAdminEmail('student@st.ueh.edu.vn')).toBe(false);
+    expect(isAdminEmail(null)).toBe(false);
   });
 
   it('ensures MFC KNOWLEDGE_ITEMS plain summaries do not leak raw LaTeX braces', () => {

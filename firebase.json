@@ -1,0 +1,18 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Exam Studio Hub",
+        "supportEmail": "nguyenvanvietthong@gmail.com",
+        "authorizedRedirectUris": [
+          "https://mfc-exam-studio-ueh-780e7.firebaseapp.com/__/auth/handler",
+          "https://vthonq.github.io",
+          "http://localhost:5173"
+        ]
+      }
+    }
+  }
+}

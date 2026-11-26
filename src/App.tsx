@@ -1,5 +1,7 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { AppProvider } from './context/AppContext';
+import { AuthProvider } from './context/AuthContext';
+import { AccessGate } from './components/AccessGate';
 import { Layout } from './components/Layout';
 import type {
   ChapterId,
@@ -293,8 +295,12 @@ function AppShell() {
 
 export default function App() {
   return (
-    <AppProvider>
-      <AppShell />
-    </AppProvider>
+    <AuthProvider>
+      <AccessGate>
+        <AppProvider>
+          <AppShell />
+        </AppProvider>
+      </AccessGate>
+    </AuthProvider>
   );
 }

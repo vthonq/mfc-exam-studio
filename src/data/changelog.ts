@@ -7,9 +7,26 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v2.2';
+export const LATEST_UPDATE_ID = 'v2.3';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v2.3',
+    version: 'v2.3',
+    date: 'Nov 2026',
+    title: 'Class Access Security & Admin User-Cap Panel',
+    titleVi: 'Bảo mật Lớp học & Admin Kiểm soát Sĩ số',
+    items: [
+      {
+        en: 'Google Sign-In Gate with server-enforced student seat cap (Firebase Auth + Cloud Firestore Security Rules).',
+        vi: 'Cổng đăng nhập Google giới hạn sĩ số trực tiếp từ server (Firebase Auth + Cloud Firestore).',
+      },
+      {
+        en: 'Admin Panel: adjust Max Users anytime, pause/resume auto-approval, and Approve, Waitlist, Ban, or Remove accounts live.',
+        vi: 'Admin Panel: thay đổi giới hạn người dùng mọi lúc, bật/tắt tự động duyệt và Approve / Waitlist / Ban từng tài khoản.',
+      },
+    ],
+  },
   {
     id: 'v2.2',
     version: 'v2.2',

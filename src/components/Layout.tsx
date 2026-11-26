@@ -10,17 +10,21 @@ import {
   HelpCircle,
   KeyRound,
   LayoutDashboard,
+  LogOut,
   Moon,
   Scale,
   Search,
   Settings,
   Share2,
+  ShieldCheck,
   Sun,
   Table2,
   TrendingUp,
   X,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
+import { AdminPanelModal } from './AdminPanelModal';
 import { GlobalSearchModal } from './GlobalSearchModal';
 import { ReviewBankModal } from './ReviewBankModal';
 import { UpdatesBanner, UpdatesModal } from './UpdatesBox';
@@ -112,11 +116,13 @@ export const Layout: React.FC<LayoutProps> = ({
     importProgressJson,
     resetProgress,
   } = useApp();
+  const { firebaseUser, profile, accessConfig, isAdmin, signOutUser } = useAuth();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [updatesOpen, setUpdatesOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
   const [importText, setImportText] = useState('');
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [copiedAppLink, setCopiedAppLink] = useState(false);
@@ -269,6 +275,21 @@ export const Layout: React.FC<LayoutProps> = ({
               </span>
             </button>
           </div>
+
+          {isAdmin && (
+            <button
+              onClick={() => setAdminOpen(true)}
+              className="w-full px-3 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center justify-between cursor-pointer transition-colors"
+            >
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                Admin Panel
+              </span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/20">
+                {accessConfig ? `${accessConfig.approvedCount}/${accessConfig.maxUsers}` : 'Control'}
+              </span>
+            </button>
+          )}
         </div>
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
@@ -394,6 +415,26 @@ export const Layout: React.FC<LayoutProps> = ({
               {copiedAppLink ? 'Copied!' : 'Share URL'}
             </button>
           </div>
+          {firebaseUser && (
+            <div className="pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 text-[11px]">
+              <div className="min-w-0">
+                <div className="font-semibold truncate text-slate-800 dark:text-slate-200">
+                  {profile?.displayName || firebaseUser.email}
+                </div>
+                <div className="font-mono text-[10px] text-slate-400 truncate">
+                  {firebaseUser.email}
+                </div>
+              </div>
+              <button
+                onClick={() => void signOutUser()}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 shrink-0 cursor-pointer"
+                title="Sign Out"
+                aria-label="Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -439,6 +480,16 @@ export const Layout: React.FC<LayoutProps> = ({
                 </span>
               )}
             </button>
+            {isAdmin && (
+              <button
+                onClick={() => setAdminOpen(true)}
+                className="p-1.5 rounded-md bg-emerald-600 text-white"
+                aria-label="Admin Panel"
+                title="Admin Panel"
+              >
+                <ShieldCheck className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={() => setLang(settings.lang === 'en' ? 'bilingual' : 'en')}
               className="px-2 py-1 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-700"
@@ -642,6 +693,8 @@ export const Layout: React.FC<LayoutProps> = ({
       <ReviewBankModal open={reviewOpen} onClose={() => setReviewOpen(false)} />
 
       <UpdatesModal open={updatesOpen} onClose={() => setUpdatesOpen(false)} />
+
+      <AdminPanelModal open={adminOpen} onClose={() => setAdminOpen(false)} />
     </div>
   );
 };
