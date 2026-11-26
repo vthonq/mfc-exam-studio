@@ -38,7 +38,11 @@ export type ProbLabTab = 'discrete' | 'continuous' | 'bivariate' | 'inference';
 
 export type LangMode = 'en' | 'bilingual';
 export type ThemeMode = 'light' | 'dark';
-export type GeminiModelId = 'gemini-4-hydrogen' | 'gemini-4-argon' | 'gemini-4-carbon';
+export type GeminiModelId =
+  | 'gemini-4-hydrogen'
+  | 'gemini-4-argon'
+  | 'gemini-4-carbon'
+  | 'gemini-3.5-flash-lite';
 
 export interface ChapterMastery {
   correct: number;

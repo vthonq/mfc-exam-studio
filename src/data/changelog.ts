@@ -7,9 +7,26 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v2.6';
+export const LATEST_UPDATE_ID = 'v2.7';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v2.7',
+    version: 'v2.7',
+    date: 'Nov 2026',
+    title: 'My Gemini AI Tutor (In-App Chat, Screenshot Paste & Gemini Web Handoff)',
+    titleVi: 'Trợ lý My Gemini AI ngay trên Web (Chat, Dán ảnh đề bài & Mở Gemini Web)',
+    items: [
+      {
+        en: 'Ask My Gemini AI floating drawer across MFC, Economics & ProbStat: streaming replies, KaTeX math rendering, Ctrl+V screenshot upload & free Google AI Studio key setup/test stored only in your browser.',
+        vi: 'Trợ lý My Gemini AI tích hợp sẵn (cả 3 môn): trả lời theo luồng trực tiếp, hiển thị công thức KaTeX, dán ảnh chụp đề (Ctrl+V), nhập key Google AI Studio miễn phí lưu ngay trên trình duyệt.',
+      },
+      {
+        en: 'No API key? Click "Gemini Web ↗" inside the tutor to copy your subject-tagged prompt and open gemini.google.com directly in one click.',
+        vi: 'Không cần API key? Nhấn nút "Gemini Web ↗" để tự động copy câu hỏi kèm ngữ cảnh môn học và mở ngay trang Gemini cá nhân của bạn.',
+      },
+    ],
+  },
   {
     id: 'v2.6',
     version: 'v2.6',

@@ -9,6 +9,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (id.includes('node_modules/@google/genai')) {
+            return 'vendor-genai';
+          }
           if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) {
             return 'vendor-firebase';
           }

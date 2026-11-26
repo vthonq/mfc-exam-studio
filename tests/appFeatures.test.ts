@@ -5,6 +5,11 @@ import { KNOWLEDGE_ITEMS } from '../src/data/knowledge';
 import { generateProbFinalExam, PROB_MIDTERM_MCQS } from '../src/data/probStat';
 import { validateKmap3Group } from '../src/math/booleanAlgebra';
 import { isAdminEmail, isUehStudentEmail } from '../src/services/firebase';
+import {
+  GEMINI_MODEL_OPTIONS,
+  buildGeminiWebHandoffPrompt,
+  buildTutorSystemPrompt,
+} from '../src/services/geminiTutor';
 import { formatRelativeTime, isInAppBrowser } from '../src/utils/browserDetect';
 import { clearExamDraft, loadExamDraft, saveExamDraft } from '../src/utils/examDraft';
 import { buildGlobalSearchItems, searchGlobalItems } from '../src/utils/searchIndex';
@@ -170,6 +175,31 @@ describe('Changelog & Cross-Subject Data Integrity', () => {
     for (const item of KNOWLEDGE_ITEMS) {
       expect(rawLatexPattern.test(item.summary)).toBe(false);
       expect(rawLatexPattern.test(item.summaryVi)).toBe(false);
+    }
+  });
+
+  it('builds tailored Gemini AI tutor system prompts and web handoff prompts without legacy models', () => {
+    const mfcPrompt = buildTutorSystemPrompt('mfc', 'Proofs Trainer', true);
+    expect(mfcPrompt).toContain('Math for Computing');
+    expect(mfcPrompt).toContain('Vietnamese');
+    expect(mfcPrompt).toContain('$...$');
+
+    const econPrompt = buildTutorSystemPrompt('econ', 'Econ Simulators', false);
+    expect(econPrompt).toContain('ECO101');
+    expect(econPrompt).not.toContain('Tóm tắt tiếng Việt');
+
+    const probPrompt = buildTutorSystemPrompt('probstat', 'SB Stat Tables', true);
+    expect(probPrompt).toContain('SB Statistical Tables');
+
+    const handoff = buildGeminiWebHandoffPrompt('mfc', 'Explain CRT step-by-step', true);
+    expect(handoff).toContain('Math for Computing (MFC)');
+    expect(handoff).toContain('Explain CRT step-by-step');
+
+    const ids = GEMINI_MODEL_OPTIONS.map((m) => m.id);
+    expect(ids).toContain('gemini-4-hydrogen');
+    expect(ids).toContain('gemini-3.5-flash-lite');
+    for (const id of ids) {
+      expect(id).not.toMatch(/gemini-(1\.5|2\.0|2\.5)/);
     }
   });
 });

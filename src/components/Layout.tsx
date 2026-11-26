@@ -7,11 +7,13 @@ import {
   ClipboardCheck,
   Cloud,
   Compass,
+  ExternalLink,
   FileText,
   FlaskConical,
   HelpCircle,
   KeyRound,
   LayoutDashboard,
+  Loader2,
   LogOut,
   Menu,
   Moon,
@@ -39,6 +41,9 @@ const GlobalSearchModal = lazy(() =>
 );
 const ReviewBankModal = lazy(() =>
   import('./ReviewBankModal').then((m) => ({ default: m.ReviewBankModal })),
+);
+const GeminiTutorDrawer = lazy(() =>
+  import('./GeminiTutorDrawer').then((m) => ({ default: m.GeminiTutorDrawer })),
 );
 import type {
   EconPageRoute,
@@ -138,10 +143,23 @@ export const Layout: React.FC<LayoutProps> = ({
   const [reviewOpen, setReviewOpen] = useState(false);
   const [updatesOpen, setUpdatesOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [tutorOpen, setTutorOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [keyTestLoading, setKeyTestLoading] = useState(false);
+  const [keyTestResult, setKeyTestResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [importText, setImportText] = useState('');
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [copiedAppLink, setCopiedAppLink] = useState(false);
+
+  const hasGeminiKey = Boolean(settings.geminiKey.trim());
+
+  const activeRouteLabel = isGuide
+    ? 'Study Guide (Hướng dẫn 3 môn)'
+    : subject === 'mfc'
+      ? MFC_NAV.find((n) => n.id === mfcRoute)?.label ?? 'Dashboard'
+      : subject === 'econ'
+        ? ECON_NAV.find((n) => n.id === econRoute)?.label ?? 'Econ Dashboard'
+        : PROB_NAV.find((n) => n.id === probRoute)?.label ?? 'Prob Dashboard';
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -327,6 +345,24 @@ export const Layout: React.FC<LayoutProps> = ({
               </span>
             </button>
           )}
+
+          <button
+            onClick={() => setTutorOpen(true)}
+            className="w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-xs flex items-center justify-between transition-all cursor-pointer"
+            title="Open My Gemini AI Tutor"
+          >
+            <span className="flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 shrink-0" />
+              <span>Ask My Gemini AI</span>
+            </span>
+            <span
+              className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full ${
+                hasGeminiKey ? 'bg-emerald-400/25 text-emerald-100' : 'bg-white/20 text-white'
+              }`}
+            >
+              {hasGeminiKey ? 'ON' : 'BYOK'}
+            </span>
+          </button>
         </div>
 
         <nav className="flex-1 px-2.5 py-2 space-y-0.5 overflow-y-auto">
@@ -631,6 +667,22 @@ export const Layout: React.FC<LayoutProps> = ({
               </button>
             )}
 
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setTutorOpen(true);
+              }}
+              className="w-full px-3 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-violet-600 text-white flex items-center justify-between"
+            >
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                My Gemini AI Tutor
+              </span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/20">
+                {hasGeminiKey ? 'Connected' : 'Setup'}
+              </span>
+            </button>
+
             <div className="grid grid-cols-2 gap-1.5 text-xs">
               <button
                 onClick={() => setLang(settings.lang === 'en' ? 'bilingual' : 'en')}
@@ -793,21 +845,65 @@ export const Layout: React.FC<LayoutProps> = ({
             </div>
 
             <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-              <label className="text-sm font-semibold flex items-center gap-1.5">
-                <KeyRound className="w-4 h-4 text-indigo-500" />
-                Optional Gemini API Key (For Direct In-App AI Grading)
-              </label>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label className="text-sm font-semibold flex items-center gap-1.5">
+                  <KeyRound className="w-4 h-4 text-indigo-500" />
+                  Your Gemini API Key (BYOK)
+                </label>
+                <a
+                  href="https://aistudio.google.com/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                >
+                  Get Free Key ↗
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                No API key? Use the built-in <strong>Instant Offline Check</strong> or click{' '}
-                <strong>Copy Prompt for Free ChatGPT / Gemini</strong> inside Proofs &amp; Policy Drills!
+                Stored <strong>strictly in your browser</strong> (never uploaded to our server). Unlocks{' '}
+                <strong>My Gemini AI Tutor</strong> chat &amp; direct AI Proof / Policy grading. Or use{' '}
+                <strong>Instant Offline Check</strong> / <strong>Gemini Web ↗</strong> with zero key!
               </p>
-              <input
-                type="password"
-                value={settings.geminiKey}
-                onChange={(e) => setGeminiKey(e.target.value)}
-                placeholder="AIza..."
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm font-mono"
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="password"
+                  value={settings.geminiKey}
+                  onChange={(e) => {
+                    setGeminiKey(e.target.value);
+                    setKeyTestResult(null);
+                  }}
+                  placeholder="AIza..."
+                  className="flex-1 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm font-mono"
+                />
+                <button
+                  type="button"
+                  disabled={keyTestLoading}
+                  onClick={async () => {
+                    setKeyTestLoading(true);
+                    setKeyTestResult(null);
+                    const { testGeminiConnection } = await import('../services/geminiTutor');
+                    const res = await testGeminiConnection(settings.geminiKey, settings.geminiModel);
+                    setKeyTestResult({ ok: res.ok, message: res.message });
+                    setKeyTestLoading(false);
+                  }}
+                  className="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-xs font-semibold inline-flex items-center gap-1 cursor-pointer shrink-0"
+                >
+                  {keyTestLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                  Test Key
+                </button>
+              </div>
+              {keyTestResult && (
+                <div
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium ${
+                    keyTestResult.ok
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                      : 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300'
+                  }`}
+                >
+                  {keyTestResult.message}
+                </div>
+              )}
               <div className="pt-1">
                 <label className="text-xs font-medium text-slate-600 dark:text-slate-300 block mb-1">
                   Gemini Model
@@ -818,10 +914,22 @@ export const Layout: React.FC<LayoutProps> = ({
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm"
                 >
                   <option value="gemini-4-hydrogen">Gemini 4 Hydrogen (Fast &amp; Balanced — Default)</option>
+                  <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite (Ultra-Fast / High Free Quota)</option>
                   <option value="gemini-4-argon">Gemini 4 Argon (Deeper Reasoning)</option>
                   <option value="gemini-4-carbon">Gemini 4 Carbon (Strict Verification)</option>
                 </select>
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSettingsOpen(false);
+                  setTutorOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer pt-1"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Open My Gemini AI Tutor →
+              </button>
             </div>
 
             <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
@@ -891,7 +999,32 @@ export const Layout: React.FC<LayoutProps> = ({
         {reviewOpen && <ReviewBankModal open={reviewOpen} onClose={() => setReviewOpen(false)} />}
 
         {adminOpen && <AdminPanelModal open={adminOpen} onClose={() => setAdminOpen(false)} />}
+
+        {tutorOpen && (
+          <GeminiTutorDrawer
+            open={tutorOpen}
+            onClose={() => setTutorOpen(false)}
+            subject={subject}
+            routeLabel={activeRouteLabel}
+          />
+        )}
       </Suspense>
+
+      {!tutorOpen && (
+        <button
+          type="button"
+          onClick={() => setTutorOpen(true)}
+          className="no-print fixed bottom-16 md:bottom-5 right-4 md:right-6 z-30 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-600 hover:from-indigo-700 hover:via-violet-700 hover:to-sky-700 text-white shadow-lg ring-2 ring-white/80 dark:ring-slate-900 text-xs font-bold transition-transform hover:scale-105 cursor-pointer"
+          title="Ask My Gemini AI Tutor"
+          aria-label="Open My Gemini AI Tutor"
+        >
+          <Sparkles className="w-4 h-4" />
+          <span className="hidden sm:inline">Gemini AI</span>
+          {hasGeminiKey && (
+            <span className="w-2 h-2 rounded-full bg-emerald-400" aria-hidden="true" />
+          )}
+        </button>
+      )}
 
       <UpdatesModal open={updatesOpen} onClose={() => setUpdatesOpen(false)} />
     </div>
