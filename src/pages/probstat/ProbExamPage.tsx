@@ -19,6 +19,7 @@ import { SbTableModal } from '../../components/probstat/SbTableModal';
 import { RichMathText } from '../../components/Math';
 import { clearExamDraft, loadExamDraft, saveExamDraft } from '../../utils/examDraft';
 import { MathKeypad } from '../../components/MathKeypad';
+import { ExamStickyBar } from '../../components/ExamStickyBar';
 
 type ProbExamMode = 'final' | 'midterm';
 
@@ -120,6 +121,7 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
 
   const secondsLeftRef = React.useRef(secondsLeft);
   secondsLeftRef.current = secondsLeft;
+  const submitBtnRef = React.useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!started || submitted) return;
@@ -328,6 +330,15 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
 
   const mins = Math.floor(secondsLeft / 60);
   const secs = secondsLeft % 60;
+  const answeredCount =
+    mode === 'midterm'
+      ? midtermPaper.filter((q) => mcqAnswers[q.id] !== undefined).length
+      : finalPaper.filter(
+          (q) =>
+            (writtenAnswers[q.id] ?? '').trim().length > 0 ||
+            q.numericChecks.some((nc) => (numInputs[`${q.id}:${nc.id}`] ?? '').trim().length > 0),
+        ).length;
+  const totalCount = mode === 'midterm' ? midtermPaper.length : finalPaper.length;
 
   return (
     <div className="space-y-5">
@@ -463,6 +474,28 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
             ))}
           </div>
         </div>
+      )}
+
+      {started && !submitted && (
+        <ExamStickyBar
+          secondsLeft={secondsLeft}
+          answeredCount={answeredCount}
+          totalCount={totalCount}
+          accent="sky"
+          label={`Seed ${activeSeed} · ${mode === 'final' ? 'Final' : 'Midterm'}`}
+          onJumpToSubmit={() =>
+            submitBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }
+          extraAction={
+            <button
+              type="button"
+              onClick={() => setSbOpen(true)}
+              className="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs inline-flex items-center gap-1 cursor-pointer"
+            >
+              <Table2 className="w-3.5 h-3.5" /> SB Tables
+            </button>
+          }
+        />
       )}
 
       {/* Exam Paper Body */}
@@ -654,6 +687,7 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
       {started && !submitted && (
         <div className="flex justify-end">
           <button
+            ref={submitBtnRef}
             onClick={submitExam}
             className="px-6 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm cursor-pointer shadow-md"
           >

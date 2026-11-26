@@ -7,9 +7,26 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v2.5';
+export const LATEST_UPDATE_ID = 'v2.6';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v2.6',
+    version: 'v2.6',
+    date: 'Nov 2026',
+    title: 'UI 10/10 Polish: Sticky Exam HUD, Mobile Drawer & Dark Contrast',
+    titleVi: 'Nâng cấp Giao diện: Thanh đếm giờ nổi, Menu Mobile & Dark Mode chuẩn',
+    items: [
+      {
+        en: 'Sticky Floating Exam HUD across MFC, Econ & ProbStat mock exams: live urgency timer, progress bar, SB Tables shortcut & Jump to Submit.',
+        vi: 'Thanh Exam HUD nổi khi làm đề thi thử (cả 3 môn): xem đồng hồ đếm ngược (<10p đổi vàng, <3p nhấp nháy đỏ), tiến độ X/Y câu & cuộn nhanh nút nộp bài.',
+      },
+      {
+        en: 'Streamlined Desktop Sidebar (all nav items fit 768px laptop screens) + clean Mobile Header, Slide-Down Menu Drawer (with Sign Out), unique Bottom Nav labels & unified Dark Mode inputs.',
+        vi: 'Sidebar gọn đẹp trên laptop 13–14" + Menu ☰ kéo thả mới trên điện thoại (đầy đủ Guide, Admin, Đăng xuất) + thanh Bottom Nav hết trùng nhãn + ô nhập Dark Mode đồng bộ.',
+      },
+    ],
+  },
   {
     id: 'v2.5',
     version: 'v2.5',

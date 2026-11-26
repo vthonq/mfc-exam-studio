@@ -39,6 +39,11 @@ const TABS: Array<{ id: EconLabTab; label: string; badge: string }> = [
   { id: 'trainer', label: 'Shock Predictor & Blank Tables', badge: 'Exam Drills' },
 ];
 
+const NUM_INPUT_CLS =
+  'mt-1 w-full px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-mono text-xs';
+const COMPACT_INPUT_CLS =
+  'px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-mono text-xs';
+
 export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectTab }) => {
   const { recordEconPractice } = useApp();
 
@@ -217,14 +222,14 @@ export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectT
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4">
             <h3 className="font-bold text-sm">GDP Deflator vs. CPI Basket Calculator (Ch. 23–24)</h3>
             <div className="grid sm:grid-cols-4 gap-3 text-xs">
-              <label>Good A Y1 P <input type="number" value={pA1} onChange={(e) => setPA1(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Good A Y1 Q <input type="number" value={qA1} onChange={(e) => setQA1(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Good A Y2 P <input type="number" value={pA2} onChange={(e) => setPA2(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Good A Y2 Q <input type="number" value={qA2} onChange={(e) => setQA2(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Good B Y1 P <input type="number" value={pB1} onChange={(e) => setPB1(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Good B Y1 Q <input type="number" value={qB1} onChange={(e) => setQB1(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Good B Y2 P <input type="number" value={pB2} onChange={(e) => setPB2(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Good B Y2 Q <input type="number" value={qB2} onChange={(e) => setQB2(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
+              <label>Good A Y1 P <input type="number" value={pA1} onChange={(e) => setPA1(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
+              <label>Good A Y1 Q <input type="number" value={qA1} onChange={(e) => setQA1(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
+              <label>Good A Y2 P <input type="number" value={pA2} onChange={(e) => setPA2(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
+              <label>Good A Y2 Q <input type="number" value={qA2} onChange={(e) => setQA2(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
+              <label>Good B Y1 P <input type="number" value={pB1} onChange={(e) => setPB1(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
+              <label>Good B Y1 Q <input type="number" value={qB1} onChange={(e) => setQB1(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
+              <label>Good B Y2 P <input type="number" value={pB2} onChange={(e) => setPB2(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
+              <label>Good B Y2 Q <input type="number" value={qB2} onChange={(e) => setQB2(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
             </div>
             <div className="grid md:grid-cols-2 gap-4 text-xs font-mono">
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-1">
@@ -252,14 +257,14 @@ export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectT
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-2">
               <h3 className="font-bold text-sm">CPI Indexing &amp; Real Rate (Ch. 24)</h3>
               <div className="grid grid-cols-3 gap-1.5">
-                <label>$ Then <input type="number" value={amountThen} onChange={(e) => setAmountThen(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>CPI (Then) <input type="number" min={1} value={cpiThen} onChange={(e) => setCpiThen(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>CPI (Now) <input type="number" min={1} value={cpiNow} onChange={(e) => setCpiNow(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
+                <label>$ Then <input type="number" value={amountThen} onChange={(e) => setAmountThen(Number(e.target.value))} className={`w-full ${COMPACT_INPUT_CLS}`} /></label>
+                <label>CPI (Then) <input type="number" min={1} value={cpiThen} onChange={(e) => setCpiThen(Number(e.target.value))} className={`w-full ${COMPACT_INPUT_CLS}`} /></label>
+                <label>CPI (Now) <input type="number" min={1} value={cpiNow} onChange={(e) => setCpiNow(Number(e.target.value))} className={`w-full ${COMPACT_INPUT_CLS}`} /></label>
               </div>
               <div className="font-mono">Indexed Value = <strong>${indexDollarValue(amountThen, cpiThen, cpiNow)}</strong></div>
               <div className="grid grid-cols-2 gap-1.5 pt-1">
-                <label>Nom i% <input type="number" value={nomRate} onChange={(e) => setNomRate(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>Infl π% <input type="number" value={infRate} onChange={(e) => setInfRate(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
+                <label>Nom i% <input type="number" value={nomRate} onChange={(e) => setNomRate(Number(e.target.value))} className={`w-full ${COMPACT_INPUT_CLS}`} /></label>
+                <label>Infl π% <input type="number" value={infRate} onChange={(e) => setInfRate(Number(e.target.value))} className={`w-full ${COMPACT_INPUT_CLS}`} /></label>
               </div>
               <div className="font-mono">Real r = <strong>{realInterestRate(nomRate, infRate)}%</strong></div>
             </div>
@@ -267,19 +272,19 @@ export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectT
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-2">
               <h3 className="font-bold text-sm">National Saving &amp; P/E (Ch. 26)</h3>
               <div className="grid grid-cols-2 gap-1.5">
-                <label>Y <input type="number" value={macroY} onChange={(e) => setMacroY(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>C <input type="number" value={macroC} onChange={(e) => setMacroC(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>G <input type="number" value={macroG} onChange={(e) => setMacroG(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>T <input type="number" value={macroT} onChange={(e) => setMacroT(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
+                <label>Y <input type="number" value={macroY} onChange={(e) => setMacroY(Number(e.target.value))} className={`w-full ${COMPACT_INPUT_CLS}`} /></label>
+                <label>C <input type="number" value={macroC} onChange={(e) => setMacroC(Number(e.target.value))} className={`w-full ${COMPACT_INPUT_CLS}`} /></label>
+                <label>G <input type="number" value={macroG} onChange={(e) => setMacroG(Number(e.target.value))} className={`w-full ${COMPACT_INPUT_CLS}`} /></label>
+                <label>T <input type="number" value={macroT} onChange={(e) => setMacroT(Number(e.target.value))} className={`w-full ${COMPACT_INPUT_CLS}`} /></label>
               </div>
               <div className="font-mono bg-slate-50 dark:bg-slate-800/60 p-2 rounded-lg">
                 Priv={savUnemp.privateSaving} | Pub={savUnemp.publicSaving}<br />
                 National S = I = <strong>{savUnemp.nationalSaving}</strong>
               </div>
               <div className="grid grid-cols-3 gap-1">
-                <label>Price <input type="number" value={stockPrice} onChange={(e) => setStockPrice(Number(e.target.value))} className="w-full px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>EPS <input type="number" value={eps} onChange={(e) => setEps(Number(e.target.value))} className="w-full px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>Yield% <input type="number" step="0.5" value={divYield} onChange={(e) => setDivYield(Number(e.target.value))} className="w-full px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
+                <label>Price <input type="number" value={stockPrice} onChange={(e) => setStockPrice(Number(e.target.value))} className="w-full px-1.5 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-mono text-xs" /></label>
+                <label>EPS <input type="number" value={eps} onChange={(e) => setEps(Number(e.target.value))} className="w-full px-1.5 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-mono text-xs" /></label>
+                <label>Yield% <input type="number" step="0.5" value={divYield} onChange={(e) => setDivYield(Number(e.target.value))} className="w-full px-1.5 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-mono text-xs" /></label>
               </div>
               <div className="font-mono">P/E={stockInfo.peRatio} | Div=${stockInfo.dividendPerShare}</div>
             </div>
@@ -287,9 +292,9 @@ export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectT
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-2">
               <h3 className="font-bold text-sm">Labor Force &amp; Discouraged Test (Ch. 28)</h3>
               <div className="grid grid-cols-3 gap-1.5">
-                <label>Employed <input type="number" value={employed} onChange={(e) => setEmployed(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>Unemp <input type="number" value={unemployed} onChange={(e) => setUnemployed(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>Not LF <input type="number" value={notInLf} onChange={(e) => setNotInLf(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
+                <label>Employed <input type="number" value={employed} onChange={(e) => setEmployed(Number(e.target.value))} className={`w-full ${COMPACT_INPUT_CLS}`} /></label>
+                <label>Unemp <input type="number" value={unemployed} onChange={(e) => setUnemployed(Number(e.target.value))} className={`w-full ${COMPACT_INPUT_CLS}`} /></label>
+                <label>Not LF <input type="number" value={notInLf} onChange={(e) => setNotInLf(Number(e.target.value))} className={`w-full ${COMPACT_INPUT_CLS}`} /></label>
               </div>
               <div className="font-mono bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-lg space-y-1">
                 <div>LF = {savUnemp.laborForce} | Pop = {savUnemp.adultPop}</div>
@@ -318,12 +323,12 @@ export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectT
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
             <h3 className="font-bold text-sm">Money Multiplier (Simple vs. Actual) &amp; Bank Leverage (Ch. 29)</h3>
             <div className="grid grid-cols-2 gap-2">
-              <label>Initial Deposit / OMO $ <input type="number" value={dep} onChange={(e) => setDep(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Required Reserve rr% <input type="number" value={resRatio} onChange={(e) => setResRatio(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Excess Reserve er% <input type="number" min={0} value={exRes} onChange={(e) => setExRes(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Currency Drain cr% <input type="number" min={0} value={currDrain} onChange={(e) => setCurrDrain(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Bank Assets <input type="number" value={assets} onChange={(e) => setAssets(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Bank Capital <input type="number" value={cap} onChange={(e) => setCap(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
+              <label>Initial Deposit / OMO $ <input type="number" value={dep} onChange={(e) => setDep(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
+              <label>Required Reserve rr% <input type="number" value={resRatio} onChange={(e) => setResRatio(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
+              <label>Excess Reserve er% <input type="number" min={0} value={exRes} onChange={(e) => setExRes(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
+              <label>Currency Drain cr% <input type="number" min={0} value={currDrain} onChange={(e) => setCurrDrain(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
+              <label>Bank Assets <input type="number" value={assets} onChange={(e) => setAssets(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
+              <label>Bank Capital <input type="number" value={cap} onChange={(e) => setCap(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
             </div>
             <div className="font-mono bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl space-y-1">
               <div>Simple Multiplier (1/rr) = <strong>{moneyRes.moneyMultiplier}</strong> → Max MS = <strong>${moneyRes.maxTotalMoneyCreated}</strong></div>
@@ -335,9 +340,9 @@ export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectT
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
             <h3 className="font-bold text-sm">Quantity Theory of Money: M × V = P × Y (Ch. 30)</h3>
             <div className="grid grid-cols-3 gap-2">
-              <label>Money Supply M <input type="number" value={mSupply} onChange={(e) => setMSupply(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Velocity V <input type="number" value={vel} onChange={(e) => setVel(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Real Output Y <input type="number" value={realOut} onChange={(e) => setRealOut(Number(e.target.value))} className="mt-1 w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
+              <label>Money Supply M <input type="number" value={mSupply} onChange={(e) => setMSupply(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
+              <label>Velocity V <input type="number" value={vel} onChange={(e) => setVel(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
+              <label>Real Output Y <input type="number" value={realOut} onChange={(e) => setRealOut(Number(e.target.value))} className={NUM_INPUT_CLS} /></label>
             </div>
             <div className="font-mono bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl space-y-1">
               <div>Price Level P = (M × V) / Y = <strong>{moneyRes.priceLevel}</strong></div>
@@ -390,11 +395,11 @@ export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectT
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3 text-xs">
             <h3 className="font-bold text-sm">Real Exchange Rate, PPP &amp; NCO = S − I Calculator (Ch. 31)</h3>
             <div className="flex flex-wrap gap-3">
-              <label>Nominal e (foreign/$) <input type="number" value={nomEx} onChange={(e) => setNomEx(Number(e.target.value))} className="mt-1 block w-28 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Domestic P <input type="number" value={domP} onChange={(e) => setDomP(Number(e.target.value))} className="mt-1 block w-24 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Foreign P* <input type="number" value={forP} onChange={(e) => setForP(Number(e.target.value))} className="mt-1 block w-24 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Saving S <input type="number" value={natS} onChange={(e) => setNatS(Number(e.target.value))} className="mt-1 block w-24 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-              <label>Investment I <input type="number" value={domI} onChange={(e) => setDomI(Number(e.target.value))} className="mt-1 block w-24 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
+              <label>Nominal e (foreign/$) <input type="number" value={nomEx} onChange={(e) => setNomEx(Number(e.target.value))} className={`mt-1 block w-28 ${COMPACT_INPUT_CLS}`} /></label>
+              <label>Domestic P <input type="number" value={domP} onChange={(e) => setDomP(Number(e.target.value))} className={`mt-1 block w-24 ${COMPACT_INPUT_CLS}`} /></label>
+              <label>Foreign P* <input type="number" value={forP} onChange={(e) => setForP(Number(e.target.value))} className={`mt-1 block w-24 ${COMPACT_INPUT_CLS}`} /></label>
+              <label>Saving S <input type="number" value={natS} onChange={(e) => setNatS(Number(e.target.value))} className={`mt-1 block w-24 ${COMPACT_INPUT_CLS}`} /></label>
+              <label>Investment I <input type="number" value={domI} onChange={(e) => setDomI(Number(e.target.value))} className={`mt-1 block w-24 ${COMPACT_INPUT_CLS}`} /></label>
             </div>
             <div className="font-mono bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl">
               Real FX ε = <strong>{openRes.realExchangeRate}</strong> | PPP Nominal e = <strong>{openRes.pppNominalRate}</strong> | NCO = NX = <strong>{openRes.nx}</strong> ({openRes.tradeStatus})
@@ -437,9 +442,9 @@ export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectT
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
               <h3 className="font-bold text-sm">Spending &amp; Tax Multiplier Calculator (Ch. 34)</h3>
               <div className="flex flex-wrap gap-3">
-                <label>MPC <input type="number" step="0.05" max="0.99" min="0" value={mpc} onChange={(e) => setMpc(Number(e.target.value))} className="mt-1 block w-20 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>ΔG ($B) <input type="number" value={dG} onChange={(e) => setDG(Number(e.target.value))} className="mt-1 block w-20 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>ΔT ($B) <input type="number" value={dT} onChange={(e) => setDT(Number(e.target.value))} className="mt-1 block w-20 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
+                <label>MPC <input type="number" step="0.05" max="0.99" min="0" value={mpc} onChange={(e) => setMpc(Number(e.target.value))} className={`mt-1 block w-20 ${COMPACT_INPUT_CLS}`} /></label>
+                <label>ΔG ($B) <input type="number" value={dG} onChange={(e) => setDG(Number(e.target.value))} className={`mt-1 block w-20 ${COMPACT_INPUT_CLS}`} /></label>
+                <label>ΔT ($B) <input type="number" value={dT} onChange={(e) => setDT(Number(e.target.value))} className={`mt-1 block w-20 ${COMPACT_INPUT_CLS}`} /></label>
               </div>
               <div className="font-mono bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl">
                 Spending Mult = {multRes.spendingMultiplier} | Tax Mult = {multRes.taxMultiplier}<br />
@@ -450,9 +455,9 @@ export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectT
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
               <h3 className="font-bold text-sm">Disinflation Sacrifice Ratio Calculator (Ch. 35)</h3>
               <div className="flex flex-wrap gap-3">
-                <label>Δπ Drop (%) <input type="number" value={infDrop} onChange={(e) => setInfDrop(Number(e.target.value))} className="mt-1 block w-20 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>Sacrifice Ratio <input type="number" value={sacRatio} onChange={(e) => setSacRatio(Number(e.target.value))} className="mt-1 block w-20 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>Years <input type="number" min={1} value={disinfYears} onChange={(e) => setDisinfYears(Number(e.target.value))} className="mt-1 block w-20 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
+                <label>Δπ Drop (%) <input type="number" value={infDrop} onChange={(e) => setInfDrop(Number(e.target.value))} className={`mt-1 block w-20 ${COMPACT_INPUT_CLS}`} /></label>
+                <label>Sacrifice Ratio <input type="number" value={sacRatio} onChange={(e) => setSacRatio(Number(e.target.value))} className={`mt-1 block w-20 ${COMPACT_INPUT_CLS}`} /></label>
+                <label>Years <input type="number" min={1} value={disinfYears} onChange={(e) => setDisinfYears(Number(e.target.value))} className={`mt-1 block w-20 ${COMPACT_INPUT_CLS}`} /></label>
               </div>
               <div className="font-mono bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl">
                 Total Annual GDP Lost = <strong>{sacRes.totalGdpLossPct}%</strong> | Per Year ({disinfYears}y) = <strong>{sacRes.annualGdpLossPct}%/yr</strong>

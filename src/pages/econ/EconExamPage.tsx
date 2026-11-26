@@ -21,6 +21,7 @@ import {
   type OfflineCheckResult,
 } from '../../utils/offlineProofChecker';
 import { clearExamDraft, loadExamDraft, saveExamDraft } from '../../utils/examDraft';
+import { ExamStickyBar } from '../../components/ExamStickyBar';
 
 type EconExamMode = 'final' | 'quiz3' | 'quiz4' | 'quiz5';
 
@@ -427,6 +428,7 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
 
   const secsLeftRef = React.useRef(secsLeft);
   secsLeftRef.current = secsLeft;
+  const submitBtnRef = React.useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (submitted) return;
@@ -566,6 +568,10 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
 
   const mins = Math.floor(secsLeft / 60);
   const secs = secsLeft % 60;
+  const answeredCount =
+    mcqs.filter((q) => mcqAnswers[q.id] !== undefined).length +
+    essays.filter((e) => (essayAnswers[e.id] ?? '').trim().length > 0).length;
+  const totalCount = mcqs.length + essays.length;
 
   return (
     <div className="space-y-5">
@@ -659,6 +665,19 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
             ))}
           </div>
         </div>
+      )}
+
+      {!submitted && (
+        <ExamStickyBar
+          secondsLeft={secsLeft}
+          answeredCount={answeredCount}
+          totalCount={totalCount}
+          accent="emerald"
+          label={`Seed ${seed} · ${mode.toUpperCase()}`}
+          onJumpToSubmit={() =>
+            submitBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }
+        />
       )}
 
       {/* Section A: Multiple Choice */}
@@ -856,6 +875,7 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
 
       {!submitted ? (
         <button
+          ref={submitBtnRef}
           onClick={submitExam}
           className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md cursor-pointer"
         >

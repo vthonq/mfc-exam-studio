@@ -35,6 +35,7 @@ import {
 } from '../utils/offlineProofChecker';
 import { clearExamDraft, loadExamDraft, saveExamDraft } from '../utils/examDraft';
 import { MathKeypad } from '../components/MathKeypad';
+import { ExamStickyBar } from '../components/ExamStickyBar';
 
 type MfcDraftBySeed = MfcExamDraft;
 
@@ -302,6 +303,7 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
 
   const secondsLeftRef = React.useRef(secondsLeft);
   secondsLeftRef.current = secondsLeft;
+  const submitBtnRef = React.useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (submitted) return;
@@ -432,6 +434,7 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
 
   const mins = Math.floor(secondsLeft / 60);
   const secs = secondsLeft % 60;
+  const answeredCount = questions.filter((q) => (answers[q.id] ?? '').trim().length > 0).length;
 
   return (
     <div className="space-y-5">
@@ -517,6 +520,19 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
             )}
           </div>
         </div>
+      )}
+
+      {!submitted && (
+        <ExamStickyBar
+          secondsLeft={secondsLeft}
+          answeredCount={answeredCount}
+          totalCount={questions.length}
+          accent="indigo"
+          label={`Seed ${seed} · ${mode === 'full' ? '90m Final' : '30m Sprint'}`}
+          onJumpToSubmit={() =>
+            submitBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }
+        />
       )}
 
       <div className="space-y-4">
@@ -710,6 +726,7 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
 
       {!submitted ? (
         <button
+          ref={submitBtnRef}
           onClick={submitExam}
           className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md cursor-pointer"
         >
