@@ -6,7 +6,7 @@ import { MathFormula } from '../../components/Math';
 import { BiText } from '../../components/BiText';
 
 interface ProbKnowledgePageProps {
-  initialTopic?: ProbTopicId;
+  initialTopic?: 'all' | 'glossary' | ProbTopicId;
   onNavigate: (route: ProbPageRoute, query?: string) => void;
 }
 

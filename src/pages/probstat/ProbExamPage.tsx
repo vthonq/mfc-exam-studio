@@ -40,26 +40,29 @@ interface ProbExamPageProps {
 
 export const ProbExamPage: React.FC<ProbExamPageProps> = ({
   initialSeed,
-  initialMode = 'final',
+  initialMode,
   onSeedChange,
 }) => {
   const { settings, addProbExamRecord, recordProbPractice, recordMistake } = useApp();
   const [initialDraft] = useState<ProbExamDraft | null>(() => {
     if (initialSeed) {
-      return loadExamDraft<ProbExamDraft>(`probstat:${initialSeed}:${initialMode}`);
+      return loadExamDraft<ProbExamDraft>(
+        `probstat:${initialSeed}:${initialMode || 'final'}`,
+      );
     }
     return loadExamDraft<ProbExamDraft>('probstat:active');
   });
 
   const [seedInput, setSeedInput] = useState(initialSeed || initialDraft?.seed || 'STAT26');
   const [activeSeed, setActiveSeed] = useState(initialSeed || initialDraft?.seed || 'STAT26');
-  const [mode, setMode] = useState<ProbExamMode>(initialDraft?.mode || initialMode);
+  const [mode, setMode] = useState<ProbExamMode>(initialMode || initialDraft?.mode || 'final');
   const [sbOpen, setSbOpen] = useState(false);
 
   const [started, setStarted] = useState(Boolean(initialDraft?.started));
   const [submitted, setSubmitted] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(
-    initialDraft?.secondsLeft ?? ((initialDraft?.mode || initialMode) === 'final' ? 100 * 60 : 60 * 60),
+    initialDraft?.secondsLeft ??
+      ((initialMode || initialDraft?.mode || 'final') === 'final' ? 100 * 60 : 60 * 60),
   );
   const [draftRestored, setDraftRestored] = useState(Boolean(initialDraft?.started));
 
@@ -115,8 +118,26 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
     [activeSeed],
   );
 
+  const secondsLeftRef = React.useRef(secondsLeft);
+  secondsLeftRef.current = secondsLeft;
+
   useEffect(() => {
     if (!started || submitted) return;
+    const draft: ProbExamDraft = {
+      seed: activeSeed,
+      mode,
+      started,
+      mcqAnswers,
+      numInputs,
+      writtenAnswers,
+      secondsLeft: secondsLeftRef.current,
+    };
+    saveExamDraft(`probstat:${activeSeed}:${mode}`, draft);
+    saveExamDraft('probstat:active', draft);
+  }, [started, submitted, activeSeed, mode, mcqAnswers, numInputs, writtenAnswers]);
+
+  useEffect(() => {
+    if (!started || submitted || secondsLeft % 15 !== 0) return;
     const draft: ProbExamDraft = {
       seed: activeSeed,
       mode,
@@ -128,7 +149,7 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
     };
     saveExamDraft(`probstat:${activeSeed}:${mode}`, draft);
     saveExamDraft('probstat:active', draft);
-  }, [started, submitted, activeSeed, mode, mcqAnswers, numInputs, writtenAnswers, secondsLeft]);
+  }, [secondsLeft]);
 
   useEffect(() => {
     if (!started || submitted) return;

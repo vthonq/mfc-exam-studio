@@ -275,7 +275,7 @@ export function buildGlobalSearchItems(): GlobalSearchItem[] {
       subtitle: g.note,
       keywords: `${g.en} ${g.vi} ${g.note}`,
       route: 'knowledge',
-      query: `topic=${g.topic}`,
+      query: 'topic=glossary',
     });
   }
 
@@ -301,7 +301,7 @@ export function buildGlobalSearchItems(): GlobalSearchItem[] {
       subtitle: g.definition,
       keywords: `${g.term} ${g.termVi} ${g.definition}`,
       route: 'knowledge',
-      query: `topic=${g.chapter}`,
+      query: 'topic=glossary',
     });
   }
 

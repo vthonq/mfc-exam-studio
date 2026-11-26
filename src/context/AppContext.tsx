@@ -16,8 +16,40 @@ import type {
 } from '../types';
 
 const SETTINGS_KEY = 'mfc_studio_settings_v1';
-const PROGRESS_KEY = 'mfc_studio_progress_v1';
-const PROGRESS_TS_KEY = 'mfc_studio_progress_ts_v1';
+const LEGACY_PROGRESS_KEY = 'mfc_studio_progress_v1';
+const LEGACY_OWNER_KEY = 'mfc_studio_legacy_owner_v1';
+
+function progressKeyFor(uid?: string | null): string {
+  return uid ? `mfc_studio_progress_v1:${uid}` : LEGACY_PROGRESS_KEY;
+}
+
+function progressTsKeyFor(uid?: string | null): string {
+  return uid ? `mfc_studio_progress_ts_v1:${uid}` : 'mfc_studio_progress_ts_v1';
+}
+
+function loadLocalProgressForUid(uid?: string | null): ProgressState {
+  try {
+    const scopedRaw = localStorage.getItem(progressKeyFor(uid));
+    if (scopedRaw) {
+      return hydrateProgress(JSON.parse(scopedRaw));
+    }
+    if (uid) {
+      const legacyOwner = localStorage.getItem(LEGACY_OWNER_KEY);
+      if (!legacyOwner || legacyOwner === uid) {
+        const legacyRaw = localStorage.getItem(LEGACY_PROGRESS_KEY);
+        if (legacyRaw) {
+          const parsed = hydrateProgress(JSON.parse(legacyRaw));
+          localStorage.setItem(LEGACY_OWNER_KEY, uid);
+          localStorage.setItem(progressKeyFor(uid), JSON.stringify(parsed));
+          return parsed;
+        }
+      }
+    }
+  } catch {
+    // ignore malformed storage
+  }
+  return DEFAULT_PROGRESS;
+}
 
 export type CloudSyncStatus = 'idle' | 'syncing' | 'synced' | 'error';
 
@@ -152,20 +184,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return DEFAULT_SETTINGS;
   });
 
-  const [progress, setProgress] = useState<ProgressState>(() => {
-    try {
-      const raw = localStorage.getItem(PROGRESS_KEY);
-      if (raw) {
-        return hydrateProgress(JSON.parse(raw));
-      }
-    } catch {
-      // ignore malformed storage
-    }
-    return DEFAULT_PROGRESS;
-  });
+  const [progress, setProgress] = useState<ProgressState>(() =>
+    loadLocalProgressForUid(firebaseUser?.uid),
+  );
 
   const progressRef = useRef<ProgressState>(progress);
   progressRef.current = progress;
+  const activeUidRef = useRef<string | undefined>(firebaseUser?.uid);
 
   useEffect(() => {
     try {
@@ -185,9 +210,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     firebaseUser?.uid && (isAdmin || profile?.status === 'approved'),
   );
 
-  // Sync on login / user switch
+  // Sync on login / user switch (isolated per-uid storage prevents shared-browser leakage)
   useEffect(() => {
     const uid = firebaseUser?.uid;
+    if (activeUidRef.current !== uid) {
+      activeUidRef.current = uid;
+      skipNextCloudSaveRef.current = true;
+      const isolatedLocal = loadLocalProgressForUid(uid);
+      progressRef.current = isolatedLocal;
+      setProgress(isolatedLocal);
+    }
+
     if (!uid || !canUseCloud) {
       hydratedUidRef.current = null;
       setCloudSyncStatus('idle');
@@ -202,7 +235,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const cloud = await fetchCloudProgress(uid);
         if (cancelled) return;
-        const localTs = Number(localStorage.getItem(PROGRESS_TS_KEY) || '0') || 0;
+        const tsKey = progressTsKeyFor(uid);
+        const localTs = Number(localStorage.getItem(tsKey) || '0') || 0;
 
         if (cloud) {
           let cloudParsed: Partial<ProgressState> | null = null;
@@ -219,7 +253,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             skipNextCloudSaveRef.current = true;
             setProgress(hydrateProgress(cloudParsed));
             try {
-              localStorage.setItem(PROGRESS_TS_KEY, String(cloud.updatedAtMs));
+              localStorage.setItem(tsKey, String(cloud.updatedAtMs));
             } catch {
               // ignore
             }
@@ -248,10 +282,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, [firebaseUser?.uid, canUseCloud]);
 
-  // Persist locally & debounced save to Firestore
+  // Persist locally (scoped by uid) & debounced save to Firestore
   useEffect(() => {
+    const uid = firebaseUser?.uid;
     try {
-      localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+      localStorage.setItem(progressKeyFor(uid), JSON.stringify(progress));
     } catch {
       // ignore quota
     }
@@ -268,12 +303,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const nowTs = Date.now();
     try {
-      localStorage.setItem(PROGRESS_TS_KEY, String(nowTs));
+      localStorage.setItem(progressTsKeyFor(uid), String(nowTs));
     } catch {
       // ignore
     }
 
-    const uid = firebaseUser?.uid;
     if (!uid || !canUseCloud || hydratedUidRef.current !== uid) return;
 
     setCloudSyncStatus('syncing');

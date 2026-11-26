@@ -27,6 +27,11 @@ describe('Global Search Index', () => {
 
     const guide = searchGlobalItems('Guide');
     expect(guide.some((x) => x.subject === 'guide')).toBe(true);
+
+    const econGloss = all.find((x) => x.id.startsWith('econ-gloss-'));
+    expect(econGloss?.query).toBe('topic=glossary');
+    const probGloss = all.find((x) => x.id.startsWith('prob-gloss-'));
+    expect(probGloss?.query).toBe('topic=glossary');
   });
 });
 

@@ -51,8 +51,10 @@ export async function registerOrSyncUser(fbUser: User): Promise<{
   config: AccessConfigDoc;
 }> {
   const email = safeStr(fbUser.email, 150).toLowerCase();
-  const displayName = safeStr(fbUser.displayName, 100) || email || 'Student';
-  const photoURL = safeStr(fbUser.photoURL, 500);
+  const displayName =
+    (safeStr(fbUser.displayName, 100) || safeStr(email, 100) || 'Student').slice(0, 100);
+  const rawPhoto = safeStr(fbUser.photoURL, 500);
+  const photoURL = /^https?:\/\//i.test(rawPhoto) ? rawPhoto : '';
   const adminFlag = isAdminEmail(email);
 
   const cfgRef = doc(db, 'access_config', 'settings');

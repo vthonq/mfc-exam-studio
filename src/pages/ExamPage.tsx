@@ -300,13 +300,30 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
     }
   }, [initialSeed]);
 
+  const secondsLeftRef = React.useRef(secondsLeft);
+  secondsLeftRef.current = secondsLeft;
+
   useEffect(() => {
     if (submitted) return;
+    if (Object.keys(answers).length === 0 && !Object.values(proofSelfCheck).some(Boolean)) return;
+    const draft: MfcExamDraft = {
+      seed,
+      mode,
+      answers,
+      proofSelfCheck,
+      secondsLeft: secondsLeftRef.current,
+    };
+    saveExamDraft(`mfc:${seed}:${mode}`, draft);
+    saveExamDraft('mfc:active', draft);
+  }, [answers, proofSelfCheck, seed, mode, submitted]);
+
+  useEffect(() => {
+    if (submitted || secondsLeft % 15 !== 0) return;
     if (Object.keys(answers).length === 0 && !Object.values(proofSelfCheck).some(Boolean)) return;
     const draft: MfcExamDraft = { seed, mode, answers, proofSelfCheck, secondsLeft };
     saveExamDraft(`mfc:${seed}:${mode}`, draft);
     saveExamDraft('mfc:active', draft);
-  }, [answers, proofSelfCheck, secondsLeft, seed, mode, submitted]);
+  }, [secondsLeft]);
 
   useEffect(() => {
     if (submitted) return;

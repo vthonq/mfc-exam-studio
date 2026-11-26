@@ -7,7 +7,7 @@ import { BiText } from '../components/BiText';
 import { useApp } from '../context/AppContext';
 
 interface KnowledgePageProps {
-  initialChapter?: ChapterId;
+  initialChapter?: 'all' | 'glossary' | ChapterId;
   onNavigate: (route: PageRoute, query?: string) => void;
 }
 

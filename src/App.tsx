@@ -178,16 +178,17 @@ function AppShell() {
 
   const activeLab = (nav.params.get('tab') as LabTab) || 'logic';
   const proofId = nav.params.get('id') ?? undefined;
-  const knowledgeChap = (nav.params.get('chapter') as ChapterId) || undefined;
+  const knowledgeChap = (nav.params.get('chapter') as 'all' | 'glossary' | ChapterId) || undefined;
   const examSeed = nav.params.get('seed') ?? undefined;
 
   const econLabTab = (nav.params.get('tab') as EconLabTab) || 'part6';
-  const econTopic = (nav.params.get('topic') as EconTopicId) || undefined;
-  const econExamMode = (nav.params.get('mode') as 'final' | 'quiz3' | 'quiz4' | 'quiz5') || 'final';
+  const econTopic = (nav.params.get('topic') as 'all' | 'glossary' | EconTopicId) || undefined;
+  const econExamMode =
+    (nav.params.get('mode') as 'final' | 'quiz3' | 'quiz4' | 'quiz5' | null) ?? undefined;
 
   const probLabTab = (nav.params.get('tab') as ProbLabTab) || 'discrete';
-  const probTopic = (nav.params.get('topic') as ProbTopicId) || undefined;
-  const probExamMode = (nav.params.get('mode') as 'final' | 'midterm') || 'final';
+  const probTopic = (nav.params.get('topic') as 'all' | 'glossary' | ProbTopicId) || undefined;
+  const probExamMode = (nav.params.get('mode') as 'final' | 'midterm' | null) ?? undefined;
 
   return (
     <Layout

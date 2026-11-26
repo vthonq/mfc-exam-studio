@@ -1,6 +1,7 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth';
-import { auth, googleProvider, isAdminEmail } from '../services/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { auth, db, googleProvider, isAdminEmail } from '../services/firebase';
 import {
   fetchAccessConfig,
   registerOrSyncUser,
@@ -49,9 +50,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [accessConfig, setAccessConfig] = useState<AccessConfigDoc | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const syncingRef = useRef(true);
 
   const syncUser = useCallback(async (user: User | null) => {
     if (!user) {
+      syncingRef.current = false;
       setProfile(null);
       setAccessConfig(null);
       setError(null);
@@ -59,6 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
+    syncingRef.current = true;
     setLoading(true);
     setError(null);
     try {
@@ -68,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err) {
       setError(formatAuthError(err));
     } finally {
+      syncingRef.current = false;
       setLoading(false);
     }
   }, []);
@@ -79,6 +84,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     return () => unsub();
   }, [syncUser]);
+
+  // Real-time enforcement: instant Ban / Approve / Delete & live seat config updates
+  useEffect(() => {
+    const uid = firebaseUser?.uid;
+    if (!uid) return;
+
+    const unsubUser = onSnapshot(
+      doc(db, 'users', uid),
+      (snap) => {
+        if (snap.exists()) {
+          setProfile(snap.data() as UserProfileDoc);
+          setError(null);
+        } else if (!syncingRef.current) {
+          setProfile(null);
+          setError('Your access record was reset by Admin. Click Retry or sign in again.');
+        }
+      },
+      () => {
+        // Ignore transient snapshot error; explicit retry still works
+      },
+    );
+
+    const unsubCfg = onSnapshot(
+      doc(db, 'access_config', 'settings'),
+      (snap) => {
+        if (snap.exists()) {
+          setAccessConfig(snap.data() as AccessConfigDoc);
+        }
+      },
+      () => {
+        // Ignore transient snapshot error
+      },
+    );
+
+    return () => {
+      unsubUser();
+      unsubCfg();
+    };
+  }, [firebaseUser?.uid]);
 
   const signInWithGoogle = async () => {
     setError(null);

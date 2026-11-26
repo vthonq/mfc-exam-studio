@@ -7,7 +7,7 @@ import { BiText } from '../../components/BiText';
 import { useApp } from '../../context/AppContext';
 
 interface EconKnowledgePageProps {
-  initialTopic?: EconTopicId;
+  initialTopic?: 'all' | 'glossary' | EconTopicId;
   onNavigate: (route: EconPageRoute, query?: string) => void;
 }
 

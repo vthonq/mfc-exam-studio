@@ -425,13 +425,31 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
     }
   }, [initialSeed, initialMode]);
 
+  const secsLeftRef = React.useRef(secsLeft);
+  secsLeftRef.current = secsLeft;
+
   useEffect(() => {
     if (submitted) return;
+    if (Object.keys(mcqAnswers).length === 0 && Object.keys(essayAnswers).length === 0) return;
+    const draft: EconExamDraft = {
+      seed,
+      mode,
+      mcqAnswers,
+      essayAnswers,
+      essaySelfChecks,
+      secsLeft: secsLeftRef.current,
+    };
+    saveExamDraft(`econ:${seed}:${mode}`, draft);
+    saveExamDraft('econ:active', draft);
+  }, [mcqAnswers, essayAnswers, essaySelfChecks, seed, mode, submitted]);
+
+  useEffect(() => {
+    if (submitted || secsLeft % 15 !== 0) return;
     if (Object.keys(mcqAnswers).length === 0 && Object.keys(essayAnswers).length === 0) return;
     const draft: EconExamDraft = { seed, mode, mcqAnswers, essayAnswers, essaySelfChecks, secsLeft };
     saveExamDraft(`econ:${seed}:${mode}`, draft);
     saveExamDraft('econ:active', draft);
-  }, [mcqAnswers, essayAnswers, essaySelfChecks, secsLeft, seed, mode, submitted]);
+  }, [secsLeft]);
 
   useEffect(() => {
     if (submitted) return;
