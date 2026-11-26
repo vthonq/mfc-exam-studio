@@ -198,6 +198,7 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
       const res = await gradeProofWithGemini({
         apiKey: settings.geminiKey,
         model: settings.geminiModel,
+        subject: 'probstat',
         prompt: q.prompt,
         studentProof: writtenAnswers[q.id] ?? '',
         modelSolution: q.modelSolution,

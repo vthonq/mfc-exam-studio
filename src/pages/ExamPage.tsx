@@ -122,7 +122,7 @@ function generateExamFromSeed(seed: string, mode: 'full' | 'sprint'): ExamQuesti
     prompt: `How many equivalence relations exist on a set of ${relN} elements? (Also check: is ({${posetSet.join(',')}}, |) a lattice? It is ${poset.isLattice ? 'YES' : 'NO'}). Enter the count:`,
     type: 'text',
     expected: String(counts.equivalence),
-    solutionText: `Bell number B_${relN} = ${counts.equivalence}. Lattice: ${poset.isLattice ? 'Yes' : 'No'}.`,
+    solutionText: `Bell number B(${relN}) = ${counts.equivalence}. Lattice: ${poset.isLattice ? 'Yes' : 'No'}.`,
   };
 
   // Q5: Ch10 Dijkstra
@@ -208,9 +208,9 @@ function generateExamFromSeed(seed: string, mode: 'full' | 'sprint'): ExamQuesti
     const sq = booleanProduct(rMat, rMat);
     const hh = havelHakimiSteps([4, 3, 2, 2, 1]);
     q4.title = 'Q4 — Relation Composition & Degree Sequences';
-    q4.prompt = `Compute entry (1, 1) of M_R² for M_R = ${JSON.stringify(rMat)} (0 or 1). (Note Havel-Hakimi on 4,3,2,2,1 is ${hh.graphical ? 'graphical' : 'not graphical'}).`;
+    q4.prompt = `Compute entry (1, 1) of M(R²) for M(R) = ${JSON.stringify(rMat)} (0 or 1). (Note Havel-Hakimi on 4,3,2,2,1 is ${hh.graphical ? 'graphical' : 'not graphical'}).`;
     q4.expected = String(sq[0][0]);
-    q4.solutionText = `M_R²[1][1] = ${sq[0][0]}.`;
+    q4.solutionText = `M(R²)[1][1] = ${sq[0][0]}.`;
   } else {
     const pTokens = ['6', '2', '3', '*', '-', '3', '↑', '8', '2', '/', '+'];
     const ev = evaluatePostfix(pTokens);
@@ -245,6 +245,11 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
   const [aiError, setAiError] = useState<string | null>(null);
   const [offlineProofCheck, setOfflineProofCheck] = useState<OfflineCheckResult | null>(null);
   const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
+  const [lastResult, setLastResult] = useState<{
+    score: number;
+    maxScore: number;
+    byChapter: Partial<Record<ChapterId, { earned: number; total: number }>>;
+  } | null>(null);
 
   useEffect(() => {
     if (initialSeed && initialSeed !== seed) {
@@ -274,6 +279,8 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
     setSubmitted(false);
     setAiProofGrade(null);
     setAiError(null);
+    setOfflineProofCheck(null);
+    setLastResult(null);
     setSecondsLeft(nextMode === 'full' ? 90 * 60 : 30 * 60);
   };
 
@@ -318,12 +325,16 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
       byChapter[q.chapter] = cur;
     }
 
+    const roundedScore = Math.round(earned * 10) / 10;
+    const roundedMax = Math.round(max * 10) / 10;
+    setLastResult({ score: roundedScore, maxScore: roundedMax, byChapter });
+
     addExamRecord({
       id: `${seed}-${Date.now()}`,
       seed,
       mode,
-      score: Math.round(earned * 10) / 10,
-      maxScore: Math.round(max * 10) / 10,
+      score: roundedScore,
+      maxScore: roundedMax,
       dateIso: new Date().toISOString(),
       byChapter,
     });
@@ -367,6 +378,42 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
           </button>
         </div>
       </div>
+
+      {!submitted && secondsLeft === 0 && (
+        <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-xs font-semibold text-rose-800 dark:text-rose-200">
+          Time&apos;s up! Click &quot;Submit &amp; Grade Mock Exam&quot; below to see your score.
+        </div>
+      )}
+
+      {submitted && lastResult && (
+        <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-base font-extrabold text-indigo-950 dark:text-indigo-100">
+              Mock Exam Score:{' '}
+              <span className="font-mono">
+                {lastResult.score} / {lastResult.maxScore} (
+                {lastResult.maxScore > 0
+                  ? Math.round((lastResult.score / lastResult.maxScore) * 100)
+                  : 0}
+                %)
+              </span>
+            </div>
+            <span className="text-xs text-slate-500">Saved to Dashboard History (incl. bonus proof if checked).</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5 text-xs font-mono">
+            {(Object.entries(lastResult.byChapter) as Array<[ChapterId, { earned: number; total: number }]>).map(
+              ([cid, st]) => (
+                <span
+                  key={cid}
+                  className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800"
+                >
+                  {CHAPTER_META[cid].code}: {Math.round(st.earned * 10) / 10}/{Math.round(st.total * 10) / 10}
+                </span>
+              ),
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4">
         {questions.map((q) => {
@@ -563,10 +610,10 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
       ) : (
         <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-2">
           <div className="text-lg font-extrabold">
-            Exam Graded! Score saved to your Dashboard History.
+            Exam Graded: {lastResult ? `${lastResult.score} / ${lastResult.maxScore} pts` : 'Saved!'}
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-300">
-            Review any missed algorithmic questions above and jump to the matching Lab to drill that topic.
+            Score saved to your Dashboard History. Review any missed algorithmic questions above and jump to the matching Lab to drill that topic.
           </p>
         </div>
       )}

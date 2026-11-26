@@ -84,6 +84,7 @@ export const ProbProblemsPage: React.FC = () => {
       const res = await gradeProofWithGemini({
         apiKey: settings.geminiKey,
         model: settings.geminiModel,
+        subject: 'probstat',
         prompt: prob.prompt,
         studentProof: writtenDrafts[prob.id] ?? '',
         modelSolution: prob.modelSolution,

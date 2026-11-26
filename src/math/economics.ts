@@ -86,7 +86,7 @@ export function computeCpiTable(
 }
 
 export function indexDollarValue(amountThen: number, cpiThen: number, cpiNow: number): number {
-  return round2(amountThen * (cpiNow / cpiThen));
+  return cpiThen > 0 ? round2(amountThen * (cpiNow / cpiThen)) : 0;
 }
 
 export function realInterestRate(nominalRatePct: number, inflationRatePct: number): number {
@@ -273,9 +273,10 @@ export const OPEN_ECON_POLICIES: OpenEconPolicyOutcome[] = [
 ];
 
 export function computeMultipliers(mpc: number, deltaG: number, deltaT: number) {
+  const validMpc = mpc >= 0 && mpc < 1;
   const denom = 1 - mpc;
-  const spendingMultiplier = denom !== 0 ? round2(1 / denom) : 0;
-  const taxMultiplier = denom !== 0 ? round2(-mpc / denom) : 0;
+  const spendingMultiplier = validMpc && denom > 0 ? round2(1 / denom) : 0;
+  const taxMultiplier = validMpc && denom > 0 ? round2(-mpc / denom) : 0;
   const adShiftFromG = round2(spendingMultiplier * deltaG);
   const adShiftFromT = round2(taxMultiplier * deltaT);
   const totalAdShift = round2(adShiftFromG + adShiftFromT);

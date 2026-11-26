@@ -240,6 +240,7 @@ export const EconDrillPage: React.FC = () => {
                     const res = await gradeProofWithGemini({
                       apiKey: settings.geminiKey,
                       model: settings.geminiModel,
+                      subject: 'econ',
                       prompt: curScen.prompt,
                       studentProof: answerText,
                       modelSolution: curScen.modelSolution,

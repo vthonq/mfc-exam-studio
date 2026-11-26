@@ -127,4 +127,13 @@ describe('ECO101 Principles of Macroeconomics — Final Exam Calculators', () =>
     const sac = computeSacrificeRatio(4, 5, 2);
     expect(sac).toEqual({ totalGdpLossPct: 20, annualGdpLossPct: 10 });
   });
+
+  it('Handles zero/invalid denominator edge cases safely', () => {
+    expect(indexDollarValue(500, 0, 175)).toBe(0);
+    expect(indexDollarValue(500, -10, 175)).toBe(0);
+    const badMult = computeMultipliers(1, 50, 0);
+    expect(badMult.spendingMultiplier).toBe(0);
+    expect(badMult.taxMultiplier).toBe(0);
+    expect(badMult.totalAdShift).toBe(0);
+  });
 });

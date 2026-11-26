@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, CheckCircle2, ClipboardCheck, Copy, Eye, Sparkles } from 'lucide-react';
 import { PROOF_EXERCISES, type ParsonsStep, type ProofExercise } from '../data/proofs';
 import { createRng } from '../math/prng';
@@ -63,6 +63,13 @@ export const ProofsPage: React.FC<ProofsPageProps> = ({ initialProofId }) => {
     setOfflineResult(null);
     setPromptCopied(false);
   };
+
+  useEffect(() => {
+    if (initialProofId && initialProofId !== selectedId) {
+      const target = PROOF_EXERCISES.find((p) => p.id === initialProofId);
+      if (target) selectProof(target);
+    }
+  }, [initialProofId]);
 
   const filtered = PROOF_EXERCISES.filter(
     (p) => chapterFilter === 'all' || p.chapter === chapterFilter,

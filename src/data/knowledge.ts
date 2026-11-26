@@ -170,9 +170,9 @@ export const KNOWLEDGE_ITEMS: KnowledgeItem[] = [
     title: 'ISBN-10 Check Digits, Affine Cipher & RSA',
     titleVi: 'Mã kiểm tra ISBN-10, Mật mã Affine & RSA',
     summary:
-      'ISBN-10 satisfies ∑_{i=1}^{10} i·x_i ≡ 0 (mod 11). Affine cipher encrypts p ↦ (ap + b) mod 26 (requires gcd(a, 26) = 1) and decrypts c ↦ a^{-1}(c − b) mod 26. RSA uses n = pq, φ(n) = (p−1)(q−1), ed ≡ 1 (mod φ(n)), C = M^e mod n, M = C^d mod n.',
+      'ISBN-10 satisfies ∑ (i = 1..10) i·xᵢ ≡ 0 (mod 11). Affine cipher encrypts p ↦ (ap + b) mod 26 (requires gcd(a, 26) = 1) and decrypts c ↦ a⁻¹(c − b) mod 26. RSA uses n = pq, φ(n) = (p−1)(q−1), ed ≡ 1 (mod φ(n)), C = Mᵉ mod n, M = Cᵈ mod n.',
     summaryVi:
-      'ISBN-10 thỏa ∑_{i=1}^{10} i·x_i ≡ 0 (mod 11). Mật mã Affine mã hóa (ap + b) mod 26 (cần gcd(a, 26) = 1). RSA chọn n = pq, d = e^{-1} mod (p−1)(q−1).',
+      'ISBN-10 thỏa ∑ (i = 1..10) i·xᵢ ≡ 0 (mod 11). Mật mã Affine mã hóa (ap + b) mod 26 (cần gcd(a, 26) = 1). RSA chọn n = pq, d = e⁻¹ mod (p−1)(q−1).',
     formulas: [
       '\\sum_{i=1}^{10} i x_i \\equiv 0 \\pmod{11}',
       'f(p) = (ap + b) \\bmod 26, \\quad f^{-1}(c) = a^{-1}(c - b) \\bmod 26',
@@ -189,9 +189,9 @@ export const KNOWLEDGE_ITEMS: KnowledgeItem[] = [
     title: 'Relation Properties, Counting & Matrix Products',
     titleVi: 'Tính chất quan hệ, Đếm số quan hệ & Tích ma trận Boolean',
     summary:
-      'On an n-element set: Reflexive (diagonal all 1s), Symmetric (M = M^T), Antisymmetric (m_{ij}=1 ∧ m_{ji}=1 ⇒ i=j), Transitive (R² ⊆ R, i.e., M_{R²} ≤ M_R). Compositions use Boolean matrix multiplication ⊙.',
+      'On an n-element set: Reflexive (diagonal all 1s), Symmetric (M = Mᵀ), Antisymmetric (mᵢⱼ = 1 ∧ mⱼᵢ = 1 ⇒ i = j), Transitive (R² ⊆ R, i.e., M(R²) ≤ M(R)). Compositions use Boolean matrix multiplication ⊙.',
     summaryVi:
-      'Trên tập n phần tử: Phản xạ (đường chéo chính toàn 1), Đối xứng (M = M^T), Phản đối xứng (không có cặp đối xứng khác nhau), Bắc cầu (R² ⊆ R). Hợp quan hệ dùng tích Boolean ⊙.',
+      'Trên tập n phần tử: Phản xạ (đường chéo chính toàn 1), Đối xứng (M = Mᵀ), Phản đối xứng (không có cặp đối xứng khác nhau), Bắc cầu (R² ⊆ R). Hợp quan hệ dùng tích Boolean ⊙.',
     formulas: [
       '\\text{Reflexive: } 2^{n^2-n}, \\quad \\text{Symmetric: } 2^{n(n+1)/2}',
       '\\text{Antisymmetric: } 2^n \\cdot 3^{n(n-1)/2}, \\quad \\text{Refl. \\& Sym.: } 2^{n(n-1)/2}',
@@ -210,9 +210,9 @@ export const KNOWLEDGE_ITEMS: KnowledgeItem[] = [
     title: 'Closures, Warshall’s Algorithm & Equivalence Classes',
     titleVi: 'Bao đóng, Thuật toán Warshall & Lớp tương đương',
     summary:
-      'Warshall computes transitive closure via W_k[i][j] = W_{k-1}[i][j] ∨ (W_{k-1}[i][k] ∧ W_{k-1}[k][j]) for k = 1..n. An equivalence relation (reflexive, symmetric, transitive) partitions a set into disjoint equivalence classes; the count on n elements is the Bell number B_n (B_3 = 5, B_4 = 15).',
+      'Warshall computes transitive closure via Wₖ[i][j] = Wₖ₋₁[i][j] ∨ (Wₖ₋₁[i][k] ∧ Wₖ₋₁[k][j]) for k = 1..n. An equivalence relation (reflexive, symmetric, transitive) partitions a set into disjoint equivalence classes; the count on n elements is the Bell number Bₙ (B₃ = 5, B₄ = 15).',
     summaryVi:
-      'Thuật toán Warshall tìm bao đóng bắc cầu qua các ma trận W_0..W_n. Quan hệ tương đương (phản xạ, đối xứng, bắc cầu) phân hoạch tập hợp thành các lớp rời nhau (đếm bằng số Bell B_n).',
+      'Thuật toán Warshall tìm bao đóng bắc cầu qua các ma trận W₀..Wₙ. Quan hệ tương đương (phản xạ, đối xứng, bắc cầu) phân hoạch tập hợp thành các lớp rời nhau (đếm bằng số Bell Bₙ).',
     formulas: [
       'w_{ij}^{[k]} = w_{ij}^{[k-1]} \\lor (w_{ik}^{[k-1]} \\land w_{kj}^{[k-1]})',
       'R \\text{ symmetric closure} = R \\cup R^{-1}',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertTriangle, Search } from 'lucide-react';
 import { GLOSSARY_TERMS, KNOWLEDGE_ITEMS } from '../data/knowledge';
 import { CHAPTER_META, type ChapterId, type PageRoute } from '../types';
@@ -20,6 +20,10 @@ export const KnowledgePage: React.FC<KnowledgePageProps> = ({
     initialChapter ?? 'all',
   );
   const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    if (initialChapter) setChapter(initialChapter);
+  }, [initialChapter]);
 
   const q = query.trim().toLowerCase();
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertTriangle, Search } from 'lucide-react';
 import { ECON_GLOSSARY, ECON_KNOWLEDGE } from '../../data/economics';
 import { ECON_TOPIC_META, type EconPageRoute, type EconTopicId } from '../../types';
@@ -18,6 +18,10 @@ export const EconKnowledgePage: React.FC<EconKnowledgePageProps> = ({
   const { settings } = useApp();
   const [filter, setFilter] = useState<'all' | 'glossary' | EconTopicId>(initialTopic ?? 'all');
   const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    if (initialTopic) setFilter(initialTopic);
+  }, [initialTopic]);
 
   const q = query.trim().toLowerCase();
   const cards = ECON_KNOWLEDGE.filter((c) => {

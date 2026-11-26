@@ -90,7 +90,7 @@ export const RelationsLab: React.FC = () => {
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         {[
-          { id: 'props', label: 'Properties, Digraph & M_R²' },
+          { id: 'props', label: 'Properties, Digraph & M(R²)' },
           { id: 'warshall', label: 'Warshall Algorithm (W₀ → Wₙ)' },
           { id: 'poset', label: 'Hasse Diagram, Bounds & Topo Sort' },
         ].map((t) => (
@@ -112,7 +112,7 @@ export const RelationsLab: React.FC = () => {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4">
           <div className="flex flex-wrap justify-between gap-2">
             <div className="text-sm font-semibold">
-              Click cells of M_R to edit relation, inspect properties, and compute M_R² = M_R ⊙ M_R
+              Click cells of M<sub>R</sub> to edit relation, inspect properties, and compute M<sub>R</sub>² = M<sub>R</sub> ⊙ M<sub>R</sub>
             </div>
             <div className="flex gap-2">
               <button
@@ -139,7 +139,7 @@ export const RelationsLab: React.FC = () => {
 
           <div className="grid md:grid-cols-3 gap-5 items-start">
             <div>
-              <div className="text-xs font-bold mb-2 text-slate-500">Relation Matrix M_R (Editable)</div>
+              <div className="text-xs font-bold mb-2 text-slate-500">Relation Matrix M<sub>R</sub> (Editable)</div>
               <div className="inline-grid grid-cols-4 gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60">
                 {matrix.map((row, r) =>
                   row.map((val, c) => (
@@ -199,7 +199,7 @@ export const RelationsLab: React.FC = () => {
           <div className="border-t border-slate-200 dark:border-slate-800 pt-4 flex flex-wrap items-center gap-6">
             <div>
               <div className="text-xs font-bold mb-2 text-slate-500">
-                Your M_R² = M_R ⊙ M_R (Click to fill)
+                Your M<sub>R</sub>² = M<sub>R</sub> ⊙ M<sub>R</sub> (Click to fill)
               </div>
               <div className="inline-grid grid-cols-4 gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60">
                 {userSq.map((row, r) =>
@@ -238,7 +238,7 @@ export const RelationsLab: React.FC = () => {
                 }}
                 className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold cursor-pointer"
               >
-                Check M_R²
+                Check M<sub>R</sub>²
               </button>
               <button
                 onClick={() => {
@@ -253,7 +253,7 @@ export const RelationsLab: React.FC = () => {
                 <div className="text-xs font-medium">
                   {matricesEqual(userSq, expectedSq)
                     ? '✓ Exact match!'
-                    : '✗ Some entries differ — remember (M_R²)[i][j] = 1 iff ∃k with M[i][k]=1 and M[k][j]=1.'}
+                    : '✗ Some entries differ — remember M(R²)[i][j] = 1 iff ∃k with M[i][k]=1 and M[k][j]=1.'}
                 </div>
               )}
             </div>
@@ -309,7 +309,7 @@ export const RelationsLab: React.FC = () => {
                     : 'bg-slate-100 dark:bg-slate-800'
                 }`}
               >
-                W_{idx}
+                W<sub>{idx}</sub>
               </button>
             ))}
           </div>
@@ -317,9 +317,16 @@ export const RelationsLab: React.FC = () => {
           <div className="grid md:grid-cols-2 gap-5 items-center">
             <div className="space-y-3">
               <div className="text-xs text-slate-500">
-                {stepIdx === 0
-                  ? 'Initial matrix W₀ = M_R. Click W₁..Wₙ or advance step by step.'
-                  : `Showing W_${stepIdx} (allowing intermediate vertices {1..${stepIdx}}). Green edges in the digraph are newly added compared to W_${stepIdx - 1}!`}
+                {stepIdx === 0 ? (
+                  <>
+                    Initial matrix W₀ = M<sub>R</sub>. Click W₁..Wₙ or advance step by step.
+                  </>
+                ) : (
+                  <>
+                    Showing W<sub>{stepIdx}</sub> (allowing intermediate vertices {`{1..${stepIdx}}`}).
+                    Green edges in the digraph are newly added compared to W<sub>{stepIdx - 1}</sub>!
+                  </>
+                )}
               </div>
               <div
                 className="inline-grid gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60"
@@ -381,7 +388,7 @@ export const RelationsLab: React.FC = () => {
                         if (ok) {
                           setStepIdx(stepIdx + 1);
                           setUserWNext(cloneMatrix(target));
-                          setWCheckMsg(`✓ Correct W_${stepIdx + 1}!`);
+                          setWCheckMsg(`✓ Correct W(${stepIdx + 1})!`);
                         } else {
                           setWCheckMsg(
                             `✗ Not quite — check entries where row ${stepIdx + 1} has 1 and column ${stepIdx + 1} has 1.`,

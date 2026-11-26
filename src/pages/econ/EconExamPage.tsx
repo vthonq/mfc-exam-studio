@@ -33,6 +33,32 @@ interface ExamMcqItem {
   explanation: string;
 }
 
+function makeUniqueChoices(
+  rng: ReturnType<typeof createRng>,
+  correct: string,
+  distractors: string[],
+): string[] {
+  const seen = new Set<string>([correct]);
+  const pool: string[] = [correct];
+  for (const d of distractors) {
+    if (!seen.has(d)) {
+      seen.add(d);
+      pool.push(d);
+    }
+    if (pool.length === 4) break;
+  }
+  let bump = 1;
+  while (pool.length < 4) {
+    const candidate = `${correct} (alt ${bump})`;
+    if (!seen.has(candidate)) {
+      seen.add(candidate);
+      pool.push(candidate);
+    }
+    bump++;
+  }
+  return rng.shuffle(pool);
+}
+
 function makeCalcMcqs(rng: ReturnType<typeof createRng>): ExamMcqItem[] {
   const out: ExamMcqItem[] = [];
 
@@ -47,8 +73,7 @@ function makeCalcMcqs(rng: ReturnType<typeof createRng>): ExamMcqItem[] {
     0,
   );
   const def = gdp[1].gdpDeflator;
-  const defChoices = rng.shuffle([
-    String(def),
+  const defChoices = makeUniqueChoices(rng, String(def), [
     String(Math.round((def + 12) * 100) / 100),
     String(Math.round((def - 10) * 100) / 100),
     '100',
@@ -69,8 +94,7 @@ function makeCalcMcqs(rng: ReturnType<typeof createRng>): ExamMcqItem[] {
   const nomI = rng.int(7, 12);
   const cpiInf = computeCpiTable(['Y1', 'Y2'], [{ name: 'Basket', basketQty: 1, prices: [cpiB, cpiN] }], 0)[1].inflationPct!;
   const realR = realInterestRate(nomI, cpiInf);
-  const rChoices = rng.shuffle([
-    `${realR}%`,
+  const rChoices = makeUniqueChoices(rng, `${realR}%`, [
     `${nomI + cpiInf}%`,
     `${realR + 2}%`,
     `${nomI}%`,
@@ -85,7 +109,7 @@ function makeCalcMcqs(rng: ReturnType<typeof createRng>): ExamMcqItem[] {
     explanation: `Inflation π = ${cpiInf}%, so real rate r = ${nomI}% − ${cpiInf}% = ${realR}%.`,
   });
 
-  // 3. Unemployment Rate (Part 6)
+  // 3. Unemployment & National Saving (Part 6)
   const emp = rng.int(14, 18) * 10;
   const unemp = rng.int(1, 3) * 10;
   const su = computeSavingAndUnemployment({
@@ -97,8 +121,7 @@ function makeCalcMcqs(rng: ReturnType<typeof createRng>): ExamMcqItem[] {
     unemployed: unemp,
     notInLaborForce: 40,
   });
-  const uChoices = rng.shuffle([
-    `${su.unemploymentRate}%`,
+  const uChoices = makeUniqueChoices(rng, `${su.unemploymentRate}%`, [
     `${Math.round((unemp / (emp + unemp + 40)) * 10000) / 100}%`,
     `${su.lfpr}%`,
     `${Math.round((su.unemploymentRate + 4) * 100) / 100}%`,
@@ -113,6 +136,35 @@ function makeCalcMcqs(rng: ReturnType<typeof createRng>): ExamMcqItem[] {
     explanation: `Labor force = ${emp}+${unemp} = ${su.laborForce}M; u-rate = ${unemp}/${su.laborForce} × 100% = ${su.unemploymentRate}%.`,
   });
 
+  // 3b. National Saving (Part 6, Ch. 26)
+  const y6 = rng.pick([9000, 10000, 12000]);
+  const c6 = rng.pick([5500, 6000]);
+  const g6 = rng.pick([1600, 1800]);
+  const t6 = rng.pick([1400, 1500]);
+  const sav6 = computeSavingAndUnemployment({
+    Y: y6,
+    C: c6,
+    G: g6,
+    T: t6,
+    employed: 100,
+    unemployed: 5,
+    notInLaborForce: 20,
+  });
+  const sChoices = makeUniqueChoices(rng, `$${sav6.nationalSaving}`, [
+    `$${sav6.privateSaving}`,
+    `$${Math.abs(sav6.publicSaving)}`,
+    `$${sav6.nationalSaving + 400}`,
+  ]);
+  out.push({
+    id: 'calc-sav',
+    topic: 'part6',
+    tag: 'Ch. 26 (Calc)',
+    question: `In a closed economy with GDP Y = $${y6}, Consumption C = $${c6}, Government purchases G = $${g6}, and Taxes T = $${t6}, what is National Saving S?`,
+    choices: sChoices,
+    correctIndex: sChoices.indexOf(`$${sav6.nationalSaving}`),
+    explanation: `S = Y − C − G = ${y6} − ${c6} − ${g6} = $${sav6.nationalSaving} (Private S = $${sav6.privateSaving}, Public S = $${sav6.publicSaving}).`,
+  });
+
   // 4. Money Multiplier (Part 7)
   const rr = rng.pick([5, 10, 20]);
   const inj = rng.pick([200, 400, 1000]);
@@ -125,8 +177,7 @@ function makeCalcMcqs(rng: ReturnType<typeof createRng>): ExamMcqItem[] {
     velocityV: 4,
     realOutputY: 1000,
   });
-  const mChoices = rng.shuffle([
-    `$${mon.maxTotalMoneyCreated.toLocaleString()}`,
+  const mChoices = makeUniqueChoices(rng, `$${mon.maxTotalMoneyCreated.toLocaleString()}`, [
     `$${mon.maxNewLoans.toLocaleString()}`,
     `$${inj.toLocaleString()}`,
     `$${(mon.maxTotalMoneyCreated * 2).toLocaleString()}`,
@@ -141,6 +192,34 @@ function makeCalcMcqs(rng: ReturnType<typeof createRng>): ExamMcqItem[] {
     explanation: `Multiplier = 1/${rr / 100} = ${mon.moneyMultiplier}; max money expansion = $${inj} × ${mon.moneyMultiplier} = $${mon.maxTotalMoneyCreated}.`,
   });
 
+  // 4b. Quantity Theory MV = PY (Part 7, Ch. 30)
+  const m7 = rng.pick([600, 800, 1000]);
+  const v7 = rng.pick([3, 4, 5]);
+  const y7 = rng.pick([1000, 1200]);
+  const qtyRes = computeMoneyBanking({
+    initialDeposit: 100,
+    reserveRatioPct: 10,
+    bankAssets: 500,
+    bankCapital: 50,
+    moneySupplyM: m7,
+    velocityV: v7,
+    realOutputY: y7,
+  });
+  const qtmChoices = makeUniqueChoices(rng, String(qtyRes.priceLevel), [
+    String(Math.round((qtyRes.priceLevel + 1) * 100) / 100),
+    String(Math.round((m7 / y7) * 100) / 100),
+    String(v7),
+  ]);
+  out.push({
+    id: 'calc-mvpy',
+    topic: 'part7',
+    tag: 'Ch. 30 (Calc)',
+    question: `Using the quantity equation M × V = P × Y, if Money Supply M = ${m7}, Velocity V = ${v7}, and Real GDP Y = ${y7}, what is the Price Level P?`,
+    choices: qtmChoices,
+    correctIndex: qtmChoices.indexOf(String(qtyRes.priceLevel)),
+    explanation: `P = (M × V) / Y = (${m7} × ${v7}) / ${y7} = ${qtyRes.priceLevel}.`,
+  });
+
   // 5. Real Exchange Rate (Part 8)
   const eNom = rng.pick([80, 100, 120]);
   const pDom = rng.pick([2, 3]);
@@ -152,8 +231,7 @@ function makeCalcMcqs(rng: ReturnType<typeof createRng>): ExamMcqItem[] {
     nationalSavingS: 1200,
     domesticInvestmentI: 900,
   });
-  const fxChoices = rng.shuffle([
-    String(open.realExchangeRate),
+  const fxChoices = makeUniqueChoices(rng, String(open.realExchangeRate), [
     String(Math.round((open.realExchangeRate + 0.45) * 100) / 100),
     String(open.pppNominalRate),
     String(Math.round((eNom / pFor) * 100) / 100),
@@ -172,8 +250,7 @@ function makeCalcMcqs(rng: ReturnType<typeof createRng>): ExamMcqItem[] {
   const mpc = rng.pick([0.75, 0.8]);
   const dg = rng.pick([20, 40, 50]);
   const mult = computeMultipliers(mpc, dg, 0);
-  const multChoices = rng.shuffle([
-    `$${mult.totalAdShift}B`,
+  const multChoices = makeUniqueChoices(rng, `$${mult.totalAdShift}B`, [
     `$${dg}B`,
     `$${Math.round(dg * mpc * 10) / 10}B`,
     `$${Math.round(mult.totalAdShift * mpc)}B`,
@@ -188,8 +265,23 @@ function makeCalcMcqs(rng: ReturnType<typeof createRng>): ExamMcqItem[] {
     explanation: `Spending multiplier = 1/(1−${mpc}) = ${mult.spendingMultiplier}; AD shift = ${mult.spendingMultiplier} × $${dg}B = $${mult.totalAdShift}B.`,
   });
 
-  const sac = computeSacrificeRatio(4, rng.pick([4, 5]), 1);
-  void sac;
+  const dropInf = rng.pick([3, 4, 5]);
+  const srVal = rng.pick([4, 5]);
+  const sac = computeSacrificeRatio(dropInf, srVal, 1);
+  const sacChoices = makeUniqueChoices(rng, `${sac.totalGdpLossPct}%`, [
+    `${dropInf}%`,
+    `${srVal}%`,
+    `${sac.totalGdpLossPct + 5}%`,
+  ]);
+  out.push({
+    id: 'calc-sac',
+    topic: 'part9',
+    tag: 'Ch. 35 (Calc)',
+    question: `If the sacrifice ratio is ${srVal} and the central bank reduces inflation by ${dropInf} percentage points, total annual output (GDP) foregone equals:`,
+    choices: sacChoices,
+    correctIndex: sacChoices.indexOf(`${sac.totalGdpLossPct}%`),
+    explanation: `Total GDP loss = Sacrifice Ratio × Δπ = ${srVal} × ${dropInf}% = ${sac.totalGdpLossPct}%.`,
+  });
 
   return out;
 }
@@ -226,12 +318,11 @@ function buildEco101Session(seed: string, mode: EconExamMode): {
   const relevantCalcs = calcs.filter((c) => filterTopics.includes(c.topic));
   const combined = [...relevantCalcs, ...rng.shuffle(staticPool)];
 
-  // Ensure exact target count (30 for Final, 20 for Quizzes) without duplicating until needed
-  const mcqs: ExamMcqItem[] = [];
-  for (let i = 0; i < targetMcqs; i++) {
-    const base = combined[i % combined.length];
-    mcqs.push({ ...base, id: `${base.id}-${i}` });
-  }
+  // Use unique questions only (never duplicate MCQs)
+  const mcqs: ExamMcqItem[] = combined.slice(0, targetMcqs).map((base, i) => ({
+    ...base,
+    id: `${base.id}-${i}`,
+  }));
 
   // Final Exam includes 4 Short-Answer questions (1 from each Part 6, 7, 8, 9)
   const essays: EconScenario[] =
@@ -271,6 +362,14 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
   const [submitted, setSubmitted] = useState(false);
   const [secsLeft, setSecsLeft] = useState(mode === 'final' ? 100 * 60 : 25 * 60);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [lastResult, setLastResult] = useState<{
+    score: number;
+    mcqEarned: number;
+    mcqMax: number;
+    essayEarned: number;
+    essayMax: number;
+    byChapter: Record<string, { earned: number; total: number }>;
+  } | null>(null);
 
   useEffect(() => {
     if (initialSeed && initialSeed !== seed) setSeed(initialSeed);
@@ -297,6 +396,7 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
     setAiResults({});
     setAiErrors({});
     setSubmitted(false);
+    setLastResult(null);
     setSecsLeft(nextMode === 'final' ? 100 * 60 : 25 * 60);
   };
 
@@ -315,13 +415,14 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
 
   const submitExam = () => {
     setSubmitted(true);
-    let score = 0;
+    let mcqEarned = 0;
+    let essayEarned = 0;
     const byChapter: Record<string, { earned: number; total: number }> = {};
 
     for (const q of mcqs) {
       const ok = mcqAnswers[q.id] === q.correctIndex;
       const got = ok ? ptsPerMcq : 0;
-      score += got;
+      mcqEarned += got;
       const cur = byChapter[q.topic] ?? { earned: 0, total: 0 };
       byChapter[q.topic] = { earned: cur.earned + got, total: cur.total + ptsPerMcq };
       recordEconPractice(q.topic, ok);
@@ -340,17 +441,27 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
       else if (off) ratio = off.estimatedScore / off.maxScore;
 
       const got = ratio * ptsPerEssay;
-      score += got;
+      essayEarned += got;
       const cur = byChapter[es.topic] ?? { earned: 0, total: 0 };
       byChapter[es.topic] = { earned: cur.earned + got, total: cur.total + ptsPerEssay };
       recordEconPractice(es.topic, ratio >= 0.7);
     }
 
+    const totalScore = Math.round((mcqEarned + essayEarned) * 10) / 10;
+    setLastResult({
+      score: totalScore,
+      mcqEarned: Math.round(mcqEarned * 10) / 10,
+      mcqMax: mcqWeightTotal,
+      essayEarned: Math.round(essayEarned * 10) / 10,
+      essayMax: mode === 'final' ? 50 : 0,
+      byChapter,
+    });
+
     addEconExamRecord({
       id: `eco101-${seed}-${Date.now()}`,
       seed,
       mode,
-      score: Math.round(score * 10) / 10,
+      score: totalScore,
       maxScore: 100,
       dateIso: new Date().toISOString(),
       byChapter,
@@ -370,8 +481,8 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
           <p className="text-sm text-slate-500">
             Group Seed: <code className="font-mono font-bold text-emerald-600">{seed}</code> ·{' '}
             {mode === 'final'
-              ? '30 MCQs (50%) + 4 Short-Answer Policy Questions (50%)'
-              : '20 Multiple-Choice Questions'}
+              ? `${mcqs.length} MCQs (50%) + 4 Short-Answer Policy Questions (50%)`
+              : `${mcqs.length} Unique Multiple-Choice Questions`}
           </p>
         </div>
 
@@ -408,6 +519,37 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
           ))}
         </div>
       </div>
+
+      {!submitted && secsLeft === 0 && (
+        <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-xs font-semibold text-rose-800 dark:text-rose-200">
+          Time&apos;s up! Click &quot;Submit &amp; Grade ECO101 Exam&quot; below to see your score.
+        </div>
+      )}
+
+      {submitted && lastResult && (
+        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-base font-extrabold text-emerald-950 dark:text-emerald-100">
+              ECO101 Score:{' '}
+              <span className="font-mono">{lastResult.score} / 100</span>
+            </div>
+            <div className="text-xs font-mono text-slate-600 dark:text-slate-300">
+              Section A MCQs: {lastResult.mcqEarned}/{lastResult.mcqMax}
+              {lastResult.essayMax > 0 && ` · Section B Essays: ${lastResult.essayEarned}/${lastResult.essayMax}`}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-1.5 text-xs font-mono">
+            {Object.entries(lastResult.byChapter).map(([tid, st]) => (
+              <span
+                key={tid}
+                className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800"
+              >
+                {ECON_TOPIC_META[tid as EconTopicId]?.code ?? tid}: {Math.round(st.earned * 10) / 10}/{Math.round(st.total * 10) / 10}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Section A: Multiple Choice */}
       <div className="space-y-3">
@@ -535,6 +677,7 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
                         const res = await gradeProofWithGemini({
                           apiKey: settings.geminiKey,
                           model: settings.geminiModel,
+                          subject: 'econ',
                           prompt: es.prompt,
                           studentProof: essayAnswers[es.id] ?? '',
                           modelSolution: es.modelSolution,
@@ -610,7 +753,7 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
         </button>
       ) : (
         <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-sm font-bold">
-          Exam graded and saved to your Macro Readiness Dashboard!
+          Exam graded ({lastResult ? `${lastResult.score}/100` : 'done'}) and saved to your Macro Readiness Dashboard!
         </div>
       )}
     </div>

@@ -4,6 +4,7 @@ import type { GeminiModelId } from '../types';
 export interface ProofGradeInput {
   apiKey: string;
   model: GeminiModelId;
+  subject?: 'mfc' | 'econ' | 'probstat';
   prompt: string;
   studentProof: string;
   modelSolution: string;
@@ -40,9 +41,17 @@ export async function gradeProofWithGemini(
 
   const client = new GoogleGenAI({ apiKey });
 
-  const instruction = `You are a strict, encouraging Discrete Mathematics / Mathematics for Computing university grader.
-Grade the student's proof against the problem, rubric, and reference solution.
-Check for: logical validity, explicit hypotheses/assumptions, named rules of inference or theorems, quantifier scope, edge cases, and absence of circular reasoning or "proof by example" for universal claims.
+  const subjectCriteria: Record<'mfc' | 'econ' | 'probstat', string> = {
+    mfc: 'Discrete Mathematics / Mathematics for Computing university grader. Check for: logical validity, explicit hypotheses/assumptions, named rules of inference or theorems, quantifier scope, edge cases, and absence of circular reasoning or "proof by example" for universal claims.',
+    econ: 'Principles of Macroeconomics (ECO101) university grader. Check for: accurate identification of curve shifts (AD–AS, Loanable Funds, FX/NCO, Phillips Curve), clear causal mechanism chains, distinction between short-run and long-run adjustments, real vs. nominal separation, and accurate numeric calculations.',
+    probstat:
+      'Probability & Statistical Methods university grader. Check for: correct identification of random variable family and parameters, full step-by-step derivations/integrals/sums, proper standardization or sampling pivots, accurate SB Statistical Tables critical values, clear null/alternative hypotheses, and contextual conclusions.',
+  };
+
+  const roleDesc = subjectCriteria[req.subject ?? 'mfc'];
+
+  const instruction = `You are a strict, encouraging ${roleDesc}
+Grade the student's written response against the problem, rubric, and reference solution.
 Respond ONLY with valid JSON matching this exact shape (no markdown code fences if possible, just JSON):
 {
   "score": number (between 0 and ${maxScore}),

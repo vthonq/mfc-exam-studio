@@ -245,8 +245,8 @@ export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectT
               <h3 className="font-bold text-sm">CPI Indexing &amp; Real Rate (Ch. 24)</h3>
               <div className="grid grid-cols-3 gap-1.5">
                 <label>$ Then <input type="number" value={amountThen} onChange={(e) => setAmountThen(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>CPI_T <input type="number" value={cpiThen} onChange={(e) => setCpiThen(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
-                <label>CPI_now <input type="number" value={cpiNow} onChange={(e) => setCpiNow(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
+                <label>CPI (Then) <input type="number" min={1} value={cpiThen} onChange={(e) => setCpiThen(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
+                <label>CPI (Now) <input type="number" min={1} value={cpiNow} onChange={(e) => setCpiNow(Number(e.target.value))} className="w-full px-2 py-1 rounded border border-slate-300 dark:border-slate-700 font-mono" /></label>
               </div>
               <div className="font-mono">Indexed Value = <strong>${indexDollarValue(amountThen, cpiThen, cpiNow)}</strong></div>
               <div className="grid grid-cols-2 gap-1.5 pt-1">
@@ -318,7 +318,7 @@ export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectT
             <div className="font-mono bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl space-y-1">
               <div>Simple Multiplier (1/rr) = <strong>{moneyRes.moneyMultiplier}</strong> → Max MS = <strong>${moneyRes.maxTotalMoneyCreated}</strong></div>
               <div>Actual Multiplier (with er, cr) = <strong>{moneyRes.actualMultiplier}</strong> → Actual MS = <strong>${moneyRes.actualMoneyCreated}</strong></div>
-              <div>Leverage Ratio = <strong>{moneyRes.leverageRatio}:1</strong> (asset drop &gt; {Math.round(100 / Math.max(1, moneyRes.leverageRatio))}% wipes out capital!)</div>
+              <div>Leverage Ratio = <strong>{moneyRes.leverageRatio > 0 ? `${moneyRes.leverageRatio}:1` : '—'}</strong> ({moneyRes.leverageRatio > 0 ? `asset drop > ${(100 / moneyRes.leverageRatio).toFixed(1)}% wipes out capital!` : 'enter positive bank capital'})</div>
             </div>
           </div>
 
