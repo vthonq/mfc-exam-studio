@@ -43,6 +43,8 @@ interface GeminiTutorDrawerProps {
   onClose: () => void;
   subject: SubjectId;
   routeLabel: string;
+  prefillPrompt?: { prompt: string; nonce: number } | null;
+  onConsumePrefill?: () => void;
 }
 
 interface TutorMessage {
@@ -158,6 +160,8 @@ export const GeminiTutorDrawer: React.FC<GeminiTutorDrawerProps> = ({
   onClose,
   subject,
   routeLabel,
+  prefillPrompt,
+  onConsumePrefill,
 }) => {
   const { settings, setGeminiKey, setGeminiModel } = useApp();
 
@@ -212,6 +216,20 @@ export const GeminiTutorDrawer: React.FC<GeminiTutorDrawerProps> = ({
     setPreviousInteractionId(undefined);
     setErrorMsg(null);
   }, [subject]);
+
+  // Apply 1-click "Explain with AI" prefill prompts from anywhere in the app
+  useEffect(() => {
+    if (!open || !prefillPrompt) return;
+    setInput(prefillPrompt.prompt);
+    setWebPrompt(prefillPrompt.prompt);
+    if (settings.geminiKey.trim()) {
+      setActiveTab('api');
+    } else {
+      setActiveTab('web');
+      setWebStatus('Question loaded with matching course notes — click Auto-Fill or Copy & Open!');
+    }
+    onConsumePrefill?.();
+  }, [open, prefillPrompt, settings.geminiKey, onConsumePrefill]);
 
   // Persist messages per subject in sessionStorage
   useEffect(() => {

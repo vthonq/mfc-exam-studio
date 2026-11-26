@@ -28,6 +28,7 @@ import { useApp } from '../context/AppContext';
 import { CHAPTER_META, type ChapterId } from '../types';
 import { GraphSvg } from '../components/GraphSvg';
 import { gradeProofWithGemini, type ProofGradeResult } from '../services/geminiGrader';
+import { buildExplainQuestionPrompt, dispatchAskAi } from '../utils/askAiBridge';
 import {
   analyzeWrittenProofOffline,
   buildCopyableGradingPrompt,
@@ -715,8 +716,29 @@ export const ExamPage: React.FC<ExamPageProps> = ({ initialSeed, onSeedChange })
               )}
 
               {submitted && (
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 text-xs font-mono">
-                  <strong>Solution:</strong> {q.solutionText}
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 text-xs flex flex-wrap items-start justify-between gap-2">
+                  <div className="font-mono flex-1 min-w-0">
+                    <strong>Solution:</strong> {q.solutionText}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      dispatchAskAi({
+                        subject: 'mfc',
+                        prompt: buildExplainQuestionPrompt({
+                          topicLabel: `${CHAPTER_META[q.chapter].code} · ${q.title}`,
+                          question: q.prompt,
+                          userAnswer: answers[q.id]?.trim() || '(blank)',
+                          expectedAnswer: q.expected,
+                          explanation: q.solutionText,
+                        }),
+                      })
+                    }
+                    className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 border border-indigo-200/80 dark:border-indigo-800/70 text-indigo-700 dark:text-indigo-300 font-semibold inline-flex items-center gap-1 cursor-pointer shrink-0"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Explain with AI
+                  </button>
                 </div>
               )}
             </div>

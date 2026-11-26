@@ -50,7 +50,7 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6">
         <div className="text-center space-y-3">
           <img
-            src="./logo.gif"
+            src="./logo.png"
             alt="Exam Studio Hub"
             className="w-14 h-14 rounded-2xl mx-auto object-cover ring-2 ring-indigo-500/40"
           />
@@ -76,7 +76,7 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
 
             <div className="flex items-start gap-4">
               <img
-                src="./logo.gif"
+                src="./logo.png"
                 alt="Exam Studio Hub"
                 className="w-14 h-14 rounded-2xl object-cover ring-2 ring-indigo-500/30 shadow-md shrink-0"
               />
@@ -150,6 +150,19 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
                 <BookOpen className="w-3.5 h-3.5 text-amber-500" /> Bilingual EN + VI
               </span>
             </div>
+
+            <div className="text-xs text-slate-500 dark:text-slate-400 pt-1">
+              Created by{' '}
+              <a
+                href="https://github.com/vthonq"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                vthonq
+              </a>{' '}
+              · UEH-ISB Exam Studio Hub
+            </div>
           </div>
 
           {/* Right Column: Class Access Sign-In Card */}
@@ -157,7 +170,7 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
             <div className="w-full rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur border border-slate-200 dark:border-slate-800 shadow-xl p-6 space-y-5">
               <div className="flex items-center gap-3">
                 <img
-                  src="./logo.gif"
+                  src="./logo.png"
                   alt="Exam Studio Hub"
                   className="w-11 h-11 rounded-xl object-cover ring-2 ring-indigo-500/30 shrink-0"
                 />

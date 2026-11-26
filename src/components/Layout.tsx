@@ -11,6 +11,7 @@ import {
   FlaskConical,
   HelpCircle,
   KeyRound,
+  Layers,
   LayoutDashboard,
   Loader2,
   LogOut,
@@ -30,6 +31,7 @@ import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { UpdatesBanner, UpdatesModal } from './UpdatesBox';
 import { LATEST_UPDATE_ID } from '../data/changelog';
+import { ASK_AI_EVENT, type AskAiPayload } from '../utils/askAiBridge';
 
 const AdminPanelModal = lazy(() =>
   import('./AdminPanelModal').then((m) => ({ default: m.AdminPanelModal })),
@@ -39,6 +41,9 @@ const GlobalSearchModal = lazy(() =>
 );
 const ReviewBankModal = lazy(() =>
   import('./ReviewBankModal').then((m) => ({ default: m.ReviewBankModal })),
+);
+const FlashcardsModal = lazy(() =>
+  import('./FlashcardsModal').then((m) => ({ default: m.FlashcardsModal })),
 );
 const GeminiTutorDrawer = lazy(() =>
   import('./GeminiTutorDrawer').then((m) => ({ default: m.GeminiTutorDrawer })),
@@ -147,7 +152,14 @@ export const Layout: React.FC<LayoutProps> = ({
   const [updatesOpen, setUpdatesOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [tutorOpen, setTutorOpen] = useState(false);
+  const [flashcardsOpen, setFlashcardsOpen] = useState(false);
   const [introOpen, setIntroOpen] = useState(false);
+  const [pendingAi, setPendingAi] = useState<{
+    prompt: string;
+    subject?: SubjectId;
+    nonce: number;
+  } | null>(null);
+  const [tutorSubjectOverride, setTutorSubjectOverride] = useState<SubjectId | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [keyTestLoading, setKeyTestLoading] = useState(false);
   const [keyTestResult, setKeyTestResult] = useState<{ ok: boolean; message: string } | null>(null);
@@ -178,6 +190,18 @@ export const Layout: React.FC<LayoutProps> = ({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [settingsOpen]);
 
+  useEffect(() => {
+    const onAskAi = (e: Event) => {
+      const detail = (e as CustomEvent<AskAiPayload>).detail;
+      if (!detail?.prompt) return;
+      setTutorSubjectOverride(detail.subject ?? null);
+      setPendingAi({ prompt: detail.prompt, subject: detail.subject, nonce: Date.now() });
+      setTutorOpen(true);
+    };
+    window.addEventListener(ASK_AI_EVENT, onAskAi);
+    return () => window.removeEventListener(ASK_AI_EVENT, onAskAi);
+  }, []);
+
   const copyBaseUrl = async () => {
     try {
       const url = window.location.href.split('#')[0];
@@ -195,7 +219,7 @@ export const Layout: React.FC<LayoutProps> = ({
       <aside className="no-print hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-20">
         <div className="px-3.5 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2.5">
           <img
-            src="./logo.gif"
+            src="./logo.png"
             alt="Exam Studio Logo"
             className="w-9 h-9 rounded-xl object-cover shadow-sm ring-2 ring-indigo-500/30 shrink-0"
           />
@@ -363,6 +387,18 @@ export const Layout: React.FC<LayoutProps> = ({
             </button>
 
             <button
+              onClick={() => setFlashcardsOpen(true)}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+              title="Open Quick Formula & Trap Flashcards"
+            >
+              <span className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-sky-500 shrink-0" />
+                <span>Flashcards</span>
+              </span>
+              <span className="text-[10px] font-mono text-slate-400">Recall</span>
+            </button>
+
+            <button
               onClick={onNavigateGuide}
               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
                 isGuide
@@ -493,6 +529,17 @@ export const Layout: React.FC<LayoutProps> = ({
               </button>
             </div>
           )}
+          <div className="pt-1 text-center text-[10px] text-slate-400">
+            Built by{' '}
+            <a
+              href="https://github.com/vthonq"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              vthonq
+            </a>
+          </div>
         </div>
       </aside>
 
@@ -510,7 +557,7 @@ export const Layout: React.FC<LayoutProps> = ({
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <img
-              src="./logo.gif"
+              src="./logo.png"
               alt="Exam Studio Logo"
               className="w-8 h-8 rounded-lg object-cover ring-1 ring-indigo-500/30 shrink-0"
             />
@@ -641,6 +688,20 @@ export const Layout: React.FC<LayoutProps> = ({
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
+                setFlashcardsOpen(true);
+              }}
+              className="w-full px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-between"
+            >
+              <span className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-sky-500" />
+                Quick Formula &amp; Trap Flashcards
+              </span>
+              <span className="text-[10px] font-mono text-slate-400">Recall</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
                 setTutorOpen(true);
               }}
               className="w-full px-3 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-violet-600 text-white flex items-center justify-between"
@@ -741,6 +802,17 @@ export const Layout: React.FC<LayoutProps> = ({
                 </button>
               </div>
             )}
+            <div className="pt-1 text-center text-[10px] text-slate-400">
+              Built by{' '}
+              <a
+                href="https://github.com/vthonq"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                vthonq
+              </a>
+            </div>
           </div>
         )}
       </header>
@@ -1008,14 +1080,27 @@ export const Layout: React.FC<LayoutProps> = ({
 
         {reviewOpen && <ReviewBankModal open={reviewOpen} onClose={() => setReviewOpen(false)} />}
 
+        {flashcardsOpen && (
+          <FlashcardsModal
+            open={flashcardsOpen}
+            onClose={() => setFlashcardsOpen(false)}
+            initialSubject={subject}
+          />
+        )}
+
         {adminOpen && <AdminPanelModal open={adminOpen} onClose={() => setAdminOpen(false)} />}
 
         {tutorOpen && (
           <GeminiTutorDrawer
             open={tutorOpen}
-            onClose={() => setTutorOpen(false)}
-            subject={subject}
+            onClose={() => {
+              setTutorOpen(false);
+              setTutorSubjectOverride(null);
+            }}
+            subject={tutorSubjectOverride ?? subject}
             routeLabel={activeRouteLabel}
+            prefillPrompt={pendingAi}
+            onConsumePrefill={() => setPendingAi(null)}
           />
         )}
 

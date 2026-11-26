@@ -18,6 +18,7 @@ import {
 import { SbTableModal } from '../../components/probstat/SbTableModal';
 import { RichMathText } from '../../components/Math';
 import { clearExamDraft, loadExamDraft, saveExamDraft } from '../../utils/examDraft';
+import { buildExplainQuestionPrompt, dispatchAskAi } from '../../utils/askAiBridge';
 import { MathKeypad } from '../../components/MathKeypad';
 import { ExamStickyBar } from '../../components/ExamStickyBar';
 
@@ -544,13 +545,34 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
                   })}
                 </div>
                 {submitted && (
-                  <div className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl">
-                    <strong>Explanation:</strong> <RichMathText text={q.explanation} />
-                    {settings.lang === 'bilingual' && (
-                      <div className="mt-0.5 text-slate-500">
-                        <RichMathText text={q.explanationVi} />
-                      </div>
-                    )}
+                  <div className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl flex flex-wrap items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <strong>Explanation:</strong> <RichMathText text={q.explanation} />
+                      {settings.lang === 'bilingual' && (
+                        <div className="mt-0.5 text-slate-500">
+                          <RichMathText text={q.explanationVi} />
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        dispatchAskAi({
+                          subject: 'probstat',
+                          prompt: buildExplainQuestionPrompt({
+                            topicLabel: `${PROB_TOPIC_META[q.topic].code} (${q.tag})`,
+                            question: q.question,
+                            userAnswer: chosen !== undefined ? q.choices[chosen] : '(blank)',
+                            expectedAnswer: q.choices[q.correctIndex],
+                            explanation: q.explanation,
+                          }),
+                        })
+                      }
+                      className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 border border-indigo-200/80 dark:border-indigo-800/70 text-indigo-700 dark:text-indigo-300 font-semibold inline-flex items-center gap-1 cursor-pointer shrink-0"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      Explain with AI
+                    </button>
                   </div>
                 )}
               </div>
@@ -644,6 +666,29 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
                       >
                         <Copy className="w-3.5 h-3.5" />
                         {copiedId === q.id ? 'Copied!' : 'Copy Prompt for Free ChatGPT / Gemini'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          dispatchAskAi({
+                            subject: 'probstat',
+                            prompt: buildExplainQuestionPrompt({
+                              topicLabel: q.title,
+                              question: q.prompt,
+                              userAnswer: q.numericChecks
+                                .map((nc) => `${nc.label}: ${numInputs[`${q.id}:${nc.id}`] || '(blank)'}`)
+                                .join(', '),
+                              expectedAnswer: q.numericChecks
+                                .map((nc) => `${nc.label}: ${nc.expected}`)
+                                .join(', '),
+                              explanation: q.modelSolution,
+                            }),
+                          })
+                        }
+                        className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 border border-indigo-200/80 dark:border-indigo-800/70 text-indigo-700 dark:text-indigo-300 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Explain with AI
                       </button>
                       {settings.geminiKey.trim() && (
                         <button

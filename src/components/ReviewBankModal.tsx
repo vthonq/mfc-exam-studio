@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BookmarkCheck, CheckCircle2, Trash2, X, XCircle } from 'lucide-react';
+import { BookmarkCheck, CheckCircle2, Sparkles, Trash2, X, XCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { buildExplainQuestionPrompt, dispatchAskAi } from '../utils/askAiBridge';
 import type { SubjectId } from '../types';
 import { RichMathText } from './Math';
 
@@ -160,13 +161,41 @@ export const ReviewBankModal: React.FC<ReviewBankModalProps> = ({ open, onClose 
                         {item.source === 'bookmark' ? 'Bookmarked' : 'Missed'}
                       </span>
                     </div>
-                    <button
-                      onClick={() => removeMistake(item.id)}
-                      className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      Mark Mastered
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const expectedAns =
+                            item.expectedText ??
+                            (item.choices && item.correctIndex !== undefined
+                              ? item.choices[item.correctIndex]
+                              : undefined);
+                          onClose();
+                          dispatchAskAi({
+                            subject: item.subject,
+                            prompt: buildExplainQuestionPrompt({
+                              topicLabel: item.topicLabel,
+                              question: item.question,
+                              userAnswer: item.userAnswerText,
+                              expectedAnswer: expectedAns,
+                              explanation: item.explanation,
+                            }),
+                          });
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/70 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
+                        title="Open My Gemini AI Tutor with this question pre-filled"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Explain with AI
+                      </button>
+                      <button
+                        onClick={() => removeMistake(item.id)}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Mark Mastered
+                      </button>
+                    </div>
                   </div>
 
                   <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">

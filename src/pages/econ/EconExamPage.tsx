@@ -21,6 +21,7 @@ import {
   type OfflineCheckResult,
 } from '../../utils/offlineProofChecker';
 import { clearExamDraft, loadExamDraft, saveExamDraft } from '../../utils/examDraft';
+import { buildExplainQuestionPrompt, dispatchAskAi } from '../../utils/askAiBridge';
 import { ExamStickyBar } from '../../components/ExamStickyBar';
 
 type EconExamMode = 'final' | 'quiz3' | 'quiz4' | 'quiz5';
@@ -726,8 +727,27 @@ export const EconExamPage: React.FC<EconExamPageProps> = ({
                 })}
               </div>
               {submitted && (
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs">
-                  {q.explanation}
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs flex flex-wrap items-start justify-between gap-2">
+                  <span className="flex-1 min-w-0">{q.explanation}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      dispatchAskAi({
+                        subject: 'econ',
+                        prompt: buildExplainQuestionPrompt({
+                          topicLabel: `${ECON_TOPIC_META[q.topic].code} (${q.tag})`,
+                          question: q.question,
+                          userAnswer: picked !== undefined ? q.choices[picked] : '(blank)',
+                          expectedAnswer: q.choices[q.correctIndex],
+                          explanation: q.explanation,
+                        }),
+                      })
+                    }
+                    className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 border border-indigo-200/80 dark:border-indigo-800/70 text-indigo-700 dark:text-indigo-300 font-semibold inline-flex items-center gap-1 cursor-pointer shrink-0"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Explain with AI
+                  </button>
                 </div>
               )}
             </div>

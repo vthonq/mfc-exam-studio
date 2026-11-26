@@ -123,7 +123,7 @@ export const WelcomeIntroModal: React.FC<WelcomeIntroModalProps> = ({
         <div className="px-6 py-4 bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-600 text-white flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <img
-              src="./logo.gif"
+              src="./logo.png"
               alt="Exam Studio Logo"
               className="w-10 h-10 rounded-xl object-cover ring-2 ring-white/40 shadow-sm shrink-0"
             />

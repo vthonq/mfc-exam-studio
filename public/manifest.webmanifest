@@ -1,0 +1,18 @@
+{
+  "name": "Exam Studio Hub — MFC · Econ · ProbStat",
+  "short_name": "Exam Studio",
+  "description": "UEH-ISB Final Exam Studio for MFC, Macroeconomics & ProbStat — Built by vthonq",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "./logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

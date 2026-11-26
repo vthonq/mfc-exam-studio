@@ -7,9 +7,26 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v2.8';
+export const LATEST_UPDATE_ID = 'v2.9';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v2.9',
+    version: 'v2.9',
+    date: 'Nov 2026',
+    title: 'Web Logo PNG, 1-Click Explain with AI, Quick Flashcards & PWA Support',
+    titleVi: 'Icon PNG Siêu Nhẹ, Hỏi AI 1-Click Câu Sai, Flashcards & Hỗ trợ Cài đặt App',
+    items: [
+      {
+        en: 'Replaced the heavy 3.4 MB GIF with a crisp custom web logo PNG (-91% asset size) + installable PWA manifest & creator credit (vthonq).',
+        vi: 'Thay thế file GIF 3.4 MB bằng icon web PNG mới siêu nhẹ (giảm >91% dung lượng tải trang), hỗ trợ cài đặt PWA và ghi dấu tác giả (vthonq).',
+      },
+      {
+        en: 'Added 1-Click "Explain with AI" directly on Review Bank & Mock Exam questions + a Quick Formula & Trap Flashcards modal across MFC, Econ & ProbStat.',
+        vi: 'Thêm nút "Explain with AI" 1 chạm ngay trên câu sai (Review Bank & Đề thi thử) và bộ Flashcards ôn nhanh công thức, bẫy thi & thuật ngữ 3 môn.',
+      },
+    ],
+  },
   {
     id: 'v2.8',
     version: 'v2.8',

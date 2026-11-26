@@ -16,7 +16,9 @@ import {
   getMatchedKnowledgeSnippets,
 } from '../src/utils/knowledgeBridge';
 import { formatRelativeTime, isInAppBrowser } from '../src/utils/browserDetect';
+import { buildExplainQuestionPrompt } from '../src/utils/askAiBridge';
 import { clearExamDraft, loadExamDraft, saveExamDraft } from '../src/utils/examDraft';
+import { buildFlashcardDeck } from '../src/utils/flashcards';
 import { buildGlobalSearchItems, searchGlobalItems } from '../src/utils/searchIndex';
 
 describe('Global Search Index', () => {
@@ -228,5 +230,30 @@ describe('Changelog & Cross-Subject Data Integrity', () => {
       expect(md).toContain('Glossary');
       expect(getKnowledgeFileName(subj)).toMatch(/^ExamStudio-.*-Knowledge\.md$/);
     }
+  });
+
+  it('builds non-empty Formula and Glossary flashcard decks across all 3 subjects and clean Explain-with-AI prompts', () => {
+    for (const subj of ['mfc', 'econ', 'probstat'] as const) {
+      const formulaCards = buildFlashcardDeck(subj, 'formulas', true);
+      const glossaryCards = buildFlashcardDeck(subj, 'glossary', true);
+      expect(formulaCards.length).toBeGreaterThan(5);
+      expect(glossaryCards.length).toBeGreaterThan(5);
+      for (const c of [...formulaCards, ...glossaryCards]) {
+        expect(c.front.trim().length).toBeGreaterThan(0);
+        expect(c.backSummary.trim().length).toBeGreaterThan(0);
+      }
+    }
+
+    const prompt = buildExplainQuestionPrompt({
+      topicLabel: 'Ch. 1 · Logic',
+      question: 'Negate ∀x ∃y P(x, y)',
+      userAnswer: '∀x ¬∃y P(x, y)',
+      expectedAnswer: '∃x ∀y ¬P(x, y)',
+      explanation: 'Flip each quantifier and push negation inward.',
+    });
+    expect(prompt).toContain('Ch. 1 · Logic');
+    expect(prompt).toContain('Negate ∀x ∃y P(x, y)');
+    expect(prompt).toContain('My answer: ∀x ¬∃y P(x, y)');
+    expect(prompt).toContain('Expected answer: ∃x ∀y ¬P(x, y)');
   });
 });

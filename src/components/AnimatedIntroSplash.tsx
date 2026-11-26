@@ -101,7 +101,7 @@ export const AnimatedIntroSplash: React.FC = () => {
       {/* Calm Minimal Center Stack */}
       <div className="relative z-10 max-w-md mx-auto px-6 text-center flex flex-col items-center space-y-4">
         <img
-          src="./logo.gif"
+          src="./logo.png"
           alt="Exam Studio Hub"
           className="intro-logo-fade w-16 h-16 rounded-2xl object-cover shadow-lg ring-1 ring-white/15 bg-slate-900"
         />
@@ -124,6 +124,13 @@ export const AnimatedIntroSplash: React.FC = () => {
         <div className="pt-2 w-44 h-[3px] rounded-full bg-white/10 overflow-hidden">
           <div className="intro-progress-fill w-full h-full rounded-full bg-gradient-to-r from-indigo-400 via-sky-400 to-emerald-400" />
         </div>
+
+        <p
+          className="intro-text-rise text-[11px] font-medium tracking-wide text-slate-500 pt-1"
+          style={{ animationDelay: '300ms' }}
+        >
+          Built by <span className="text-slate-300 font-semibold">vthonq</span>
+        </p>
       </div>
     </div>
   );
