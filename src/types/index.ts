@@ -85,6 +85,8 @@ export interface ProgressState {
   econExamHistory: ExamAttemptRecord[];
   probExamHistory: ExamAttemptRecord[];
   mistakes: MistakeItem[];
+  examDates?: Partial<Record<SubjectId, string>>;
+  studyStreak?: { count: number; lastDate: string };
 }
 
 export interface AppSettings {

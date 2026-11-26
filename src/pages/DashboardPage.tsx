@@ -15,6 +15,7 @@ import { PROOF_EXERCISES } from '../data/proofs';
 import { randomSeedCode } from '../math/prng';
 import { CHAPTER_META, type ChapterId, type LabTab, type PageRoute } from '../types';
 import { BiText } from '../components/BiText';
+import { ExamReadinessStrip } from '../components/ExamReadinessStrip';
 
 interface DashboardPageProps {
   onNavigate: (route: PageRoute, query?: string) => void;
@@ -106,6 +107,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           </button>
         </div>
       </div>
+
+      <ExamReadinessStrip subject="mfc" />
 
       {/* 6 Chapter Mastery Grid */}
       <div>

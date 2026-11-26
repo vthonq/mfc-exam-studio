@@ -53,12 +53,38 @@ function loadLocalProgressForUid(uid?: string | null): ProgressState {
 
 export type CloudSyncStatus = 'idle' | 'syncing' | 'synced' | 'error';
 
+function localDateKey(d = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function bumpStudyStreak(
+  current?: { count: number; lastDate: string },
+  now = new Date(),
+): { count: number; lastDate: string } {
+  const today = localDateKey(now);
+  if (current?.lastDate === today) {
+    return { count: Math.max(1, current.count || 1), lastDate: today };
+  }
+  const yest = new Date(now);
+  yest.setDate(yest.getDate() - 1);
+  const yesterday = localDateKey(yest);
+  if (current?.lastDate === yesterday) {
+    return { count: (current.count || 0) + 1, lastDate: today };
+  }
+  return { count: 1, lastDate: today };
+}
+
 function hasMeaningfulProgress(p: ProgressState): boolean {
   const mCount =
     Object.values(p.mastery).reduce((s, x) => s + x.attempts, 0) +
     Object.values(p.econMastery).reduce((s, x) => s + x.attempts, 0) +
     Object.values(p.probMastery).reduce((s, x) => s + x.attempts, 0);
   if (mCount > 0) return true;
+  if (p.examDates && Object.values(p.examDates).some((v) => Boolean(v?.trim()))) return true;
+  if ((p.studyStreak?.count ?? 0) > 0) return true;
   return (
     p.completedAssignments.length > 0 ||
     p.completedProofs.length > 0 ||
@@ -112,6 +138,8 @@ const DEFAULT_PROGRESS: ProgressState = {
   econExamHistory: [],
   probExamHistory: [],
   mistakes: [],
+  examDates: {},
+  studyStreak: { count: 0, lastDate: '' },
 };
 
 interface AppContextValue {
@@ -135,6 +163,8 @@ interface AppContextValue {
   recordMistake: (item: Omit<MistakeItem, 'savedAtIso'>) => void;
   removeMistake: (id: string) => void;
   clearMistakes: (subject?: SubjectId) => void;
+  setExamDate: (subject: SubjectId, dateIso: string) => void;
+  recordStudyActivity: () => void;
   exportProgressJson: () => string;
   importProgressJson: (json: string) => boolean;
   resetProgress: () => void;
@@ -162,6 +192,15 @@ function hydrateProgress(rawObj: Partial<ProgressState> | null | undefined): Pro
     econExamHistory: Array.isArray(rawObj.econExamHistory) ? rawObj.econExamHistory : [],
     probExamHistory: Array.isArray(rawObj.probExamHistory) ? rawObj.probExamHistory : [],
     mistakes: Array.isArray(rawObj.mistakes) ? rawObj.mistakes : [],
+    examDates:
+      rawObj.examDates && typeof rawObj.examDates === 'object' ? { ...rawObj.examDates } : {},
+    studyStreak:
+      rawObj.studyStreak && typeof rawObj.studyStreak === 'object'
+        ? {
+            count: Number(rawObj.studyStreak.count) || 0,
+            lastDate: String(rawObj.studyStreak.lastDate || ''),
+          }
+        : { count: 0, lastDate: '' },
   };
 }
 
@@ -329,6 +368,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const recordPractice = (chapter: ChapterId, isCorrect: boolean) => {
     setProgress((p) => ({
       ...p,
+      studyStreak: bumpStudyStreak(p.studyStreak),
       mastery: {
         ...p.mastery,
         [chapter]: {
@@ -342,6 +382,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const recordEconPractice = (topic: EconTopicId, isCorrect: boolean) => {
     setProgress((p) => ({
       ...p,
+      studyStreak: bumpStudyStreak(p.studyStreak),
       econMastery: {
         ...p.econMastery,
         [topic]: {
@@ -355,6 +396,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const recordProbPractice = (topic: ProbTopicId, isCorrect: boolean) => {
     setProgress((p) => ({
       ...p,
+      studyStreak: bumpStudyStreak(p.studyStreak),
       probMastery: {
         ...p.probMastery,
         [topic]: {
@@ -401,6 +443,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addExamRecord = (record: ExamAttemptRecord) => {
     setProgress((p) => ({
       ...p,
+      studyStreak: bumpStudyStreak(p.studyStreak),
       examHistory: [record, ...p.examHistory].slice(0, 20),
     }));
   };
@@ -408,6 +451,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addEconExamRecord = (record: ExamAttemptRecord) => {
     setProgress((p) => ({
       ...p,
+      studyStreak: bumpStudyStreak(p.studyStreak),
       econExamHistory: [record, ...p.econExamHistory].slice(0, 20),
     }));
   };
@@ -415,7 +459,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addProbExamRecord = (record: ExamAttemptRecord) => {
     setProgress((p) => ({
       ...p,
+      studyStreak: bumpStudyStreak(p.studyStreak),
       probExamHistory: [record, ...p.probExamHistory].slice(0, 20),
+    }));
+  };
+
+  const setExamDate = (subject: SubjectId, dateIso: string) => {
+    const trimmed = dateIso.trim();
+    setProgress((p) => {
+      const nextDates = { ...(p.examDates ?? {}) };
+      if (trimmed) nextDates[subject] = trimmed;
+      else delete nextDates[subject];
+      return { ...p, examDates: nextDates };
+    });
+  };
+
+  const recordStudyActivity = () => {
+    setProgress((p) => ({
+      ...p,
+      studyStreak: bumpStudyStreak(p.studyStreak),
     }));
   };
 
@@ -482,6 +544,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         recordMistake,
         removeMistake,
         clearMistakes,
+        setExamDate,
+        recordStudyActivity,
         exportProgressJson,
         importProgressJson,
         resetProgress,

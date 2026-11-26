@@ -19,6 +19,7 @@ import {
   type ProbTopicId,
 } from '../../types';
 import { BiText } from '../../components/BiText';
+import { ExamReadinessStrip } from '../../components/ExamReadinessStrip';
 
 interface ProbDashboardProps {
   onNavigate: (route: ProbPageRoute, query?: string) => void;
@@ -103,6 +104,8 @@ export const ProbDashboardPage: React.FC<ProbDashboardProps> = ({ onNavigate }) 
           </button>
         </div>
       </div>
+
+      <ExamReadinessStrip subject="probstat" />
 
       {/* Chapter Mastery Grid */}
       <div>

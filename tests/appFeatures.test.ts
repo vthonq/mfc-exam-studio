@@ -19,6 +19,20 @@ import { formatRelativeTime, isInAppBrowser } from '../src/utils/browserDetect';
 import { buildExplainQuestionPrompt } from '../src/utils/askAiBridge';
 import { clearExamDraft, loadExamDraft, saveExamDraft } from '../src/utils/examDraft';
 import { buildFlashcardDeck } from '../src/utils/flashcards';
+import {
+  computeCombinatorics,
+  computeEconQuickCalc,
+  computeModularCalc,
+  computeQuickOneSampleT,
+  computeSampleStats,
+  convertIntegerBases,
+  parseNumberList,
+} from '../src/utils/examCalculator';
+import {
+  buildSmartDrillQuestions,
+  buildSmartFocusPlan,
+  daysUntilExam,
+} from '../src/utils/smartFocus';
 import { buildGlobalSearchItems, searchGlobalItems } from '../src/utils/searchIndex';
 
 describe('Global Search Index', () => {
@@ -255,5 +269,107 @@ describe('Changelog & Cross-Subject Data Integrity', () => {
     expect(prompt).toContain('Negate ∀x ∃y P(x, y)');
     expect(prompt).toContain('My answer: ∀x ¬∃y P(x, y)');
     expect(prompt).toContain('Expected answer: ∃x ∀y ¬P(x, y)');
+  });
+
+  it('builds Smart Exam Focus plans & adaptive drills prioritizing Review Bank mistakes and computes Show-Your-Work Exam Calculator formulas accurately', () => {
+    const now = new Date(2026, 10, 27, 10, 0, 0).getTime();
+    expect(daysUntilExam('2026-11-30', now)).toBe(3);
+    expect(daysUntilExam('2026-11-27', now)).toBe(0);
+    expect(daysUntilExam('invalid', now)).toBeNull();
+
+    const sampleProgress = {
+      mastery: {
+        ch1: { correct: 9, attempts: 10 },
+        ch4: { correct: 1, attempts: 5 },
+        ch9: { correct: 8, attempts: 10 },
+        ch10: { correct: 7, attempts: 10 },
+        ch11: { correct: 7, attempts: 10 },
+        ch12: { correct: 8, attempts: 10 },
+      },
+      econMastery: {
+        part6: { correct: 5, attempts: 5 },
+        part7: { correct: 4, attempts: 5 },
+        part8: { correct: 1, attempts: 5 },
+        part9: { correct: 4, attempts: 5 },
+      },
+      probMastery: {
+        'ps-ch1': { correct: 5, attempts: 5 },
+        'ps-ch2': { correct: 5, attempts: 5 },
+        'ps-ch3': { correct: 4, attempts: 5 },
+        'ps-ch4': { correct: 0, attempts: 3 },
+        'ps-ch5': { correct: 3, attempts: 5 },
+      },
+      completedAssignments: [],
+      completedProofs: [],
+      completedEconScenarios: [],
+      completedProbProblems: [],
+      examHistory: [],
+      econExamHistory: [],
+      probExamHistory: [],
+      mistakes: [
+        {
+          id: 'm1',
+          subject: 'mfc' as const,
+          topicLabel: 'Ch. 4 · Mod Inverse',
+          question: 'Test mistake question?',
+          choices: ['A', 'B', 'C', 'D'],
+          correctIndex: 1,
+          explanation: 'B is right.',
+          savedAtIso: '2026-11-26T00:00:00Z',
+          source: 'mistake' as const,
+        },
+      ],
+    };
+
+    const mfcPlan = buildSmartFocusPlan('mfc', sampleProgress);
+    expect(mfcPlan.weakestTopics[0].id).toBe('ch4');
+    expect(mfcPlan.dueMistakesCount).toBe(1);
+
+    const mfcDrill = buildSmartDrillQuestions('mfc', sampleProgress, 8, 'V3TEST');
+    expect(mfcDrill).toHaveLength(8);
+    expect(mfcDrill[0].source).toBe('mistake');
+
+    for (const subj of ['econ', 'probstat'] as const) {
+      const drill = buildSmartDrillQuestions(subj, sampleProgress, 8, 'V3TEST');
+      expect(drill).toHaveLength(8);
+    }
+
+    const parsed = parseNumberList('10, 12; 14\n16');
+    expect(parsed).toEqual([10, 12, 14, 16]);
+    const stats = computeSampleStats(parsed);
+    expect(stats.n).toBe(4);
+    expect(stats.mean).toBe(13);
+    expect(stats.sampleSd).toBeCloseTo(Math.sqrt(20 / 3), 5);
+    expect(stats.workingLines.length).toBeGreaterThanOrEqual(4);
+
+    const tRes = computeQuickOneSampleT(stats.mean, 10, stats.sampleSd, stats.n, 0.95);
+    expect(tRes.df).toBe(3);
+    expect(tRes.ciLow).toBeLessThan(stats.mean);
+    expect(tRes.ciHigh).toBeGreaterThan(stats.mean);
+
+    expect(computeCombinatorics(5, 2)).toEqual({ nCr: 10, nPr: 20, nFact: 120 });
+
+    const modRes = computeModularCalc(7, 13, 11);
+    expect(modRes.powMod).toBe(2);
+    expect(modRes.gcdVal).toBe(1);
+    expect(modRes.inverse).toBe(8);
+
+    const bases = convertIntegerBases('255', 10);
+    expect(bases).toEqual({ dec: '255', bin: '11111111', hex: 'FF', oct: '377' });
+
+    const econRes = computeEconQuickCalc({
+      oldVal: 100,
+      newVal: 110,
+      nominalRate: 8,
+      inflationRate: 3,
+      mpc: 0.8,
+      deltaG: 20,
+      reserveRatioPct: 10,
+    });
+    expect(econRes.pctChange).toBeCloseTo(10, 5);
+    expect(econRes.realRate).toBeCloseTo(5, 5);
+    expect(econRes.spendingMult).toBeCloseTo(5, 5);
+    expect(econRes.adShift).toBeCloseTo(100, 5);
+    expect(econRes.moneyMult).toBeCloseTo(10, 5);
   });
 });

@@ -18,6 +18,7 @@ import {
   type EconTopicId,
 } from '../../types';
 import { BiText } from '../../components/BiText';
+import { ExamReadinessStrip } from '../../components/ExamReadinessStrip';
 
 interface EconDashboardProps {
   onNavigate: (route: EconPageRoute, query?: string) => void;
@@ -89,6 +90,8 @@ export const EconDashboardPage: React.FC<EconDashboardProps> = ({ onNavigate }) 
           </button>
         </div>
       </div>
+
+      <ExamReadinessStrip subject="econ" />
 
       {/* 4 Official Macro Parts (Parts 6-9) */}
       <div>

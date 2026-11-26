@@ -7,9 +7,26 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v2.10';
+export const LATEST_UPDATE_ID = 'v3.0';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v3.0',
+    version: 'v3.0',
+    date: 'Nov 2026',
+    title: 'Smart Exam Countdown, Adaptive Focus Drills & Exam Calculator',
+    titleVi: 'Đếm Ngược Ngày Thi, Luyện Tập Trung Thông Minh & Máy Tính Giải Bước',
+    items: [
+      {
+        en: 'Set Final Exam dates per subject (cloud-synced) with Study Streak tracking + a 1-click "Smart Focus Drill" that automatically targets your Review Bank mistakes and weakest chapters.',
+        vi: 'Đặt ngày thi cuối kỳ cho từng môn (đồng bộ Cloud), theo dõi chuỗi ngày ôn thi & chế độ "Smart Focus Drill" tự động gom câu sai và chương yếu nhất để luyện lại.',
+      },
+      {
+        en: 'Added a docked "Show-Your-Work" Exam Calculator (Sample Stats/t-Test/CI/nCr for ProbStat, Modular Power/GCD/Inverse/Bases for MFC, % Change/Fisher/Multipliers for Econ) with 1-click Copy Steps.',
+        vi: 'Thêm Máy tính "Exam Calc" tích hợp (Thống kê mẫu/Kiểm định t/CI/Tổ hợp cho XSTK, Lũy thừa mod/GCD/Nghịch đảo/Đổi cơ số cho MFC, %/Fisher/Số nhân cho Kinh tế) kèm nút chép từng bước giải.',
+      },
+    ],
+  },
   {
     id: 'v2.10',
     version: 'v2.10',

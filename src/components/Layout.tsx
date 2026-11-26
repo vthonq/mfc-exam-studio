@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useEffect, useState } from 'react';
 import {
   BookOpen,
   BookmarkCheck,
+  Calculator,
   Check,
   ClipboardCheck,
   Cloud,
@@ -25,6 +26,7 @@ import {
   Sparkles,
   Sun,
   Table2,
+  Target,
   X,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -32,6 +34,7 @@ import { useAuth } from '../context/AuthContext';
 import { UpdatesBanner, UpdatesModal } from './UpdatesBox';
 import { LATEST_UPDATE_ID } from '../data/changelog';
 import { ASK_AI_EVENT, type AskAiPayload } from '../utils/askAiBridge';
+import { OPEN_FOCUS_EVENT } from '../utils/smartFocus';
 
 const AdminPanelModal = lazy(() =>
   import('./AdminPanelModal').then((m) => ({ default: m.AdminPanelModal })),
@@ -44,6 +47,12 @@ const ReviewBankModal = lazy(() =>
 );
 const FlashcardsModal = lazy(() =>
   import('./FlashcardsModal').then((m) => ({ default: m.FlashcardsModal })),
+);
+const SmartFocusModal = lazy(() =>
+  import('./SmartFocusModal').then((m) => ({ default: m.SmartFocusModal })),
+);
+const ExamCalculatorDrawer = lazy(() =>
+  import('./ExamCalculatorDrawer').then((m) => ({ default: m.ExamCalculatorDrawer })),
 );
 const GeminiTutorDrawer = lazy(() =>
   import('./GeminiTutorDrawer').then((m) => ({ default: m.GeminiTutorDrawer })),
@@ -153,6 +162,9 @@ export const Layout: React.FC<LayoutProps> = ({
   const [adminOpen, setAdminOpen] = useState(false);
   const [tutorOpen, setTutorOpen] = useState(false);
   const [flashcardsOpen, setFlashcardsOpen] = useState(false);
+  const [focusOpen, setFocusOpen] = useState(false);
+  const [focusSubjectOverride, setFocusSubjectOverride] = useState<SubjectId | null>(null);
+  const [calcOpen, setCalcOpen] = useState(false);
   const [introOpen, setIntroOpen] = useState(false);
   const [pendingAi, setPendingAi] = useState<{
     prompt: string;
@@ -200,6 +212,16 @@ export const Layout: React.FC<LayoutProps> = ({
     };
     window.addEventListener(ASK_AI_EVENT, onAskAi);
     return () => window.removeEventListener(ASK_AI_EVENT, onAskAi);
+  }, []);
+
+  useEffect(() => {
+    const onOpenFocus = (e: Event) => {
+      const detail = (e as CustomEvent<{ subject?: SubjectId }>).detail;
+      setFocusSubjectOverride(detail?.subject ?? null);
+      setFocusOpen(true);
+    };
+    window.addEventListener(OPEN_FOCUS_EVENT, onOpenFocus);
+    return () => window.removeEventListener(OPEN_FOCUS_EVENT, onOpenFocus);
   }, []);
 
   const copyBaseUrl = async () => {
@@ -384,6 +406,37 @@ export const Layout: React.FC<LayoutProps> = ({
               >
                 {progress.mistakes.length}
               </span>
+            </button>
+
+            <button
+              onClick={() => {
+                setFocusSubjectOverride(null);
+                setFocusOpen(true);
+              }}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+              title="Launch Today's Adaptive Smart Focus Drill"
+            >
+              <span className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>Smart Focus</span>
+              </span>
+              {(progress.studyStreak?.count ?? 0) > 0 && (
+                <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold">
+                  {progress.studyStreak?.count}d
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setCalcOpen(true)}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+              title="Open Show-Your-Work Exam Calculator"
+            >
+              <span className="flex items-center gap-2">
+                <Calculator className="w-4 h-4 text-slate-500 shrink-0" />
+                <span>Exam Calc</span>
+              </span>
+              <span className="text-[10px] font-mono text-slate-400">Steps</span>
             </button>
 
             <button
@@ -684,6 +737,30 @@ export const Layout: React.FC<LayoutProps> = ({
                 </span>
               </button>
             )}
+
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setFocusSubjectOverride(null);
+                  setFocusOpen(true);
+                }}
+                className="px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center gap-1.5"
+              >
+                <Target className="w-3.5 h-3.5" />
+                Smart Focus
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setCalcOpen(true);
+                }}
+                className="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5"
+              >
+                <Calculator className="w-3.5 h-3.5" />
+                Exam Calc
+              </button>
+            </div>
 
             <button
               onClick={() => {
@@ -1088,6 +1165,25 @@ export const Layout: React.FC<LayoutProps> = ({
           />
         )}
 
+        {focusOpen && (
+          <SmartFocusModal
+            open={focusOpen}
+            onClose={() => {
+              setFocusOpen(false);
+              setFocusSubjectOverride(null);
+            }}
+            initialSubject={focusSubjectOverride ?? subject}
+          />
+        )}
+
+        {calcOpen && (
+          <ExamCalculatorDrawer
+            open={calcOpen}
+            onClose={() => setCalcOpen(false)}
+            initialSubject={subject}
+          />
+        )}
+
         {adminOpen && <AdminPanelModal open={adminOpen} onClose={() => setAdminOpen(false)} />}
 
         {tutorOpen && (
@@ -1123,20 +1219,32 @@ export const Layout: React.FC<LayoutProps> = ({
         )}
       </Suspense>
 
-      {!tutorOpen && (
-        <button
-          type="button"
-          onClick={() => setTutorOpen(true)}
-          className="no-print fixed bottom-16 md:bottom-5 right-4 md:right-6 z-30 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-slate-900/90 hover:bg-slate-900 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 shadow-md border border-slate-700/40 dark:border-slate-300/60 text-xs font-semibold transition-all cursor-pointer"
-          title="Ask My Gemini AI Tutor"
-          aria-label="Open My Gemini AI Tutor"
-        >
-          <Sparkles className="w-4 h-4 text-indigo-400 dark:text-indigo-600" />
-          <span className="hidden sm:inline">Gemini AI</span>
-          {hasGeminiKey && (
-            <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />
-          )}
-        </button>
+      {!tutorOpen && !calcOpen && (
+        <div className="no-print fixed bottom-16 md:bottom-5 right-4 md:right-6 z-30 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCalcOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-white/95 hover:bg-white dark:bg-slate-900/95 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-md border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-all cursor-pointer"
+            title="Show-Your-Work Exam Calculator"
+            aria-label="Open Exam Calculator"
+          >
+            <Calculator className="w-4 h-4 text-slate-500 dark:text-slate-300" />
+            <span className="hidden sm:inline">Calc</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTutorOpen(true)}
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-slate-900/90 hover:bg-slate-900 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 shadow-md border border-slate-700/40 dark:border-slate-300/60 text-xs font-semibold transition-all cursor-pointer"
+            title="Ask My Gemini AI Tutor"
+            aria-label="Open My Gemini AI Tutor"
+          >
+            <Sparkles className="w-4 h-4 text-indigo-400 dark:text-indigo-600" />
+            <span className="hidden sm:inline">Gemini AI</span>
+            {hasGeminiKey && (
+              <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />
+            )}
+          </button>
+        </div>
       )}
 
       <UpdatesModal open={updatesOpen} onClose={() => setUpdatesOpen(false)} />
