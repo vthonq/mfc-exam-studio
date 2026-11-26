@@ -23,21 +23,12 @@ interface EconDashboardProps {
   onNavigate: (route: EconPageRoute, query?: string) => void;
 }
 
-const TOPIC_TO_LAB: Record<EconTopicId, EconLabTab> = {
-  'macro-gdp-cpi': 'gdp-cpi',
-  'macro-growth-saving-unemp': 'money-saving',
-  'macro-money-inflation': 'money-saving',
-  'macro-open-econ': 'open-econ',
-  'macro-adas-policy-phillips': 'adas-phillips',
-  'micro-supply-elasticity-tax': 'micro',
-  'micro-costs-markets': 'micro',
-};
+const PART_LIST: EconTopicId[] = ['part6', 'part7', 'part8', 'part9'];
 
 export const EconDashboardPage: React.FC<EconDashboardProps> = ({ onNavigate }) => {
   const { progress } = useApp();
-  const topics = Object.keys(ECON_TOPIC_META) as EconTopicId[];
 
-  const cards = topics.map((id) => {
+  const cards = PART_LIST.map((id) => {
     const m = progress.econMastery[id] ?? { correct: 0, attempts: 0 };
     const pct = m.attempts > 0 ? Math.round((m.correct / m.attempts) * 100) : 0;
     return { id, ...m, pct };
@@ -46,7 +37,7 @@ export const EconDashboardPage: React.FC<EconDashboardProps> = ({ onNavigate }) 
   const attempted = cards.filter((c) => c.attempts > 0);
   const readiness =
     attempted.length > 0
-      ? Math.round(attempted.reduce((s, c) => s + c.pct, 0) / topics.length)
+      ? Math.round(attempted.reduce((s, c) => s + c.pct, 0) / PART_LIST.length)
       : 0;
 
   const weakest = [...cards].sort((a, b) => a.pct - b.pct || a.attempts - b.attempts)[0];
@@ -57,7 +48,7 @@ export const EconDashboardPage: React.FC<EconDashboardProps> = ({ onNavigate }) 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-2 max-w-xl">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 text-xs font-medium">
-              <TrendingUp className="w-3.5 h-3.5" /> Principles of Economics — Macro Final &amp; Micro Midterm
+              <TrendingUp className="w-3.5 h-3.5" /> ECO101 Final Exam · Macroeconomics (Ch. 23–26, 28–35)
             </div>
             <div className="flex items-center gap-3">
               <img
@@ -66,45 +57,46 @@ export const EconDashboardPage: React.FC<EconDashboardProps> = ({ onNavigate }) 
                 className="w-12 h-12 rounded-2xl object-cover ring-2 ring-white/40 shadow-md shrink-0"
               />
               <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-                Economics Studio (Macro + Micro)
+                Macroeconomics Final Studio
               </h1>
             </div>
             <BiText
-              en="Built from Mankiw’s textbook & your ISB Macro Final (Ch. 23–35) and Micro Midterm (Ch. 1–21) handbooks — with live AD–AS, Twin-Market, and Supply/Demand SVG models."
-              vi="Tổng hợp theo giáo trình Mankiw và 2 cuốn Handbook Kinh tế Vĩ mô (Ch. 23–35) + Vi mô (Ch. 1–21), kèm đồ thị tương tác AD–AS, Kinh tế mở và Cung–Cầu."
+              en="Built strictly for your UEH-ISB Final Exam (40%): 100 minutes · 30 Multiple-Choice Questions (50%) + 4 Short-Answer Policy Questions (50%) across Parts 6–9."
+              vi="Tối ưu theo đề thi cuối kỳ ECO101 (40%): 100 phút · 30 câu trắc nghiệm (50%) + 4 câu tự luận phân tích chính sách (50%) thuộc Phần 6–9."
               className="text-sm text-emerald-50"
               viClassName="text-xs text-emerald-100/90 mt-1"
             />
           </div>
 
-          <div className="bg-white/10 backdrop-blur rounded-2xl p-4 min-w-[190px] text-center border border-white/15">
-            <div className="text-xs uppercase tracking-wider text-emerald-100">Econ Readiness</div>
+          <div className="bg-white/10 backdrop-blur rounded-2xl p-4 min-w-[200px] text-center border border-white/15">
+            <div className="text-xs uppercase tracking-wider text-emerald-100">Macro Readiness</div>
             <div className="text-4xl font-extrabold mt-1">{readiness}%</div>
             <div className="text-[11px] text-emerald-100 mt-1">
-              {ECON_MCQS.length} MCQs · {ECON_SCENARIOS.length} Policy Cases · {ECON_KNOWLEDGE.length} Guides
+              12 Chapters · {ECON_MCQS.length} MCQs · {ECON_SCENARIOS.length} Policy Cases
             </div>
           </div>
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2.5">
           <button
-            onClick={() => onNavigate('exam', `seed=${randomSeedCode()}`)}
+            onClick={() => onNavigate('exam', `seed=${randomSeedCode()}&mode=final`)}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-emerald-800 font-semibold text-sm hover:bg-emerald-50 cursor-pointer"
           >
-            <Share2 className="w-4 h-4" /> Start / Share Group Econ Exam
+            <Share2 className="w-4 h-4" /> Start 100m Final Exam (30 MCQ + 4 Essay)
           </button>
           <button
-            onClick={() => onNavigate('labs', `tab=${TOPIC_TO_LAB[weakest.id]}`)}
+            onClick={() => onNavigate('labs', `tab=${weakest.id as EconLabTab}`)}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/40 hover:bg-emerald-500/60 border border-white/20 text-white font-semibold text-sm cursor-pointer"
           >
-            Practice Next: {ECON_TOPIC_META[weakest.id].code} <ArrowRight className="w-4 h-4" />
+            Practice Weakest: {ECON_TOPIC_META[weakest.id].code} <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </div>
 
+      {/* 4 Official Macro Parts (Parts 6-9) */}
       <div>
-        <h2 className="text-base font-bold mb-3">Macro Final &amp; Micro Midterm Mastery</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <h2 className="text-base font-bold mb-3">Final Exam Syllabus — Parts 6 to 9</h2>
+        <div className="grid sm:grid-cols-2 gap-3.5">
           {cards.map((c) => {
             const meta = ECON_TOPIC_META[c.id];
             return (
@@ -114,11 +106,11 @@ export const EconDashboardPage: React.FC<EconDashboardProps> = ({ onNavigate }) 
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                      {meta.scope} · {meta.code}
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                      {meta.code} · {meta.quizTag}
                     </span>
                     <span className="text-xs font-mono text-slate-500">
-                      {c.attempts > 0 ? `${c.correct}/${c.attempts} (${c.pct}%)` : 'New'}
+                      {c.attempts > 0 ? `${c.correct}/${c.attempts} (${c.pct}%)` : 'Not practiced'}
                     </span>
                   </div>
                   <BiText en={meta.title} vi={meta.titleVi} className="font-semibold text-sm mt-1" />
@@ -132,16 +124,16 @@ export const EconDashboardPage: React.FC<EconDashboardProps> = ({ onNavigate }) 
                   </div>
                   <div className="flex justify-between text-xs">
                     <button
-                      onClick={() => onNavigate('labs', `tab=${TOPIC_TO_LAB[c.id]}`)}
+                      onClick={() => onNavigate('labs', `tab=${c.id as EconLabTab}`)}
                       className="text-emerald-600 dark:text-emerald-400 font-medium hover:underline cursor-pointer"
                     >
-                      Open Lab →
+                      Open {c.id.toUpperCase()} Lab →
                     </button>
                     <button
                       onClick={() => onNavigate('knowledge', `topic=${c.id}`)}
                       className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
                     >
-                      Summary
+                      Chapter Notes
                     </button>
                   </div>
                 </div>
@@ -151,38 +143,39 @@ export const EconDashboardPage: React.FC<EconDashboardProps> = ({ onNavigate }) 
         </div>
       </div>
 
+      {/* Quick Tutorial Quizzes & Tools */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {[
           {
-            route: 'labs' as EconPageRoute,
+            onClick: () => onNavigate('labs'),
             icon: FlaskConical,
-            title: 'Interactive Econ Labs',
-            desc: 'GDP/CPI tables, Money Multiplier, Twin Markets, AD–AS + Phillips, and Tax/Monopoly.',
+            title: 'Macro Simulators',
+            desc: 'GDP/CPI, Money Multiplier, Twin-Market FX SVG & AD–AS + Phillips SVG.',
           },
           {
-            route: 'drill' as EconPageRoute,
+            onClick: () => onNavigate('drill'),
             icon: HelpCircle,
-            title: 'Testbank & Policy Drills',
-            desc: 'ISB Handbook MCQs with EN+VI explanations + Policy Essays with Copy Prompt.',
+            title: '42 MCQs & 8 Policy Essays',
+            desc: 'Testbank across all 12 chapters + short-answer trainer with No-Key checks.',
           },
           {
-            route: 'knowledge' as EconPageRoute,
+            onClick: () => onNavigate('knowledge'),
             icon: BookOpen,
-            title: 'Macro & Micro Cheat Sheets',
-            desc: 'All key formulas, exam traps & 30+ EN–VI Economics terms.',
+            title: `${ECON_KNOWLEDGE.length} Chapter Cheat Sheets`,
+            desc: 'Every Macro chapter Ch. 23–35 formulas, exam traps & 45+ EN–VI terms.',
           },
           {
-            route: 'exam' as EconPageRoute,
+            onClick: () => onNavigate('exam', `seed=${randomSeedCode()}&mode=quiz3`),
             icon: ClipboardCheck,
-            title: 'Mock Econ Exam',
-            desc: 'Choose Macro Final, Micro Midterm, or Combined — shareable group seed link.',
+            title: 'Tutorial Quizzes 3, 4, 5',
+            desc: '25-min 20-MCQ drills matching your official ISB tutorial sessions.',
           },
-        ].map((card) => {
+        ].map((card, i) => {
           const Icon = card.icon;
           return (
             <button
-              key={card.route}
-              onClick={() => onNavigate(card.route)}
+              key={i}
+              onClick={card.onClick}
               className="text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-400 rounded-2xl p-4 space-y-2 transition-colors cursor-pointer"
             >
               <Icon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -195,7 +188,7 @@ export const EconDashboardPage: React.FC<EconDashboardProps> = ({ onNavigate }) 
 
       {progress.econExamHistory.length > 0 && (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-2">
-          <h2 className="text-sm font-bold">Recent Economics Mock Exams</h2>
+          <h2 className="text-sm font-bold">Recent Macroeconomics Exam History</h2>
           {progress.econExamHistory.slice(0, 5).map((ex) => (
             <div
               key={ex.id}

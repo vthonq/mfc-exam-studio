@@ -17,10 +17,9 @@ export function computeGdpTable(
   goods: GoodYearData[],
   baseYearIdx: number,
 ): GdpYearSummary[] {
-  const numYears = yearLabels.length;
   const rows: GdpYearSummary[] = [];
 
-  for (let y = 0; y < numYears; y++) {
+  for (let y = 0; y < yearLabels.length; y++) {
     let nominal = 0;
     let real = 0;
     for (const g of goods) {
@@ -94,6 +93,13 @@ export function realInterestRate(nominalRatePct: number, inflationRatePct: numbe
   return round2(nominalRatePct - inflationRatePct);
 }
 
+export function computePeAndDividend(stockPrice: number, eps: number, dividendYieldPct: number) {
+  const peRatio = eps > 0 ? round2(stockPrice / eps) : 0;
+  const dividendPerShare = round2(stockPrice * (dividendYieldPct / 100));
+  const retainedEarningsPerShare = round2(eps - dividendPerShare);
+  return { peRatio, dividendPerShare, retainedEarningsPerShare };
+}
+
 export function computeSavingAndUnemployment(input: {
   Y: number;
   C: number;
@@ -105,7 +111,7 @@ export function computeSavingAndUnemployment(input: {
 }) {
   const privateSaving = round2(input.Y - input.T - input.C);
   const publicSaving = round2(input.T - input.G);
-  const nationalSaving = round2(input.Y - input.C - input.G); // equals private + public
+  const nationalSaving = round2(input.Y - input.C - input.G);
   const budgetStatus =
     publicSaving > 0
       ? 'Budget Surplus'
@@ -133,16 +139,26 @@ export function computeSavingAndUnemployment(input: {
 export function computeMoneyBanking(input: {
   initialDeposit: number;
   reserveRatioPct: number;
+  excessReservePct?: number;
+  currencyDrainPct?: number;
   bankAssets: number;
   bankCapital: number;
   moneySupplyM: number;
   velocityV: number;
   realOutputY: number;
 }) {
-  const r = input.reserveRatioPct / 100;
-  const moneyMultiplier = r > 0 ? round2(1 / r) : 0;
-  const maxTotalMoneyCreated = round2(input.initialDeposit * moneyMultiplier);
+  const rr = input.reserveRatioPct / 100;
+  const er = (input.excessReservePct ?? 0) / 100;
+  const cr = (input.currencyDrainPct ?? 0) / 100;
+
+  const simpleMultiplier = rr > 0 ? round2(1 / rr) : 0;
+  const actualMultiplier =
+    rr + er + cr > 0 ? round2((1 + cr) / (rr + er + cr)) : 0;
+
+  const maxTotalMoneyCreated = round2(input.initialDeposit * simpleMultiplier);
   const maxNewLoans = round2(maxTotalMoneyCreated - input.initialDeposit);
+  const actualMoneyCreated = round2(input.initialDeposit * actualMultiplier);
+
   const leverageRatio =
     input.bankCapital > 0 ? round2(input.bankAssets / input.bankCapital) : 0;
   const priceLevel =
@@ -151,16 +167,18 @@ export function computeMoneyBanking(input: {
       : 0;
 
   return {
-    moneyMultiplier,
+    moneyMultiplier: simpleMultiplier,
+    actualMultiplier,
     maxTotalMoneyCreated,
     maxNewLoans,
+    actualMoneyCreated,
     leverageRatio,
     priceLevel,
   };
 }
 
 export function computeOpenEconomy(input: {
-  nominalExchangeRate: number; // foreign currency per 1 domestic unit
+  nominalExchangeRate: number;
   domesticPrice: number;
   foreignPrice: number;
   nationalSavingS: number;
@@ -175,7 +193,11 @@ export function computeOpenEconomy(input: {
   const nco = round2(input.nationalSavingS - input.domesticInvestmentI);
   const nx = nco;
   const tradeStatus =
-    nx > 0 ? 'Trade Surplus (Net Capital Outflow > 0)' : nx < 0 ? 'Trade Deficit (Net Capital Inflow)' : 'Balanced Trade';
+    nx > 0
+      ? 'Trade Surplus (Net Capital Outflow > 0)'
+      : nx < 0
+        ? 'Trade Deficit (Net Capital Inflow)'
+        : 'Balanced Trade';
 
   return {
     realExchangeRate,
@@ -266,164 +288,15 @@ export function computeMultipliers(mpc: number, deltaG: number, deltaT: number) 
   };
 }
 
-// Linear market: Qd = a - bP, Qs = c + dP (with a > 0, b > 0, d > 0)
-export function computeLinearMarket(input: {
-  a: number;
-  b: number;
-  c: number;
-  d: number;
-  tax?: number;
-  priceControl?: { type: 'none' | 'ceiling' | 'floor'; price: number };
-}) {
-  const { a, b, c, d, tax = 0 } = input;
-  const eqPrice = (a - c) / (b + d);
-  const eqQty = a - b * eqPrice;
-  const pMaxDemand = a / b;
-  const pMinSupply = -c / d;
-
-  const csNoTax = 0.5 * (pMaxDemand - eqPrice) * eqQty;
-  const psNoTax = 0.5 * (eqPrice - Math.max(0, pMinSupply)) * eqQty;
-
-  // With per-unit tax t: Pb - Ps = t, and a - b*Pb = c + d*Ps => Q_tax
-  const psTax = (a - c - b * tax) / (b + d);
-  const pbTax = psTax + tax;
-  const qTax = Math.max(0, a - b * pbTax);
-  const taxRevenue = tax * qTax;
-  const dwlTax = 0.5 * tax * Math.max(0, eqQty - qTax);
-  const buyerBurdenPerUnit = pbTax - eqPrice;
-  const sellerBurdenPerUnit = eqPrice - psTax;
-
-  let controlStatus = 'No Price Control';
-  let shortageOrSurplus = 0;
-  let actualQtyControl = eqQty;
-
-  if (input.priceControl && input.priceControl.type !== 'none') {
-    const pCtrl = input.priceControl.price;
-    const qdAt = Math.max(0, a - b * pCtrl);
-    const qsAt = Math.max(0, c + d * pCtrl);
-    if (input.priceControl.type === 'ceiling') {
-      if (pCtrl < eqPrice) {
-        controlStatus = 'Binding Price Ceiling (Shortage)';
-        shortageOrSurplus = round2(qdAt - qsAt);
-        actualQtyControl = round2(qsAt);
-      } else {
-        controlStatus = 'Non-Binding Price Ceiling (Market stays at P*)';
-      }
-    } else if (input.priceControl.type === 'floor') {
-      if (pCtrl > eqPrice) {
-        controlStatus = 'Binding Price Floor (Surplus)';
-        shortageOrSurplus = round2(qsAt - qdAt);
-        actualQtyControl = round2(qdAt);
-      } else {
-        controlStatus = 'Non-Binding Price Floor (Market stays at P*)';
-      }
-    }
-  }
-
-  return {
-    eqPrice: round2(eqPrice),
-    eqQty: round2(eqQty),
-    csNoTax: round2(csNoTax),
-    psNoTax: round2(psNoTax),
-    tsNoTax: round2(csNoTax + psNoTax),
-    pbTax: round2(pbTax),
-    psTax: round2(psTax),
-    qTax: round2(qTax),
-    taxRevenue: round2(taxRevenue),
-    dwlTax: round2(dwlTax),
-    buyerBurdenPerUnit: round2(buyerBurdenPerUnit),
-    sellerBurdenPerUnit: round2(sellerBurdenPerUnit),
-    controlStatus,
-    shortageOrSurplus,
-    actualQtyControl,
-  };
-}
-
-export function computeMidpointElasticity(p1: number, q1: number, p2: number, q2: number) {
-  const pctQ = (q2 - q1) / ((q2 + q1) / 2);
-  const pctP = (p2 - p1) / ((p2 + p1) / 2);
-  const ed = pctP !== 0 ? Math.abs(pctQ / pctP) : Infinity;
-  const classification =
-    ed > 1.0001 ? 'Elastic (|Ed| > 1)' : ed < 0.9999 ? 'Inelastic (|Ed| < 1)' : 'Unit Elastic (|Ed| = 1)';
-  const tr1 = round2(p1 * q1);
-  const tr2 = round2(p2 * q2);
-  return {
-    elasticityAbs: ed === Infinity ? Infinity : round2(ed),
-    classification,
-    tr1,
-    tr2,
-    trDelta: round2(tr2 - tr1),
-  };
-}
-
-// Inverse demand P = a - bQ, constant MC, optional Fixed Cost
-export function computeMonopolyLinear(a: number, b: number, mc: number, fixedCost = 0) {
-  // Competitive: P = MC => Q_c = (a - mc)/b
-  const qComp = Math.max(0, (a - mc) / b);
-  const pComp = mc;
-  // Monopoly: MR = a - 2bQ = MC => Q_m = (a - mc)/(2b)
-  const qMono = Math.max(0, (a - mc) / (2 * b));
-  const pMono = a - b * qMono;
-  const profitMono = (pMono - mc) * qMono - fixedCost;
-  const dwl = 0.5 * (pMono - mc) * (qComp - qMono);
-
-  return {
-    qComp: round2(qComp),
-    pComp: round2(pComp),
-    qMono: round2(qMono),
-    pMono: round2(pMono),
-    profitMono: round2(profitMono),
-    dwl: round2(dwl),
-  };
-}
-
-export function computeComparativeAdvantage(input: {
-  personAName: string;
-  personBName: string;
-  good1Name: string;
-  good2Name: string;
-  aGood1Max: number;
-  aGood2Max: number;
-  bGood1Max: number;
-  bGood2Max: number;
-}) {
-  const oppA1 = round2(input.aGood2Max / input.aGood1Max); // cost of 1 unit of Good1 in Good2
-  const oppB1 = round2(input.bGood2Max / input.bGood1Max);
-  const oppA2 = round2(input.aGood1Max / input.aGood2Max);
-  const oppB2 = round2(input.bGood1Max / input.bGood2Max);
-
-  const compAdvGood1 =
-    oppA1 < oppB1 ? input.personAName : oppB1 < oppA1 ? input.personBName : 'Tie';
-  const compAdvGood2 =
-    oppA2 < oppB2 ? input.personAName : oppB2 < oppA2 ? input.personBName : 'Tie';
-
-  const absAdvGood1 =
-    input.aGood1Max > input.bGood1Max
-      ? input.personAName
-      : input.bGood1Max > input.aGood1Max
-        ? input.personBName
-        : 'Tie';
-  const absAdvGood2 =
-    input.aGood2Max > input.bGood2Max
-      ? input.personAName
-      : input.bGood2Max > input.aGood2Max
-        ? input.personBName
-        : 'Tie';
-
-  const lowPriceGood1 = Math.min(oppA1, oppB1);
-  const highPriceGood1 = Math.max(oppA1, oppB1);
-
-  return {
-    oppA1,
-    oppB1,
-    oppA2,
-    oppB2,
-    compAdvGood1,
-    compAdvGood2,
-    absAdvGood1,
-    absAdvGood2,
-    tradeRangeGood1: `${lowPriceGood1} to ${highPriceGood1} ${input.good2Name} per ${input.good1Name}`,
-  };
+export function computeSacrificeRatio(
+  inflationReductionPct: number,
+  sacrificeRatio: number,
+  yearsToDisinflate = 1,
+) {
+  const totalGdpLossPct = round2(inflationReductionPct * sacrificeRatio);
+  const annualGdpLossPct =
+    yearsToDisinflate > 0 ? round2(totalGdpLossPct / yearsToDisinflate) : totalGdpLossPct;
+  return { totalGdpLossPct, annualGdpLossPct };
 }
 
 function round2(n: number): number {

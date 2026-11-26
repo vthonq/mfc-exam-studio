@@ -121,8 +121,9 @@ function AppShell() {
   const knowledgeChap = (nav.params.get('chapter') as ChapterId) || undefined;
   const examSeed = nav.params.get('seed') ?? undefined;
 
-  const econLabTab = (nav.params.get('tab') as EconLabTab) || 'gdp-cpi';
+  const econLabTab = (nav.params.get('tab') as EconLabTab) || 'part6';
   const econTopic = (nav.params.get('topic') as EconTopicId) || undefined;
+  const econExamMode = (nav.params.get('mode') as 'final' | 'quiz3' | 'quiz4' | 'quiz5') || 'final';
 
   return (
     <Layout
@@ -177,7 +178,10 @@ function AppShell() {
             {nav.econRoute === 'exam' && (
               <EconExamPage
                 initialSeed={examSeed}
-                onSeedChange={(s) => navigateEcon('exam', `seed=${encodeURIComponent(s)}`)}
+                initialMode={econExamMode}
+                onSeedChange={(s, m) =>
+                  navigateEcon('exam', `seed=${encodeURIComponent(s)}&mode=${m}`)
+                }
               />
             )}
           </>

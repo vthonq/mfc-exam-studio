@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle2, Copy, Eye, Sparkles, XCircle } from 'lucide-react';
+import { CheckCircle2, ClipboardCheck, Copy, Eye, Sparkles, XCircle } from 'lucide-react';
 import { ECON_MCQS, ECON_SCENARIOS } from '../../data/economics';
 import { ECON_TOPIC_META, type EconTopicId } from '../../types';
 import { useApp } from '../../context/AppContext';
@@ -14,7 +14,7 @@ import {
 export const EconDrillPage: React.FC = () => {
   const { settings, progress, recordEconPractice, markEconScenarioDone } = useApp();
   const [mode, setMode] = useState<'mcq' | 'policy'>('mcq');
-  const [scopeFilter, setScopeFilter] = useState<'all' | 'Macro Final' | 'Micro Midterm'>('all');
+  const [partFilter, setPartFilter] = useState<'all' | EconTopicId>('all');
   const [picked, setPicked] = useState<Record<string, number>>({});
 
   // Policy essay state
@@ -28,10 +28,7 @@ export const EconDrillPage: React.FC = () => {
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiResult, setAiResult] = useState<ProofGradeResult | null>(null);
 
-  const mcqs = ECON_MCQS.filter(
-    (m) => scopeFilter === 'all' || ECON_TOPIC_META[m.topic].scope === scopeFilter,
-  );
-
+  const mcqs = ECON_MCQS.filter((m) => partFilter === 'all' || m.topic === partFilter);
   const curScen = ECON_SCENARIOS.find((s) => s.id === scenId) ?? ECON_SCENARIOS[0];
 
   const selectScenario = (id: string) => {
@@ -50,11 +47,11 @@ export const EconDrillPage: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight">
-            Testbank MCQs &amp; Policy Essay Trainer
+            Macroeconomics Testbank &amp; Policy Essay Trainer
           </h1>
           <BiText
-            en="Practice ISB handbook multiple-choice questions and structured policy/graph essays with zero-API-key grading helpers."
-            vi="Luyện trắc nghiệm theo Handbook và bài tự luận phân tích chính sách kèm công cụ tự chấm không cần API key."
+            en="Practice ISB handbook MCQs across all 12 Macro Final chapters plus all 8 Short-Answer Policy Dilemma essays."
+            vi="Luyện trắc nghiệm đủ 12 chương Vĩ mô cuối kỳ và 8 bài tự luận phân tích chính sách có chấm điểm không cần API key."
             className="text-sm text-slate-500 dark:text-slate-400 mt-1"
           />
         </div>
@@ -65,7 +62,7 @@ export const EconDrillPage: React.FC = () => {
               mode === 'mcq' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800'
             }`}
           >
-            MCQ Testbank ({ECON_MCQS.length})
+            MCQ Bank ({ECON_MCQS.length})
           </button>
           <button
             onClick={() => setMode('policy')}
@@ -73,23 +70,31 @@ export const EconDrillPage: React.FC = () => {
               mode === 'policy' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800'
             }`}
           >
-            Policy Short-Answers ({ECON_SCENARIOS.length})
+            Short-Answer Essays ({ECON_SCENARIOS.length})
           </button>
         </div>
       </div>
 
       {mode === 'mcq' && (
         <div className="space-y-4">
-          <div className="flex gap-2">
-            {(['all', 'Macro Final', 'Micro Midterm'] as const).map((sc) => (
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              onClick={() => setPartFilter('all')}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer ${
+                partFilter === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'
+              }`}
+            >
+              All Parts ({ECON_MCQS.length})
+            </button>
+            {(['part6', 'part7', 'part8', 'part9'] as EconTopicId[]).map((tid) => (
               <button
-                key={sc}
-                onClick={() => setScopeFilter(sc)}
+                key={tid}
+                onClick={() => setPartFilter(tid)}
                 className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer ${
-                  scopeFilter === sc ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'
+                  partFilter === tid ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'
                 }`}
               >
-                {sc === 'all' ? 'All Topics' : sc}
+                {ECON_TOPIC_META[tid].code}
               </button>
             ))}
           </div>
@@ -103,7 +108,7 @@ export const EconDrillPage: React.FC = () => {
                 className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3"
               >
                 <div className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                  #{qIdx + 1} · {ECON_TOPIC_META[m.topic].scope} ({m.chapter})
+                  #{qIdx + 1} · {ECON_TOPIC_META[m.topic].code} ({m.chapter})
                 </div>
                 <BiText en={m.question} vi={m.questionVi} className="text-sm font-semibold" />
 
@@ -122,7 +127,7 @@ export const EconDrillPage: React.FC = () => {
                         onClick={() => {
                           if (!answered) {
                             setPicked((prev) => ({ ...prev, [m.id]: idx }));
-                            recordEconPractice(m.topic as EconTopicId, idx === m.correctIndex);
+                            recordEconPractice(m.topic, idx === m.correctIndex);
                           }
                         }}
                         className={`p-3 rounded-xl border text-left text-xs flex items-center justify-between gap-2 cursor-pointer ${cls}`}
@@ -150,7 +155,7 @@ export const EconDrillPage: React.FC = () => {
 
       {mode === 'policy' && (
         <div className="grid lg:grid-cols-12 gap-5 items-start">
-          <div className="lg:col-span-4 space-y-2">
+          <div className="lg:col-span-4 space-y-2 max-h-[540px] overflow-y-auto pr-1">
             {ECON_SCENARIOS.map((s) => {
               const done = progress.completedEconScenarios.includes(s.id);
               return (
@@ -164,7 +169,7 @@ export const EconDrillPage: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center justify-between text-[11px] font-mono text-slate-500">
-                    <span>{ECON_TOPIC_META[s.topic].code}</span>
+                    <span>{s.chapterLabel}</span>
                     {done && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
                   </div>
                   <div className="font-semibold text-sm mt-0.5">{s.title}</div>
@@ -183,7 +188,7 @@ export const EconDrillPage: React.FC = () => {
               value={answerText}
               onChange={(e) => setAnswerText(e.target.value)}
               rows={6}
-              placeholder="Write your step-by-step economic analysis (curves shifted, equilibrium changes, and final intuition)..."
+              placeholder="Write your step-by-step macroeconomic analysis (curves shifted, equilibrium changes, and policy trade-offs)..."
               className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm"
             />
 
@@ -197,14 +202,14 @@ export const EconDrillPage: React.FC = () => {
                     recordEconPractice(curScen.topic, true);
                   }
                 }}
-                className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
               >
-                Instant Keyword Check (No Key)
+                <ClipboardCheck className="w-3.5 h-3.5" /> Instant Offline Check (No Key)
               </button>
               <button
                 onClick={async () => {
                   const txt = buildCopyableGradingPrompt({
-                    subject: 'Principles of Economics',
+                    subject: 'Principles of Macroeconomics (ECO101)',
                     title: curScen.title,
                     prompt: curScen.prompt,
                     studentAnswer: answerText,
@@ -261,11 +266,18 @@ export const EconDrillPage: React.FC = () => {
             </div>
 
             {offlineCheck && (
-              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-xs">
-                <strong>Offline Est: {offlineCheck.estimatedScore}/{offlineCheck.maxScore}</strong>
+              <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-xs space-y-1">
+                <div className="font-bold">
+                  Offline Structural Est: {offlineCheck.estimatedScore} / {offlineCheck.maxScore}
+                </div>
+                {offlineCheck.matched.length > 0 && (
+                  <div className="text-emerald-700 dark:text-emerald-300">
+                    <strong>Detected:</strong> {offlineCheck.matched.join(' · ')}
+                  </div>
+                )}
                 {offlineCheck.missing.length > 0 && (
-                  <div className="text-amber-700 dark:text-amber-300 mt-1">
-                    Check: {offlineCheck.missing.join(' · ')}
+                  <div className="text-amber-700 dark:text-amber-300">
+                    <strong>Check / Add:</strong> {offlineCheck.missing.join(' · ')}
                   </div>
                 )}
               </div>

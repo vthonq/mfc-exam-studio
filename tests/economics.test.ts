@@ -1,21 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
-  computeComparativeAdvantage,
   computeCpiTable,
   computeGdpTable,
-  computeLinearMarket,
-  computeMidpointElasticity,
   computeMoneyBanking,
-  computeMonopolyLinear,
   computeMultipliers,
   computeOpenEconomy,
+  computePeAndDividend,
+  computeSacrificeRatio,
   computeSavingAndUnemployment,
   indexDollarValue,
   realInterestRate,
 } from '../src/math/economics';
 
-describe('Principles of Economics — Macro & Micro Calculators', () => {
-  it('computes Nominal GDP, Real GDP, Deflator and growth/inflation accurately', () => {
+describe('ECO101 Principles of Macroeconomics — Final Exam Calculators', () => {
+  it('Part 6 (Ch. 23): Nominal GDP, Real GDP, Deflator and growth/inflation', () => {
     const res = computeGdpTable(
       ['2021', '2022', '2023'],
       [
@@ -47,7 +45,7 @@ describe('Principles of Economics — Macro & Micro Calculators', () => {
     expect(res[1].realGrowthPct).toBe(20);
   });
 
-  it('computes CPI, indexing, and real interest rate', () => {
+  it('Part 6 (Ch. 24): CPI, indexing, and real interest rate', () => {
     const cpi = computeCpiTable(
       ['2022', '2023'],
       [
@@ -62,7 +60,7 @@ describe('Principles of Economics — Macro & Micro Calculators', () => {
     expect(realInterestRate(8, 3)).toBe(5);
   });
 
-  it('computes national saving and unemployment stats', () => {
+  it('Part 6 (Ch. 26 & 28): Saving, P/E ratio, and unemployment stats', () => {
     const res = computeSavingAndUnemployment({
       Y: 10000,
       C: 6000,
@@ -79,12 +77,17 @@ describe('Principles of Economics — Macro & Micro Calculators', () => {
     expect(res.laborForce).toBe(150);
     expect(res.unemploymentRate).toBe(3.33);
     expect(res.lfpr).toBe(75);
+
+    const stock = computePeAndDividend(60, 4, 2.5);
+    expect(stock).toEqual({ peRatio: 15, dividendPerShare: 1.5, retainedEarningsPerShare: 2.5 });
   });
 
-  it('computes money multiplier, leverage ratio, and quantity theory price level', () => {
+  it('Part 7 (Ch. 29–30): Money multiplier (simple vs actual), leverage & MV = PY', () => {
     const res = computeMoneyBanking({
       initialDeposit: 1000,
       reserveRatioPct: 10,
+      excessReservePct: 5,
+      currencyDrainPct: 10,
       bankAssets: 1000,
       bankCapital: 50,
       moneySupplyM: 500,
@@ -92,13 +95,14 @@ describe('Principles of Economics — Macro & Micro Calculators', () => {
       realOutputY: 1000,
     });
     expect(res.moneyMultiplier).toBe(10);
+    expect(res.actualMultiplier).toBe(4.4);
     expect(res.maxTotalMoneyCreated).toBe(10000);
     expect(res.maxNewLoans).toBe(9000);
     expect(res.leverageRatio).toBe(20);
     expect(res.priceLevel).toBe(2);
   });
 
-  it('computes open economy real exchange rate, PPP, and NCO = NX', () => {
+  it('Part 8 (Ch. 31–32): Open economy real exchange rate, PPP, and NCO = NX', () => {
     const res = computeOpenEconomy({
       nominalExchangeRate: 100,
       domesticPrice: 2,
@@ -112,59 +116,15 @@ describe('Principles of Economics — Macro & Micro Calculators', () => {
     expect(res.nx).toBe(300);
   });
 
-  it('computes spending and tax multipliers', () => {
+  it('Part 9 (Ch. 34–35): Spending/tax multipliers and sacrifice ratio', () => {
     const res = computeMultipliers(0.8, 100, 100);
     expect(res.spendingMultiplier).toBe(5);
     expect(res.taxMultiplier).toBe(-4);
     expect(res.adShiftFromG).toBe(500);
     expect(res.adShiftFromT).toBe(-400);
     expect(res.totalAdShift).toBe(100);
-  });
 
-  it('computes linear market equilibrium, tax incidence, DWL, and price controls', () => {
-    // Qd = 100 - 2P, Qs = 20 + 2P -> 4P = 80 -> P*=20, Q*=60
-    const mkt = computeLinearMarket({
-      a: 100,
-      b: 2,
-      c: 20,
-      d: 2,
-      tax: 4,
-      priceControl: { type: 'ceiling', price: 15 },
-    });
-    expect(mkt.eqPrice).toBe(20);
-    expect(mkt.eqQty).toBe(60);
-    expect(mkt.pbTax).toBe(22);
-    expect(mkt.psTax).toBe(18);
-    expect(mkt.qTax).toBe(56);
-    expect(mkt.taxRevenue).toBe(224);
-    expect(mkt.dwlTax).toBe(8);
-    expect(mkt.shortageOrSurplus).toBe(20);
-  });
-
-  it('computes midpoint elasticity, monopoly, and comparative advantage', () => {
-    const el = computeMidpointElasticity(4, 120, 6, 80);
-    expect(el.elasticityAbs).toBe(1);
-    expect(el.tr1).toBe(480);
-    expect(el.tr2).toBe(480);
-
-    const mono = computeMonopolyLinear(100, 1, 20, 100);
-    expect(mono.qComp).toBe(80);
-    expect(mono.qMono).toBe(40);
-    expect(mono.pMono).toBe(60);
-    expect(mono.profitMono).toBe(1500);
-    expect(mono.dwl).toBe(800);
-
-    const trade = computeComparativeAdvantage({
-      personAName: 'Frank',
-      personBName: 'Ruby',
-      good1Name: 'Meat',
-      good2Name: 'Potatoes',
-      aGood1Max: 8,
-      aGood2Max: 32,
-      bGood1Max: 24,
-      bGood2Max: 48,
-    });
-    expect(trade.compAdvGood1).toBe('Ruby');
-    expect(trade.compAdvGood2).toBe('Frank');
+    const sac = computeSacrificeRatio(4, 5, 2);
+    expect(sac).toEqual({ totalGdpLossPct: 20, annualGdpLossPct: 10 });
   });
 });

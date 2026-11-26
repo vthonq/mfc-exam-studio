@@ -21,13 +21,10 @@ const DEFAULT_SETTINGS: AppSettings = {
 };
 
 const DEFAULT_ECON_MASTERY: ProgressState['econMastery'] = {
-  'macro-gdp-cpi': { correct: 0, attempts: 0 },
-  'macro-growth-saving-unemp': { correct: 0, attempts: 0 },
-  'macro-money-inflation': { correct: 0, attempts: 0 },
-  'macro-open-econ': { correct: 0, attempts: 0 },
-  'macro-adas-policy-phillips': { correct: 0, attempts: 0 },
-  'micro-supply-elasticity-tax': { correct: 0, attempts: 0 },
-  'micro-costs-markets': { correct: 0, attempts: 0 },
+  part6: { correct: 0, attempts: 0 },
+  part7: { correct: 0, attempts: 0 },
+  part8: { correct: 0, attempts: 0 },
+  part9: { correct: 0, attempts: 0 },
 };
 
 const DEFAULT_PROGRESS: ProgressState = {

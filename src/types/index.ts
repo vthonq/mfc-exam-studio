@@ -2,14 +2,7 @@ export type SubjectId = 'mfc' | 'econ' | 'probstat';
 
 export type ChapterId = 'ch1' | 'ch4' | 'ch9' | 'ch10' | 'ch11' | 'ch12';
 
-export type EconTopicId =
-  | 'macro-gdp-cpi'
-  | 'macro-growth-saving-unemp'
-  | 'macro-money-inflation'
-  | 'macro-open-econ'
-  | 'macro-adas-policy-phillips'
-  | 'micro-supply-elasticity-tax'
-  | 'micro-costs-markets';
+export type EconTopicId = 'part6' | 'part7' | 'part8' | 'part9';
 
 export type PageRoute =
   | 'dashboard'
@@ -28,12 +21,7 @@ export type LabTab =
   | 'graphs-trees'
   | 'boolean';
 
-export type EconLabTab =
-  | 'gdp-cpi'
-  | 'money-saving'
-  | 'open-econ'
-  | 'adas-phillips'
-  | 'micro';
+export type EconLabTab = 'part6' | 'part7' | 'part8' | 'part9';
 
 export type LangMode = 'en' | 'bilingual';
 export type ThemeMode = 'light' | 'dark';
@@ -115,48 +103,30 @@ export const CHAPTER_META: Record<
 
 export const ECON_TOPIC_META: Record<
   EconTopicId,
-  { code: string; scope: 'Macro Final' | 'Micro Midterm'; title: string; titleVi: string }
+  { code: string; quizTag: string; title: string; titleVi: string }
 > = {
-  'macro-gdp-cpi': {
-    code: 'Ch. 23–24',
-    scope: 'Macro Final',
-    title: 'GDP, Deflator & Cost of Living (CPI)',
-    titleVi: 'GDP, Chỉ số giảm phát & Chỉ số giá CPI',
+  part6: {
+    code: 'Part 6 · Ch. 23–26, 28',
+    quizTag: 'Quiz 3',
+    title: 'The Real Economy in the Long Run',
+    titleVi: 'Nền kinh tế thực trong dài hạn (GDP, CPI, Tăng trưởng, Tiết kiệm, Thất nghiệp)',
   },
-  'macro-growth-saving-unemp': {
-    code: 'Ch. 25–26, 28',
-    scope: 'Macro Final',
-    title: 'Growth, Saving/Loanable Funds & Unemployment',
-    titleVi: 'Tăng trưởng, Tiết kiệm/Vốn vay & Thất nghiệp',
+  part7: {
+    code: 'Part 7 · Ch. 29–30',
+    quizTag: 'Quiz 4',
+    title: 'Money & Prices in the Long Run',
+    titleVi: 'Tiền tệ & Giá cả trong dài hạn (Ngân hàng, Số nhân tiền, MV=PY, Lạm phát)',
   },
-  'macro-money-inflation': {
-    code: 'Ch. 29–30',
-    scope: 'Macro Final',
-    title: 'Monetary System, Money Growth & Inflation',
-    titleVi: 'Hệ thống tiền tệ, Cung tiền & Lạm phát',
+  part8: {
+    code: 'Part 8 · Ch. 31–32',
+    quizTag: 'Quiz 4',
+    title: 'Macroeconomics of Open Economies',
+    titleVi: 'Kinh tế vĩ mô của nền kinh tế mở (NCO=NX, Tỷ giá thực, PPP, Hai thị trường)',
   },
-  'macro-open-econ': {
-    code: 'Ch. 31–32',
-    scope: 'Macro Final',
-    title: 'Open-Economy, Exchange Rates & Twin Markets',
-    titleVi: 'Kinh tế mở, Tỷ giá & Mô hình hai thị trường',
-  },
-  'macro-adas-policy-phillips': {
-    code: 'Ch. 33–35',
-    scope: 'Macro Final',
-    title: 'AD–AS, Fiscal/Monetary Policy & Phillips Curve',
-    titleVi: 'AD–AS, Chính sách tài khóa/tiền tệ & Đường Phillips',
-  },
-  'micro-supply-elasticity-tax': {
-    code: 'Micro Ch. 1–9',
-    scope: 'Micro Midterm',
-    title: 'Trade, Supply/Demand, Elasticity, Welfare & Tax',
-    titleVi: 'Thương mại, Cung–Cầu, Co giãn, Thặng dư & Thuế',
-  },
-  'micro-costs-markets': {
-    code: 'Micro Ch. 13–17, 21',
-    scope: 'Micro Midterm',
-    title: 'Costs, Competition, Monopoly, Oligopoly & Choice',
-    titleVi: 'Chi phí, Cạnh tranh, Độc quyền & Lựa chọn tiêu dùng',
+  part9: {
+    code: 'Part 9 · Ch. 33–35',
+    quizTag: 'Quiz 5',
+    title: 'Short-Run Fluctuations & Stabilization',
+    titleVi: 'Biến động ngắn hạn & Chính sách ổn định (AD–AS, Số nhân, Đường Phillips)',
   },
 };

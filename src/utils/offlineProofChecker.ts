@@ -134,6 +134,47 @@ const PROOF_CHECKPOINTS: Record<string, Checkpoint[]> = {
     { label: 'Factors x(1 + y) via Distributive Law', points: 1, patterns: [/distributive/i] },
     { label: 'Applies Domination Law (1 + y = 1)', points: 2, patterns: [/domination|1\s*\+\s*y\s*=\s*1/i] },
   ],
+  'scen-p6-gdp-cpi': [
+    { label: 'Notes CPI rises (imports) while GDP Deflator stays unchanged (domestic only)', points: 1.5, patterns: [/cpi/i, /deflator/i, /import|domestic/i] },
+    { label: 'Lists CPI biases (substitution, new goods, quality)', points: 1.5, patterns: [/substitution/i, /quality|new good/i] },
+    { label: 'Links real interest r = i − π to borrowers gaining & lenders losing', points: 1, patterns: [/borrower|lender/i] },
+  ],
+  'scen-p6-saving-unemp': [
+    { label: 'Shows budget deficit lowers public saving & shifts Loanable Funds Supply left', points: 1.5, patterns: [/public saving|national saving|supply/i, /left/i] },
+    { label: 'Identifies r rises & crowds out private investment', points: 1, patterns: [/interest|r\s*rises|crowding/i] },
+    { label: 'Explains discouraged workers leave BOTH U and labor force', points: 1.5, patterns: [/discouraged|labor force/i, /fall|drop|decreas/i] },
+  ],
+  'scen-p7-money-mult': [
+    { label: 'Computes multiplier 1/R = 10 and max $10,000', points: 1.5, patterns: [/10|10,?000/] },
+    { label: 'Notes households holding cash (currency drain)', points: 1.25, patterns: [/cash|currency/i] },
+    { label: 'Notes banks holding excess reserves', points: 1.25, patterns: [/excess reserve/i] },
+  ],
+  'scen-p7-quantity-inflation': [
+    { label: 'Uses MV = PY & Monetary Neutrality', points: 1.5, patterns: [/mv\s*=\s*py|quantity|neutral/i] },
+    { label: 'Explains Fisher Effect (i = r + π)', points: 1.25, patterns: [/fisher|i\s*=\s*r/i] },
+    { label: 'Mentions inflation tax & social costs (shoeleather/menu/tax)', points: 1.25, patterns: [/shoeleather|menu|inflation tax|redistribution/i] },
+  ],
+  'scen-p8-budget-deficit': [
+    { label: 'Loanable funds supply shifts left ⇒ r rises', points: 1, patterns: [/supply/i, /interest|r\s*rise/i] },
+    { label: 'Higher r reduces NCO', points: 1, patterns: [/nco|net capital outflow/i] },
+    { label: 'FX supply shifts left ⇒ currency appreciates', points: 1, patterns: [/appreciat/i] },
+    { label: 'Net exports NX falls (twin deficits)', points: 1, patterns: [/nx|net export/i] },
+  ],
+  'scen-p8-quota-vs-flight': [
+    { label: 'Tariff/quota shifts FX demand right ⇒ currency appreciates', points: 1.5, patterns: [/appreciat|demand/i] },
+    { label: 'Explains NX = NCO = S − I stays unchanged', points: 1.5, patterns: [/unchanged|s\s*-\s*i|s\s*−\s*i/i] },
+    { label: 'Contrasts Capital Flight (NCO right, r↑, depreciates, NX↑)', points: 1, patterns: [/capital flight|depreciat/i] },
+  ],
+  'scen-p9-stagflation': [
+    { label: 'SRAS shifts left ⇒ P↑ and Y↓ (stagflation)', points: 1.5, patterns: [/sras|aggregate supply/i, /left|stagflation/i] },
+    { label: 'SRPC shifts right (higher π & u)', points: 1, patterns: [/phillips|srpc/i] },
+    { label: 'Contrasts accommodating AD vs waiting for wages to fall', points: 1.5, patterns: [/accommodat|ad|wage/i] },
+  ],
+  'scen-p9-policy-lags': [
+    { label: 'Compares spending multiplier (5) vs tax multiplier (−4)', points: 1.5, patterns: [/multiplier|5|4/i] },
+    { label: 'Explains crowding out (r↑ reduces I)', points: 1.25, patterns: [/crowding/i] },
+    { label: 'Links central bank credibility / rational expectations to lower sacrifice ratio', points: 1.25, patterns: [/credib|rational|sacrifice/i] },
+  ],
 };
 
 export function analyzeWrittenProofOffline(

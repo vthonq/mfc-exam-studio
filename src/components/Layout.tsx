@@ -140,7 +140,7 @@ export const Layout: React.FC<LayoutProps> = ({
               <span className="flex items-center gap-1.5">
                 <TrendingUp className="w-3.5 h-3.5" /> Principles of Econ
               </span>
-              <span className="text-[10px] opacity-80">Macro+Micro</span>
+              <span className="text-[10px] opacity-80">Macro Final</span>
             </button>
             <button
               onClick={() => onSelectSubject('probstat')}
