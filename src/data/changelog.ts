@@ -7,9 +7,26 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v2.4';
+export const LATEST_UPDATE_ID = 'v2.5';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v2.5',
+    version: 'v2.5',
+    date: 'Nov 2026',
+    title: 'MFC Step Trainers, Econ Shock Predictor & Missing Mankiw Diagrams',
+    titleVi: 'Luyện điền bảng MFC, Đoán cú sốc Vĩ mô & Biểu đồ Mankiw mới',
+    items: [
+      {
+        en: 'MFC Practice Labs → Step-by-Step Trainers: Quantifier traps, blank ExtGCD/ModExp tables, clickable Warshall W_k matrix, tree traversal & K-Map group validator.',
+        vi: 'MFC → Step-by-Step Trainers: Bẫy lượng từ, điền bảng ExtGCD/ModExp, ma trận Warshall click-to-fill, duyệt cây & kiểm tra gom nhóm bìa K-Map.',
+      },
+      {
+        en: 'Economics → Shock Predictor & Blank Tables + Closed-Economy Loanable Funds (Ch.26) & Money Market / Liquidity Preference (Ch.34) diagrams.',
+        vi: 'Kinh tế → Đoán cú sốc Vĩ mô (↑/↓) + điền bảng T-Account/GDP + 2 biểu đồ mới: Loanable Funds (Lấn át) & Money Market (Ch.34).',
+      },
+    ],
+  },
   {
     id: 'v2.4',
     version: 'v2.4',

@@ -67,6 +67,16 @@ const LAB_ENTRIES: GlobalSearchItem[] = [
     route: 'labs',
     query: 'tab=boolean',
   },
+  {
+    id: 'lab-mfc-trainers',
+    subject: 'mfc',
+    category: 'Exam Drills · Ch. 1, 4, 9, 11–12',
+    title: 'MFC Step-by-Step Blank-Table & Quantifier Trainers',
+    subtitle: 'Quantifier & negation traps, blank ExtGCD/ModExp tables, Warshall clickable grid, tree traversal & K-map validator',
+    keywords: 'quantifier negation blank table extgcd modexp warshall traversal k-map trainer drill ch1 ch4 ch9 ch11 ch12',
+    route: 'labs',
+    query: 'tab=trainers',
+  },
 
   // Econ 4 labs
   {
@@ -104,10 +114,30 @@ const LAB_ENTRIES: GlobalSearchItem[] = [
     subject: 'econ',
     category: 'Econ Simulator · Part 9',
     title: 'AD–AS, Multipliers & Phillips Curve Simulator',
-    subtitle: 'Interactive AD/SRAS/LRAS shifts, MPC spending/tax multipliers & sacrifice ratio',
-    keywords: 'ad-as aggregate demand supply lras sras multiplier mpc crowding out phillips curve sacrifice ratio ch33 ch34 ch35',
+    subtitle: 'Interactive AD/SRAS/LRAS shifts, Money Market (Liquidity Preference), MPC multipliers & sacrifice ratio',
+    keywords: 'ad-as aggregate demand supply lras sras money market liquidity preference multiplier mpc crowding out phillips curve sacrifice ratio ch33 ch34 ch35',
     route: 'labs',
     query: 'tab=part9',
+  },
+  {
+    id: 'lab-econ-loanable',
+    subject: 'econ',
+    category: 'Econ Diagram · Ch. 26',
+    title: 'Closed-Economy Loanable Funds Diagram (Crowding Out)',
+    subtitle: 'Saving incentive, investment tax credit & budget deficit crowding out interactive SVG',
+    keywords: 'loanable funds crowding out saving investment tax credit budget deficit diagram ch26',
+    route: 'labs',
+    query: 'tab=part6',
+  },
+  {
+    id: 'lab-econ-trainer',
+    subject: 'econ',
+    category: 'Exam Drills · ECO101 Final',
+    title: 'Macro Shock Predictor & Blank T-Account / GDP Drills',
+    subtitle: 'Predict curve shifts and variable directions (r, Y, P, u, NCO, ε, NX) + fill-in Bank Balance Sheet & GDP tables',
+    keywords: 'shock predictor quiz blank table t-account bank balance sheet gdp deflator fisher trainer drill',
+    route: 'labs',
+    query: 'tab=trainer',
   },
 
   // Prob & Stat 4 labs + 5 SB Tables

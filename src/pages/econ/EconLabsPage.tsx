@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { Suspense, lazy, useMemo, useState } from 'react';
 import {
   computeCpiTable,
   computeGdpTable,
@@ -17,7 +17,14 @@ import type { EconLabTab } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { AdAsSvg, MACRO_SHOCKS, type MacroShockId } from '../../components/econ/AdAsSvg';
 import { TwinMarketSvg } from '../../components/econ/TwinMarketSvg';
+import { LoanableFundsSvg, MoneyMarketSvg } from '../../components/econ/MacroDiagramsSvg';
 import { BiText } from '../../components/BiText';
+
+const MacroTrainerTab = lazy(() =>
+  import('../../components/econ/MacroTrainerTab').then((m) => ({
+    default: m.MacroTrainerTab,
+  })),
+);
 
 interface EconLabsPageProps {
   activeTab: EconLabTab;
@@ -29,6 +36,7 @@ const TABS: Array<{ id: EconLabTab; label: string; badge: string }> = [
   { id: 'part7', label: 'Money, Multiplier & MV = PY', badge: 'Part 7 · Ch.29–30' },
   { id: 'part8', label: 'Open Economy & Twin Markets', badge: 'Part 8 · Ch.31–32' },
   { id: 'part9', label: 'AD–AS, Multipliers & Phillips Curve', badge: 'Part 9 · Ch.33–35' },
+  { id: 'trainer', label: 'Shock Predictor & Blank Tables', badge: 'Exam Drills' },
 ];
 
 export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectTab }) => {
@@ -300,6 +308,8 @@ export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectT
               </button>
             </div>
           </div>
+
+          <LoanableFundsSvg />
         </div>
       )}
 
@@ -449,7 +459,15 @@ export const EconLabsPage: React.FC<EconLabsPageProps> = ({ activeTab, onSelectT
               </div>
             </div>
           </div>
+
+          <MoneyMarketSvg />
         </div>
+      )}
+
+      {activeTab === 'trainer' && (
+        <Suspense fallback={<div className="p-6 text-sm text-slate-500">Loading macro trainers...</div>}>
+          <MacroTrainerTab />
+        </Suspense>
       )}
     </div>
   );

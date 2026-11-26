@@ -3,6 +3,7 @@ import { CHANGELOG_ENTRIES, LATEST_UPDATE_ID } from '../src/data/changelog';
 import { ECON_MCQS } from '../src/data/economics';
 import { KNOWLEDGE_ITEMS } from '../src/data/knowledge';
 import { generateProbFinalExam, PROB_MIDTERM_MCQS } from '../src/data/probStat';
+import { validateKmap3Group } from '../src/math/booleanAlgebra';
 import { isAdminEmail, isUehStudentEmail } from '../src/services/firebase';
 import { formatRelativeTime, isInAppBrowser } from '../src/utils/browserDetect';
 import { clearExamDraft, loadExamDraft, saveExamDraft } from '../src/utils/examDraft';
@@ -32,6 +33,18 @@ describe('Global Search Index', () => {
     expect(econGloss?.query).toBe('topic=glossary');
     const probGloss = all.find((x) => x.id.startsWith('prob-gloss-'));
     expect(probGloss?.query).toBe('topic=glossary');
+
+    expect(searchGlobalItems('Quantifier').some((x) => x.subject === 'mfc')).toBe(true);
+    expect(searchGlobalItems('Shock Predictor').some((x) => x.subject === 'econ')).toBe(true);
+    expect(searchGlobalItems('Loanable Funds').some((x) => x.subject === 'econ')).toBe(true);
+    expect(searchGlobalItems('Money Market').some((x) => x.subject === 'econ')).toBe(true);
+  });
+
+  it('validates 3-variable K-Map implicant grouping rules accurately', () => {
+    const tv: Record<number, 0 | 1> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 1, 5: 1, 6: 1, 7: 1 };
+    expect(validateKmap3Group([4, 5, 6, 7], tv).valid).toBe(true);
+    expect(validateKmap3Group([4, 5, 6], tv).valid).toBe(false);
+    expect(validateKmap3Group([0, 4], tv).valid).toBe(false);
   });
 });
 

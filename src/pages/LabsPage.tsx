@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import type { LabTab } from '../types';
 import { LogicLab } from '../components/labs/LogicLab';
 import { NumberTheoryLab } from '../components/labs/NumberTheoryLab';
@@ -6,6 +6,12 @@ import { RelationsLab } from '../components/labs/RelationsLab';
 import { GraphsTreesLab } from '../components/labs/GraphsTreesLab';
 import { BooleanLab } from '../components/labs/BooleanLab';
 import { BiText } from '../components/BiText';
+
+const MfcExamTrainersLab = lazy(() =>
+  import('../components/labs/MfcExamTrainersLab').then((m) => ({
+    default: m.MfcExamTrainersLab,
+  })),
+);
 
 interface LabsPageProps {
   activeTab: LabTab;
@@ -18,6 +24,7 @@ const LAB_TABS: Array<{ id: LabTab; label: string; badge: string }> = [
   { id: 'relations', label: 'Relations & Posets', badge: 'Ch. 9' },
   { id: 'graphs-trees', label: 'Graphs & Trees', badge: 'Ch. 10–11' },
   { id: 'boolean', label: 'Boolean & K-Maps', badge: 'Ch. 12' },
+  { id: 'trainers', label: 'Step-by-Step Trainers', badge: 'Exam Drills' },
 ];
 
 export const LabsPage: React.FC<LabsPageProps> = ({ activeTab, onSelectTab }) => {
@@ -63,6 +70,11 @@ export const LabsPage: React.FC<LabsPageProps> = ({ activeTab, onSelectTab }) =>
       {activeTab === 'relations' && <RelationsLab />}
       {activeTab === 'graphs-trees' && <GraphsTreesLab />}
       {activeTab === 'boolean' && <BooleanLab />}
+      {activeTab === 'trainers' && (
+        <Suspense fallback={<div className="p-6 text-sm text-slate-500">Loading exam trainers...</div>}>
+          <MfcExamTrainersLab />
+        </Suspense>
+      )}
     </div>
   );
 };

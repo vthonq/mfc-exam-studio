@@ -29,9 +29,10 @@ export type LabTab =
   | 'number-theory'
   | 'relations'
   | 'graphs-trees'
-  | 'boolean';
+  | 'boolean'
+  | 'trainers';
 
-export type EconLabTab = 'part6' | 'part7' | 'part8' | 'part9';
+export type EconLabTab = 'part6' | 'part7' | 'part8' | 'part9' | 'trainer';
 
 export type ProbLabTab = 'discrete' | 'continuous' | 'bivariate' | 'inference';
 
