@@ -13,6 +13,11 @@ export function isAdminEmail(email: string | null | undefined): boolean {
   return ADMIN_EMAILS.some((admin) => admin === normalized);
 }
 
+export function isUehStudentEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return email.trim().toLowerCase().endsWith('@st.ueh.edu.vn');
+}
+
 export const firebaseConfig = {
   apiKey: 'AIzaSyAGm1m-8AT6uxjrz09vuBEpzvbC9zeSBBI',
   authDomain: 'mfc-exam-studio-ueh-780e7.firebaseapp.com',

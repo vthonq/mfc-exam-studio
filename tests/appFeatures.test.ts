@@ -3,7 +3,8 @@ import { CHANGELOG_ENTRIES, LATEST_UPDATE_ID } from '../src/data/changelog';
 import { ECON_MCQS } from '../src/data/economics';
 import { KNOWLEDGE_ITEMS } from '../src/data/knowledge';
 import { generateProbFinalExam, PROB_MIDTERM_MCQS } from '../src/data/probStat';
-import { isAdminEmail } from '../src/services/firebase';
+import { isAdminEmail, isUehStudentEmail } from '../src/services/firebase';
+import { formatRelativeTime, isInAppBrowser } from '../src/utils/browserDetect';
 import { clearExamDraft, loadExamDraft, saveExamDraft } from '../src/utils/examDraft';
 import { buildGlobalSearchItems, searchGlobalItems } from '../src/utils/searchIndex';
 
@@ -124,6 +125,26 @@ describe('Changelog & Cross-Subject Data Integrity', () => {
     expect(isAdminEmail('  THONGNGUYEN.31261028903@ST.UEH.EDU.VN  ')).toBe(true);
     expect(isAdminEmail('student@st.ueh.edu.vn')).toBe(false);
     expect(isAdminEmail(null)).toBe(false);
+    expect(isUehStudentEmail('student.123@st.ueh.edu.vn')).toBe(true);
+    expect(isUehStudentEmail('random@gmail.com')).toBe(false);
+  });
+
+  it('detects Zalo/Messenger webviews and formats relative timestamps cleanly', () => {
+    expect(isInAppBrowser('Mozilla/5.0 (Linux; Android 13) Zalo/23.0')).toBe(true);
+    expect(isInAppBrowser('Mozilla/5.0 [FBAN/MessengerForiOS;FBAV/420.0]')).toBe(true);
+    expect(
+      isInAppBrowser(
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36',
+      ),
+    ).toBe(false);
+
+    const now = 1_700_000_000_000;
+    expect(formatRelativeTime(null, now)).toBe('—');
+    expect(formatRelativeTime(now - 20_000, now)).toBe('Just now');
+    expect(formatRelativeTime(now - 5 * 60_000, now)).toBe('5m ago');
+    expect(formatRelativeTime({ seconds: Math.floor((now - 3 * 3600_000) / 1000) }, now)).toBe(
+      '3h ago',
+    );
   });
 
   it('ensures MFC KNOWLEDGE_ITEMS plain summaries do not leak raw LaTeX braces', () => {

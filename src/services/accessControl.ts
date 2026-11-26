@@ -8,7 +8,8 @@ import {
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore';
-import { db, isAdminEmail } from './firebase';
+import { db, isAdminEmail, isUehStudentEmail } from './firebase';
+import { extractMillis } from '../utils/browserDetect';
 
 export type UserRole = 'admin' | 'student';
 export type UserAccessStatus = 'approved' | 'waitlist' | 'banned';
@@ -17,6 +18,7 @@ export interface AccessConfigDoc {
   maxUsers: number;
   approvedCount: number;
   registrationOpen: boolean;
+  requireUehEmail?: boolean;
   updatedAt?: unknown;
   updatedBy: string;
 }
@@ -30,6 +32,12 @@ export interface UserProfileDoc {
   status: UserAccessStatus;
   createdAt?: unknown;
   lastSeenAt?: unknown;
+}
+
+export interface CloudProgressDoc {
+  progressJson: string;
+  updatedAt?: unknown;
+  updatedAtMs: number;
 }
 
 const DEFAULT_MAX_USERS = 50;
@@ -60,6 +68,7 @@ export async function registerOrSyncUser(fbUser: User): Promise<{
           maxUsers: DEFAULT_MAX_USERS,
           approvedCount: 0,
           registrationOpen: true,
+          requireUehEmail: false,
           updatedBy: email || 'system',
         };
 
@@ -69,6 +78,7 @@ export async function registerOrSyncUser(fbUser: User): Promise<{
           maxUsers: DEFAULT_MAX_USERS,
           approvedCount: 0,
           registrationOpen: true,
+          requireUehEmail: false,
           updatedAt: serverTimestamp(),
           updatedBy: email,
         };
@@ -119,10 +129,12 @@ export async function registerOrSyncUser(fbUser: User): Promise<{
       };
     }
 
-    // First-time student login: check cap atomically
+    // First-time student login: check cap & optional UEH domain atomically
+    const passesDomain = !config.requireUehEmail || isUehStudentEmail(email);
     const canAutoApprove =
       cfgSnap.exists() &&
       config.registrationOpen === true &&
+      passesDomain &&
       config.approvedCount < config.maxUsers;
 
     if (canAutoApprove) {
@@ -175,6 +187,9 @@ export async function listAllUsers(): Promise<UserProfileDoc[]> {
   list.sort((a, b) => {
     if (a.role !== b.role) return a.role === 'admin' ? -1 : 1;
     if (a.status !== b.status) return statusRank[a.status] - statusRank[b.status];
+    const tA = extractMillis(a.lastSeenAt) ?? 0;
+    const tB = extractMillis(b.lastSeenAt) ?? 0;
+    if (tA !== tB) return tB - tA;
     return a.email.localeCompare(b.email);
   });
   return list;
@@ -183,6 +198,7 @@ export async function listAllUsers(): Promise<UserProfileDoc[]> {
 export async function updateAccessSettings(params: {
   maxUsers: number;
   registrationOpen: boolean;
+  requireUehEmail: boolean;
   updatedBy: string;
 }): Promise<AccessConfigDoc> {
   const clampedMax = Math.max(0, Math.min(10000, Math.round(params.maxUsers)));
@@ -196,6 +212,7 @@ export async function updateAccessSettings(params: {
       maxUsers: clampedMax,
       approvedCount: Math.max(0, currentApproved),
       registrationOpen: Boolean(params.registrationOpen),
+      requireUehEmail: Boolean(params.requireUehEmail),
       updatedAt: serverTimestamp(),
       updatedBy,
     };
@@ -274,15 +291,45 @@ export async function adminRecountApproved(adminEmail: string): Promise<number> 
   const snap = await getDoc(cfgRef);
   const existing = snap.exists()
     ? (snap.data() as AccessConfigDoc)
-    : { maxUsers: DEFAULT_MAX_USERS, registrationOpen: true };
+    : { maxUsers: DEFAULT_MAX_USERS, registrationOpen: true, requireUehEmail: false };
 
   await setDoc(cfgRef, {
     maxUsers: existing.maxUsers,
     approvedCount: approvedStudents,
     registrationOpen: existing.registrationOpen,
+    requireUehEmail: Boolean(existing.requireUehEmail),
     updatedAt: serverTimestamp(),
     updatedBy: safeStr(adminEmail, 150).toLowerCase(),
   });
 
   return approvedStudents;
+}
+
+export async function fetchCloudProgress(uid: string): Promise<CloudProgressDoc | null> {
+  const snap = await getDoc(doc(db, 'users', uid, 'studio_data', 'progress'));
+  if (!snap.exists()) return null;
+  const data = snap.data() as Partial<CloudProgressDoc>;
+  if (typeof data.progressJson !== 'string' || typeof data.updatedAtMs !== 'number') {
+    return null;
+  }
+  return {
+    progressJson: data.progressJson,
+    updatedAt: data.updatedAt,
+    updatedAtMs: data.updatedAtMs,
+  };
+}
+
+export async function saveCloudProgress(
+  uid: string,
+  progressJson: string,
+  updatedAtMs: number,
+): Promise<void> {
+  if (progressJson.length > 195000) {
+    throw new Error('Progress payload exceeds 195 KB cloud sync limit.');
+  }
+  await setDoc(doc(db, 'users', uid, 'studio_data', 'progress'), {
+    progressJson,
+    updatedAt: serverTimestamp(),
+    updatedAtMs,
+  });
 }

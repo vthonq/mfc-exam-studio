@@ -25,6 +25,9 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 function formatAuthError(err: unknown): string {
   const msg = err instanceof Error ? err.message : String(err);
+  if (msg.includes('auth/popup-blocked')) {
+    return 'Browser blocked the Google sign-in popup. Please allow popups or open this link in Chrome / Safari instead of Zalo/Messenger.';
+  }
   if (msg.includes('auth/popup-closed-by-user')) {
     return 'Google sign-in popup was closed before completing login.';
   }

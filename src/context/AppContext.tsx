@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useAuth } from './AuthContext';
+import { fetchCloudProgress, saveCloudProgress } from '../services/accessControl';
 import type {
   AppSettings,
   ChapterId,
@@ -15,6 +17,27 @@ import type {
 
 const SETTINGS_KEY = 'mfc_studio_settings_v1';
 const PROGRESS_KEY = 'mfc_studio_progress_v1';
+const PROGRESS_TS_KEY = 'mfc_studio_progress_ts_v1';
+
+export type CloudSyncStatus = 'idle' | 'syncing' | 'synced' | 'error';
+
+function hasMeaningfulProgress(p: ProgressState): boolean {
+  const mCount =
+    Object.values(p.mastery).reduce((s, x) => s + x.attempts, 0) +
+    Object.values(p.econMastery).reduce((s, x) => s + x.attempts, 0) +
+    Object.values(p.probMastery).reduce((s, x) => s + x.attempts, 0);
+  if (mCount > 0) return true;
+  return (
+    p.completedAssignments.length > 0 ||
+    p.completedProofs.length > 0 ||
+    p.completedEconScenarios.length > 0 ||
+    p.completedProbProblems.length > 0 ||
+    p.examHistory.length > 0 ||
+    p.econExamHistory.length > 0 ||
+    p.probExamHistory.length > 0 ||
+    p.mistakes.length > 0
+  );
+}
 
 const DEFAULT_SETTINGS: AppSettings = {
   lang: 'bilingual',
@@ -62,6 +85,7 @@ const DEFAULT_PROGRESS: ProgressState = {
 interface AppContextValue {
   settings: AppSettings;
   progress: ProgressState;
+  cloudSyncStatus: CloudSyncStatus;
   setLang: (lang: LangMode) => void;
   setTheme: (theme: ThemeMode) => void;
   setGeminiKey: (key: string) => void;
@@ -110,6 +134,12 @@ function hydrateProgress(rawObj: Partial<ProgressState> | null | undefined): Pro
 }
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { firebaseUser, profile, isAdmin } = useAuth();
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<CloudSyncStatus>('idle');
+  const hydratedUidRef = useRef<string | null>(null);
+  const skipNextCloudSaveRef = useRef<boolean>(false);
+  const firstMountEffectRef = useRef<boolean>(true);
+
   const [settings, setSettings] = useState<AppSettings>(() => {
     try {
       const raw = localStorage.getItem(SETTINGS_KEY);
@@ -134,6 +164,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return DEFAULT_PROGRESS;
   });
 
+  const progressRef = useRef<ProgressState>(progress);
+  progressRef.current = progress;
+
   useEffect(() => {
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
@@ -148,13 +181,110 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [settings]);
 
+  const canUseCloud = Boolean(
+    firebaseUser?.uid && (isAdmin || profile?.status === 'approved'),
+  );
+
+  // Sync on login / user switch
+  useEffect(() => {
+    const uid = firebaseUser?.uid;
+    if (!uid || !canUseCloud) {
+      hydratedUidRef.current = null;
+      setCloudSyncStatus('idle');
+      return;
+    }
+    if (hydratedUidRef.current === uid) return;
+
+    let cancelled = false;
+    setCloudSyncStatus('syncing');
+
+    void (async () => {
+      try {
+        const cloud = await fetchCloudProgress(uid);
+        if (cancelled) return;
+        const localTs = Number(localStorage.getItem(PROGRESS_TS_KEY) || '0') || 0;
+
+        if (cloud) {
+          let cloudParsed: Partial<ProgressState> | null = null;
+          try {
+            cloudParsed = JSON.parse(cloud.progressJson) as Partial<ProgressState>;
+          } catch {
+            cloudParsed = null;
+          }
+          if (
+            cloudParsed &&
+            cloudParsed.mastery &&
+            (cloud.updatedAtMs > localTs || !hasMeaningfulProgress(progressRef.current))
+          ) {
+            skipNextCloudSaveRef.current = true;
+            setProgress(hydrateProgress(cloudParsed));
+            try {
+              localStorage.setItem(PROGRESS_TS_KEY, String(cloud.updatedAtMs));
+            } catch {
+              // ignore
+            }
+          } else if (hasMeaningfulProgress(progressRef.current) && localTs > cloud.updatedAtMs) {
+            await saveCloudProgress(uid, JSON.stringify(progressRef.current), localTs);
+          }
+        } else if (hasMeaningfulProgress(progressRef.current)) {
+          const ts = localTs || Date.now();
+          await saveCloudProgress(uid, JSON.stringify(progressRef.current), ts);
+        }
+
+        if (!cancelled) {
+          hydratedUidRef.current = uid;
+          setCloudSyncStatus('synced');
+        }
+      } catch {
+        if (!cancelled) {
+          hydratedUidRef.current = uid;
+          setCloudSyncStatus('error');
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [firebaseUser?.uid, canUseCloud]);
+
+  // Persist locally & debounced save to Firestore
   useEffect(() => {
     try {
       localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
     } catch {
       // ignore quota
     }
-  }, [progress]);
+
+    if (firstMountEffectRef.current) {
+      firstMountEffectRef.current = false;
+      return;
+    }
+
+    if (skipNextCloudSaveRef.current) {
+      skipNextCloudSaveRef.current = false;
+      return;
+    }
+
+    const nowTs = Date.now();
+    try {
+      localStorage.setItem(PROGRESS_TS_KEY, String(nowTs));
+    } catch {
+      // ignore
+    }
+
+    const uid = firebaseUser?.uid;
+    if (!uid || !canUseCloud || hydratedUidRef.current !== uid) return;
+
+    setCloudSyncStatus('syncing');
+    const timer = window.setTimeout(() => {
+      void saveCloudProgress(uid, JSON.stringify(progress), nowTs)
+        .then(() => setCloudSyncStatus('synced'))
+        .catch(() => setCloudSyncStatus('error'));
+    }, 1500);
+
+    return () => window.clearTimeout(timer);
+  }, [progress, firebaseUser?.uid, canUseCloud]);
 
   const setLang = (lang: LangMode) => setSettings((s) => ({ ...s, lang }));
   const setTheme = (theme: ThemeMode) => setSettings((s) => ({ ...s, theme }));
@@ -300,6 +430,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         settings,
         progress,
+        cloudSyncStatus,
         setLang,
         setTheme,
         setGeminiKey,

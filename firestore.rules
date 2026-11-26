@@ -12,6 +12,7 @@ rules_version = '2';
 //   - maxUsers: int (required, 0 <= maxUsers <= 10000) - maximum approved students allowed
 //   - approvedCount: int (required, 0 <= approvedCount <= 10000) - current approved student count
 //   - registrationOpen: bool (required) - whether new student auto-approval is open
+//   - requireUehEmail: bool (optional) - whether new student auto-approval requires @st.ueh.edu.vn email
 //   - updatedAt: timestamp (optional) - server timestamp of last admin configuration update
 //   - updatedBy: string (required, length <= 150) - email/identifier of last updater
 //
@@ -26,6 +27,13 @@ rules_version = '2';
 //   - status: string (required, immutable for non-admins, 'approved' | 'waitlist' | 'banned')
 //   - createdAt: timestamp (required, immutable)
 //   - lastSeenAt: timestamp (required)
+//
+// Subcollection: users/{uid}/studio_data
+// Document ID: progress
+// Fields:
+//   - progressJson: string (required, length <= 200000) - serialized studio progress JSON
+//   - updatedAt: timestamp (required) - server timestamp of last cloud sync
+//   - updatedAtMs: int | float (required, >= 0) - client epoch milliseconds of last sync
 //
 // ===============================================================
 
@@ -103,7 +111,7 @@ service cloud.firestore {
 
     function isValidAccessConfig(data) {
       return hasRequiredFields(data, ['maxUsers', 'approvedCount', 'registrationOpen', 'updatedBy']) &&
-             hasOnlyAllowedFields(data, ['maxUsers', 'approvedCount', 'registrationOpen', 'updatedAt', 'updatedBy']) &&
+             hasOnlyAllowedFields(data, ['maxUsers', 'approvedCount', 'registrationOpen', 'requireUehEmail', 'updatedAt', 'updatedBy']) &&
              data.maxUsers is int &&
              data.maxUsers >= 0 &&
              data.maxUsers <= 10000 &&
@@ -111,9 +119,20 @@ service cloud.firestore {
              data.approvedCount >= 0 &&
              data.approvedCount <= 10000 &&
              data.registrationOpen is bool &&
+             (!('requireUehEmail' in data) || data.requireUehEmail is bool) &&
              (!('updatedAt' in data) || data.updatedAt is timestamp) &&
              data.updatedBy is string &&
              data.updatedBy.size() <= 150;
+    }
+
+    function isValidCloudProgress(data) {
+      return hasRequiredFields(data, ['progressJson', 'updatedAt', 'updatedAtMs']) &&
+             hasOnlyAllowedFields(data, ['progressJson', 'updatedAt', 'updatedAtMs']) &&
+             data.progressJson is string &&
+             data.progressJson.size() <= 200000 &&
+             data.updatedAt is timestamp &&
+             (data.updatedAtMs is int || data.updatedAtMs is float) &&
+             data.updatedAtMs >= 0;
     }
 
     function isValidUser(data, docUid) {
@@ -142,6 +161,19 @@ service cloud.firestore {
     // Cross-Document Atomic Helpers
     // ===============================================================
 
+    // True when UEH email restriction is disabled (or absent) OR the caller's
+    // auth token carries a @st.ueh.edu.vn email address.
+    function isAllowedByDomainSetting(cfg) {
+      return !('requireUehEmail' in cfg) ||
+             cfg.requireUehEmail == false ||
+             (
+               isAuthenticated() &&
+               'email' in request.auth.token &&
+               request.auth.token.email is string &&
+               request.auth.token.email.lower().matches('.*@st\\.ueh\\.edu\\.vn$')
+             );
+    }
+
     // True when a first-time student atomically increments approvedCount by 1
     // while creating their own approved student document in the same transaction.
     function isClaimingStudentSlot() {
@@ -151,6 +183,7 @@ service cloud.firestore {
              getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved' &&
              getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'student' &&
              resource.data.registrationOpen == true &&
+             isAllowedByDomainSetting(resource.data) &&
              resource.data.approvedCount < resource.data.maxUsers &&
              request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approvedCount']) &&
              request.resource.data.approvedCount == resource.data.approvedCount + 1;
@@ -161,6 +194,7 @@ service cloud.firestore {
     function isValidApprovedSlotClaimOnUserCreate() {
       return exists(/databases/$(database)/documents/access_config/settings) &&
              get(/databases/$(database)/documents/access_config/settings).data.registrationOpen == true &&
+             isAllowedByDomainSetting(get(/databases/$(database)/documents/access_config/settings).data) &&
              get(/databases/$(database)/documents/access_config/settings).data.approvedCount <
                get(/databases/$(database)/documents/access_config/settings).data.maxUsers &&
              getAfter(/databases/$(database)/documents/access_config/settings).data.approvedCount ==
@@ -220,6 +254,17 @@ service cloud.firestore {
                        );
 
       allow delete: if isAdmin();
+
+      match /studio_data/progress {
+        allow read: if isOwner(uid) || isAdmin();
+        allow create, update: if isOwner(uid) &&
+                                 isValidCloudProgress(request.resource.data) &&
+                                 (isAdmin() || (
+                                   exists(/databases/$(database)/documents/users/$(uid)) &&
+                                   get(/databases/$(database)/documents/users/$(uid)).data.status == 'approved'
+                                 ));
+        allow delete: if isOwner(uid) || isAdmin();
+      }
     }
 
     // ===============================================================

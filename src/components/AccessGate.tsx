@@ -1,6 +1,8 @@
-import React from 'react';
-import { Clock, LogOut, RefreshCw, ShieldAlert, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, Copy, ExternalLink, LogOut, RefreshCw, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { isUehStudentEmail } from '../services/firebase';
+import { isInAppBrowser } from '../utils/browserDetect';
 
 export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
@@ -14,6 +16,18 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
     signOutUser,
     refreshAccess,
   } = useAuth();
+  const [copiedUrl, setCopiedUrl] = useState(false);
+  const inAppWebview = isInAppBrowser();
+
+  const copyCurrentUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 2000);
+    } catch {
+      // ignore clipboard errors
+    }
+  };
 
   if (loading) {
     return (
@@ -67,6 +81,26 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
               tự động.
             </p>
           </div>
+
+          {inAppWebview && (
+            <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+              <div className="font-bold flex items-center gap-1.5">
+                <ExternalLink className="w-4 h-4 shrink-0" />
+                Đang mở trong Zalo / Messenger?
+              </div>
+              <p className="leading-relaxed">
+                Google chặn đăng nhập trong trình duyệt nội bộ của Zalo/Messenger. Hãy bấm biểu tượng{' '}
+                <strong>⋯</strong> (góc trên/dưới) và chọn <strong>Mở bằng Chrome / Safari</strong>.
+              </p>
+              <button
+                onClick={() => void copyCurrentUrl()}
+                className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold inline-flex items-center gap-1 cursor-pointer"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                {copiedUrl ? 'Đã sao chép link!' : 'Copy Link để mở bằng Chrome/Safari'}
+              </button>
+            </div>
+          )}
 
           {error && (
             <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300">
@@ -153,6 +187,12 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
             Tài khoản của bạn đang ở danh sách chờ vì đã đủ sĩ số lớp. Hãy nhắn Admin nâng giới hạn
             hoặc bấm Approve cho email của bạn rồi nhấn nút kiểm tra lại bên dưới.
           </p>
+          {accessConfig?.requireUehEmail && !isUehStudentEmail(profile.email) && (
+            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200">
+              Admin currently requires a <strong>@st.ueh.edu.vn</strong> email for instant entry. Sign
+              out and sign in with your UEH student Gmail, or ask Admin to approve this email.
+            </div>
+          )}
           {accessConfig && (
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs font-mono flex items-center justify-between">
               <span>Current Seats Used:</span>

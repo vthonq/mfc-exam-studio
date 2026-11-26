@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import {
   BarChart3,
   BookOpen,
   BookmarkCheck,
   ClipboardCheck,
+  Cloud,
   Compass,
   FileText,
   FlaskConical,
@@ -24,11 +25,18 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
-import { AdminPanelModal } from './AdminPanelModal';
-import { GlobalSearchModal } from './GlobalSearchModal';
-import { ReviewBankModal } from './ReviewBankModal';
 import { UpdatesBanner, UpdatesModal } from './UpdatesBox';
 import { LATEST_UPDATE_ID } from '../data/changelog';
+
+const AdminPanelModal = lazy(() =>
+  import('./AdminPanelModal').then((m) => ({ default: m.AdminPanelModal })),
+);
+const GlobalSearchModal = lazy(() =>
+  import('./GlobalSearchModal').then((m) => ({ default: m.GlobalSearchModal })),
+);
+const ReviewBankModal = lazy(() =>
+  import('./ReviewBankModal').then((m) => ({ default: m.ReviewBankModal })),
+);
 import type {
   EconPageRoute,
   GeminiModelId,
@@ -108,6 +116,7 @@ export const Layout: React.FC<LayoutProps> = ({
   const {
     settings,
     progress,
+    cloudSyncStatus,
     setLang,
     setTheme,
     setGeminiKey,
@@ -421,8 +430,19 @@ export const Layout: React.FC<LayoutProps> = ({
                 <div className="font-semibold truncate text-slate-800 dark:text-slate-200">
                   {profile?.displayName || firebaseUser.email}
                 </div>
-                <div className="font-mono text-[10px] text-slate-400 truncate">
-                  {firebaseUser.email}
+                <div className="font-mono text-[10px] text-slate-400 truncate flex items-center gap-1">
+                  <span className="truncate">{firebaseUser.email}</span>
+                  {cloudSyncStatus === 'synced' && (
+                    <span
+                      className="inline-flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 shrink-0"
+                      title="Progress synced to Cloud"
+                    >
+                      <Cloud className="w-3 h-3" />
+                    </span>
+                  )}
+                  {cloudSyncStatus === 'syncing' && (
+                    <span className="text-sky-500 shrink-0">Sync...</span>
+                  )}
                 </div>
               </div>
               <button
@@ -681,20 +701,24 @@ export const Layout: React.FC<LayoutProps> = ({
         </div>
       )}
 
-      <GlobalSearchModal
-        open={searchOpen}
-        onClose={() => setSearchOpen(false)}
-        onNavigateMfc={onNavigateMfc}
-        onNavigateEcon={onNavigateEcon}
-        onNavigateProb={onNavigateProb}
-        onNavigateGuide={onNavigateGuide}
-      />
+      <Suspense fallback={null}>
+        {searchOpen && (
+          <GlobalSearchModal
+            open={searchOpen}
+            onClose={() => setSearchOpen(false)}
+            onNavigateMfc={onNavigateMfc}
+            onNavigateEcon={onNavigateEcon}
+            onNavigateProb={onNavigateProb}
+            onNavigateGuide={onNavigateGuide}
+          />
+        )}
 
-      <ReviewBankModal open={reviewOpen} onClose={() => setReviewOpen(false)} />
+        {reviewOpen && <ReviewBankModal open={reviewOpen} onClose={() => setReviewOpen(false)} />}
+
+        {adminOpen && <AdminPanelModal open={adminOpen} onClose={() => setAdminOpen(false)} />}
+      </Suspense>
 
       <UpdatesModal open={updatesOpen} onClose={() => setUpdatesOpen(false)} />
-
-      <AdminPanelModal open={adminOpen} onClose={() => setAdminOpen(false)} />
     </div>
   );
 };

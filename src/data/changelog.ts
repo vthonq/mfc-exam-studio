@@ -7,9 +7,26 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v2.3';
+export const LATEST_UPDATE_ID = 'v2.4';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v2.4',
+    version: 'v2.4',
+    date: 'Nov 2026',
+    title: 'Cloud Progress Sync, Faster Load & Zalo/UEH Guard',
+    titleVi: 'Đồng bộ Đám mây, Tải nhanh hơn & Cảnh báo Zalo',
+    items: [
+      {
+        en: 'Automatic Cloud Progress Sync: mastery scores, exam history & Review Bank sync across your laptop and phone.',
+        vi: 'Tự động đồng bộ tiến độ lên Cloud: giữ nguyên điểm ôn tập, lịch sử thi và câu sai khi đổi máy tính / điện thoại.',
+      },
+      {
+        en: 'Faster initial load via code-splitting + Zalo/Messenger in-app browser warning + optional @st.ueh.edu.vn Admin lock & Last Active tracking.',
+        vi: 'Tách chunk giúp tải trang nhanh hơn + cảnh báo mở bằng Chrome/Safari khi nhấn link từ Zalo/Messenger + tùy chọn lọc email @st.ueh.edu.vn.',
+      },
+    ],
+  },
   {
     id: 'v2.3',
     version: 'v2.3',

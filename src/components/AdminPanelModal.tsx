@@ -21,6 +21,7 @@ import {
   type UserAccessStatus,
   type UserProfileDoc,
 } from '../services/accessControl';
+import { formatRelativeTime } from '../utils/browserDetect';
 
 interface AdminPanelModalProps {
   open: boolean;
@@ -39,6 +40,9 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ open, onClose 
     String(accessConfig?.maxUsers ?? 50),
   );
   const [regOpen, setRegOpen] = useState<boolean>(accessConfig?.registrationOpen ?? true);
+  const [requireUeh, setRequireUeh] = useState<boolean>(
+    Boolean(accessConfig?.requireUehEmail),
+  );
   const [filterStatus, setFilterStatus] = useState<'all' | UserAccessStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -53,6 +57,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ open, onClose 
         setAccessConfigLocal(cfg);
         setMaxUsersInput(String(cfg.maxUsers));
         setRegOpen(cfg.registrationOpen);
+        setRequireUeh(Boolean(cfg.requireUehEmail));
       }
       setUsers(allUsers);
     } catch (err) {
@@ -93,7 +98,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ open, onClose 
 
   if (!open || !isAdmin) return null;
 
-  const handleSaveSettings = async (nextRegOpen = regOpen) => {
+  const handleSaveSettings = async (nextRegOpen = regOpen, nextRequireUeh = requireUeh) => {
     const parsedMax = Number(maxUsersInput);
     if (!Number.isFinite(parsedMax) || parsedMax < 0) {
       setMsg({ type: 'err', text: 'Max Users must be a valid number >= 0.' });
@@ -105,14 +110,16 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ open, onClose 
       const nextCfg = await updateAccessSettings({
         maxUsers: parsedMax,
         registrationOpen: nextRegOpen,
+        requireUehEmail: nextRequireUeh,
         updatedBy: adminEmail,
       });
       setAccessConfigLocal(nextCfg);
       setRegOpen(nextCfg.registrationOpen);
+      setRequireUeh(Boolean(nextCfg.requireUehEmail));
       setMaxUsersInput(String(nextCfg.maxUsers));
       setMsg({
         type: 'ok',
-        text: `Saved: Max Users = ${nextCfg.maxUsers}, Auto-Join = ${nextCfg.registrationOpen ? 'OPEN' : 'PAUSED'}.`,
+        text: `Saved: Max Users = ${nextCfg.maxUsers}, Auto-Approve = ${nextCfg.registrationOpen ? 'ON' : 'PAUSED'}, UEH Only = ${nextCfg.requireUehEmail ? 'ON' : 'OFF'}.`,
       });
     } catch (err) {
       setMsg({ type: 'err', text: err instanceof Error ? err.message : String(err) });
@@ -252,7 +259,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ open, onClose 
                   Save Max Cap
                 </button>
                 <button
-                  onClick={() => void handleSaveSettings(!regOpen)}
+                  onClick={() => void handleSaveSettings(!regOpen, requireUeh)}
                   disabled={savingSettings}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold border cursor-pointer ${
                     regOpen
@@ -260,7 +267,19 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ open, onClose 
                       : 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700'
                   }`}
                 >
-                  Auto-Approve New Users: {regOpen ? 'ON' : 'PAUSED (Manual Only)'}
+                  Auto-Approve: {regOpen ? 'ON' : 'PAUSED'}
+                </button>
+                <button
+                  onClick={() => void handleSaveSettings(regOpen, !requireUeh)}
+                  disabled={savingSettings}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border cursor-pointer ${
+                    requireUeh
+                      ? 'bg-sky-600 text-white border-sky-600'
+                      : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+                  }`}
+                  title="When ON, only @st.ueh.edu.vn emails can auto-claim student seats"
+                >
+                  @st.ueh.edu.vn Only: {requireUeh ? 'ON' : 'OFF'}
                 </button>
               </div>
 
@@ -342,13 +361,14 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ open, onClose 
                     <th className="p-3">User</th>
                     <th className="p-3">Role</th>
                     <th className="p-3">Status</th>
+                    <th className="p-3">Last Active</th>
                     <th className="p-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="p-6 text-center text-slate-500">
+                      <td colSpan={5} className="p-6 text-center text-slate-500">
                         {loadingList ? 'Loading users...' : 'No matching users found.'}
                       </td>
                     </tr>
@@ -390,6 +410,9 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ open, onClose 
                               {u.status === 'banned' && <Ban className="w-3 h-3" />}
                               {u.status}
                             </span>
+                          </td>
+                          <td className="p-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                            {formatRelativeTime(u.lastSeenAt)}
                           </td>
                           <td className="p-3 text-right">
                             {isRowAdmin ? (
