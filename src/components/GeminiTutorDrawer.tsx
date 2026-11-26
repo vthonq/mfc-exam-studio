@@ -1,13 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  ArrowUpRight,
   Check,
   Copy,
   ExternalLink,
   Eye,
   EyeOff,
+  Globe,
   ImagePlus,
   KeyRound,
   Loader2,
+  Maximize2,
+  Minimize2,
   RotateCcw,
   Send,
   ShieldCheck,
@@ -122,6 +126,9 @@ export const GeminiTutorDrawer: React.FC<GeminiTutorDrawerProps> = ({
 }) => {
   const { settings, setGeminiKey, setGeminiModel } = useApp();
 
+  const [activeTab, setActiveTab] = useState<'api' | 'web'>('api');
+  const [expanded, setExpanded] = useState(false);
+
   const [messages, setMessages] = useState<TutorMessage[]>(() => loadSessionChat(subject));
   const [previousInteractionId, setPreviousInteractionId] = useState<string | undefined>(undefined);
   const [input, setInput] = useState('');
@@ -134,12 +141,15 @@ export const GeminiTutorDrawer: React.FC<GeminiTutorDrawerProps> = ({
   const [testingKey, setTestingKey] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; text: string } | null>(null);
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
-  const [webCopiedNotice, setWebCopiedNotice] = useState(false);
+
+  const [webPrompt, setWebPrompt] = useState('');
+  const [webStatus, setWebStatus] = useState<string | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const keyInputRef = useRef<HTMLInputElement | null>(null);
   const feedEndRef = useRef<HTMLDivElement | null>(null);
+  const webToastTimerRef = useRef<number | null>(null);
 
   // Switch chat history cleanly when active subject changes
   useEffect(() => {
@@ -157,10 +167,10 @@ export const GeminiTutorDrawer: React.FC<GeminiTutorDrawerProps> = ({
 
   // Keep latest message scrolled into view while chatting/streaming
   useEffect(() => {
-    if (open) {
+    if (open && activeTab === 'api') {
       feedEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
-  }, [messages, open, streaming]);
+  }, [messages, open, streaming, activeTab]);
 
   // Close on Escape key
   useEffect(() => {
@@ -174,10 +184,68 @@ export const GeminiTutorDrawer: React.FC<GeminiTutorDrawerProps> = ({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
 
+  useEffect(() => {
+    return () => {
+      if (webToastTimerRef.current) {
+        window.clearTimeout(webToastTimerRef.current);
+      }
+    };
+  }, []);
+
   if (!open) return null;
 
   const hasKey = Boolean(settings.geminiKey.trim());
   const badge = SUBJECT_BADGES[subject];
+
+  const showWebToast = (msg: string) => {
+    setWebStatus(msg);
+    if (webToastTimerRef.current) {
+      window.clearTimeout(webToastTimerRef.current);
+    }
+    webToastTimerRef.current = window.setTimeout(() => setWebStatus(null), 4000);
+  };
+
+  const openGeminiWebWindow = async (promptText: string, mode: 'side' | 'tab') => {
+    const payload = buildGeminiWebHandoffPrompt(
+      subject,
+      promptText,
+      settings.lang === 'bilingual',
+    );
+    try {
+      await navigator.clipboard.writeText(payload);
+    } catch {
+      // ignore clipboard errors
+    }
+
+    if (mode === 'side' && window.innerWidth >= 768) {
+      const popupW = 480;
+      const popupH = Math.min(840, Math.max(640, (window.screen?.availHeight || 900) - 90));
+      const left = Math.max(0, (window.screen?.availWidth || 1280) - popupW - 24);
+      window.open(
+        'https://gemini.google.com/app',
+        'exam_studio_gemini_web',
+        `width=${popupW},height=${popupH},left=${left},top=45,resizable=yes,scrollbars=yes`,
+      );
+    } else {
+      window.open('https://gemini.google.com/app', '_blank', 'noopener,noreferrer');
+    }
+
+    showWebToast('Prompt copied! Press Ctrl+V → Enter in the Gemini window.');
+  };
+
+  const copyWebPromptOnly = async (promptText: string) => {
+    const payload = buildGeminiWebHandoffPrompt(
+      subject,
+      promptText,
+      settings.lang === 'bilingual',
+    );
+    try {
+      await navigator.clipboard.writeText(payload);
+      showWebToast('Prompt copied to clipboard! Paste into any Gemini chat.');
+    } catch {
+      showWebToast('Could not access clipboard — please copy from the text box.');
+    }
+  };
 
   const handleImageFile = (file: File | null | undefined) => {
     if (!file) return;
@@ -246,7 +314,7 @@ export const GeminiTutorDrawer: React.FC<GeminiTutorDrawerProps> = ({
     if (!settings.geminiKey.trim()) {
       setSetupOpen(true);
       setErrorMsg(
-        'Paste your free Google AI Studio key above to chat inside the app — or click "Gemini Web ↗" below to open your regular Gemini with this prompt!',
+        'Paste your free Google AI Studio key above, or switch to the "Web Gemini (No Key)" tab!',
       );
       window.setTimeout(() => keyInputRef.current?.focus(), 60);
       return;
@@ -306,22 +374,6 @@ export const GeminiTutorDrawer: React.FC<GeminiTutorDrawerProps> = ({
     }
   };
 
-  const handleOpenGeminiWeb = async () => {
-    const payload = buildGeminiWebHandoffPrompt(
-      subject,
-      input,
-      settings.lang === 'bilingual',
-    );
-    try {
-      await navigator.clipboard.writeText(payload);
-      setWebCopiedNotice(true);
-      window.setTimeout(() => setWebCopiedNotice(false), 2600);
-    } catch {
-      // ignore clipboard restrictions
-    }
-    window.open('https://gemini.google.com/app', '_blank', 'noopener,noreferrer');
-  };
-
   const handleCopyMessage = async (msg: TutorMessage) => {
     try {
       await navigator.clipboard.writeText(msg.text);
@@ -334,24 +386,27 @@ export const GeminiTutorDrawer: React.FC<GeminiTutorDrawerProps> = ({
 
   return (
     <div
-      className="no-print fixed inset-0 z-50 bg-black/40 backdrop-blur-[1px] flex justify-end"
+      className="no-print fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] flex justify-end"
       onClick={onClose}
     >
       <aside
-        className="w-full max-w-md h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col"
+        className={`animate-slide-in-right w-full ${
+          expanded ? 'max-w-2xl' : 'max-w-lg'
+        } h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col transition-[max-width] duration-200`}
         onClick={(e) => e.stopPropagation()}
         aria-label="My Gemini AI Tutor"
       >
-        {/* Header */}
-        <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 space-y-2.5 shrink-0">
+        {/* Uncluttered 2-Row Header */}
+        <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 space-y-3 shrink-0 bg-white/95 dark:bg-slate-900/95">
+          {/* Row 1: Identity & Window Controls */}
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-sky-500 text-white flex items-center justify-center shadow-sm shrink-0">
                 <Sparkles className="w-4 h-4" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <h2 className="font-bold text-sm truncate">My Gemini AI Tutor</h2>
+                  <h2 className="font-bold text-sm tracking-tight truncate">My Gemini AI</h2>
                   <span
                     className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${badge.cls}`}
                   >
@@ -367,35 +422,53 @@ export const GeminiTutorDrawer: React.FC<GeminiTutorDrawerProps> = ({
             <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
-                onClick={() => setSetupOpen((v) => !v)}
-                className={`relative p-1.5 rounded-lg border text-xs cursor-pointer transition-colors ${
-                  setupOpen
-                    ? 'border-indigo-400 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'
-                    : 'border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-                title="Configure your Gemini API Key"
-                aria-label="Configure Gemini API Key"
+                onClick={() => setExpanded((v) => !v)}
+                className="hidden md:inline-flex p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
+                title={expanded ? 'Compact width' : 'Expand width'}
+                aria-label={expanded ? 'Compact drawer width' : 'Expand drawer width'}
               >
-                <KeyRound className="w-4 h-4" />
-                <span
-                  className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ${
-                    hasKey ? 'bg-emerald-500' : 'bg-amber-500'
-                  }`}
-                />
+                {expanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
               </button>
-              <button
-                type="button"
-                onClick={handleResetChat}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                title="New Chat"
-                aria-label="New Chat"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </button>
+
+              {activeTab === 'api' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setSetupOpen((v) => !v)}
+                    className={`relative p-1.5 rounded-lg border text-xs cursor-pointer transition-colors ${
+                      setupOpen
+                        ? 'border-indigo-400 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'
+                        : 'border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
+                    }`}
+                    title={hasKey ? 'API Key Connected — Click to manage' : 'Add your free Gemini API key'}
+                    aria-label="Configure Gemini API Key"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    <span
+                      className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ring-2 ring-white dark:ring-slate-900 ${
+                        hasKey ? 'bg-emerald-500' : 'bg-amber-500'
+                      }`}
+                    />
+                  </button>
+
+                  {messages.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleResetChat}
+                      className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
+                      title="New Chat"
+                      aria-label="New Chat"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                  )}
+                </>
+              )}
+
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer transition-colors"
                 title="Close Tutor"
                 aria-label="Close Tutor"
               >
@@ -404,328 +477,462 @@ export const GeminiTutorDrawer: React.FC<GeminiTutorDrawerProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-2">
-            <select
-              value={settings.geminiModel}
-              onChange={(e) => {
-                setGeminiModel(e.target.value as GeminiModelId);
-                setPreviousInteractionId(undefined);
-              }}
-              aria-label="Select Gemini Model"
-              className="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
-            >
-              {GEMINI_MODEL_OPTIONS.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
+          {/* Row 2: 2-Tab Segmented Switcher */}
+          <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90">
             <button
               type="button"
-              onClick={() => setSetupOpen((v) => !v)}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold border shrink-0 cursor-pointer ${
-                hasKey
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800'
-                  : 'bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800'
+              onClick={() => setActiveTab('api')}
+              className={`py-1.5 px-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                activeTab === 'api'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
-              {hasKey ? '● Connected' : '○ No Key'}
+              <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+              <span>In-App Chat (API Key)</span>
+              {hasKey && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('web')}
+              className={`py-1.5 px-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                activeTab === 'web'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              <Globe className="w-3.5 h-3.5 text-sky-500" />
+              <span>Web Gemini (No Key)</span>
             </button>
           </div>
         </div>
 
-        {/* Collapsible Connect Your Own Gemini Panel */}
-        {setupOpen && (
-          <div className="px-4 py-3 bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 space-y-2 text-xs shrink-0 animate-fade-in">
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                Use Your Own Gemini (BYOK)
-              </span>
-              <a
-                href="https://aistudio.google.com/apikey"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
-              >
-                Get Free Key at Google AI Studio
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
+        {/* ================= TAB 1: IN-APP CHAT (API KEY) ================= */}
+        {activeTab === 'api' && (
+          <>
+            {/* Calm Collapsible BYOK Setup Sheet */}
+            {setupOpen && (
+              <div className="px-5 py-3.5 bg-slate-50/90 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 space-y-2.5 text-xs shrink-0 animate-fade-in">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    Connect Your Free Gemini Key
+                  </span>
+                  <a
+                    href="https://aistudio.google.com/apikey"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                  >
+                    Get Free Key at Google AI Studio
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
 
-            <div className="flex items-center gap-1.5">
-              <div className="relative flex-1">
-                <input
-                  ref={keyInputRef}
-                  type={showKey ? 'text' : 'password'}
-                  value={settings.geminiKey}
-                  onChange={(e) => {
-                    setGeminiKey(e.target.value);
-                    setTestResult(null);
-                  }}
-                  placeholder="Paste AIza... key here"
-                  className="w-full pl-2.5 pr-8 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono text-xs"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowKey((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                  aria-label={showKey ? 'Hide API Key' : 'Show API Key'}
-                >
-                  {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-              {hasKey && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setGeminiKey('');
-                    setTestResult(null);
-                  }}
-                  className="p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 cursor-pointer"
-                  title="Clear API Key"
-                  aria-label="Clear API Key"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              )}
-              <button
-                type="button"
-                disabled={testingKey}
-                onClick={() => void handleTestKey()}
-                className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold text-xs inline-flex items-center gap-1 cursor-pointer shrink-0"
-              >
-                {testingKey ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                Test Key
-              </button>
-            </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="relative flex-1">
+                    <input
+                      ref={keyInputRef}
+                      type={showKey ? 'text' : 'password'}
+                      value={settings.geminiKey}
+                      onChange={(e) => {
+                        setGeminiKey(e.target.value);
+                        setTestResult(null);
+                      }}
+                      placeholder="Paste AIza... key here"
+                      className="w-full pl-3 pr-8 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowKey((v) => !v)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                      aria-label={showKey ? 'Hide API Key' : 'Show API Key'}
+                    >
+                      {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  {hasKey && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGeminiKey('');
+                        setTestResult(null);
+                      }}
+                      className="p-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 cursor-pointer"
+                      title="Clear API Key"
+                      aria-label="Clear API Key"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    disabled={testingKey}
+                    onClick={() => void handleTestKey()}
+                    className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold text-xs inline-flex items-center gap-1 cursor-pointer shrink-0"
+                  >
+                    {testingKey ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                    Test Key
+                  </button>
+                </div>
 
-            {testResult && (
-              <div
-                className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium ${
-                  testResult.ok
-                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-                    : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
-                }`}
-              >
-                {testResult.text}
+                {testResult && (
+                  <div
+                    className={`px-3 py-1.5 rounded-lg text-[11px] font-medium ${
+                      testResult.ok
+                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                        : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+                    }`}
+                  >
+                    {testResult.text}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                  <span>
+                    Stored <strong>only in your browser</strong> — never uploaded to our server.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('web')}
+                    className="font-semibold text-sky-600 dark:text-sky-400 hover:underline cursor-pointer"
+                  >
+                    No key? Use Web Gemini →
+                  </button>
+                </div>
               </div>
             )}
 
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              Stored <strong>strictly in your browser</strong> (never sent to our server). Unlocks live AI chat + in-app proof/essay grading. No API key? Type below &amp; click{' '}
-              <strong>Gemini Web ↗</strong>!
-            </p>
-          </div>
-        )}
+            {/* Chat Feed */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {messages.length === 0 ? (
+                <div className="space-y-4 pt-1">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-50 via-sky-50/70 to-white dark:from-indigo-950/40 dark:via-slate-900 dark:to-slate-900 border border-indigo-200/80 dark:border-indigo-800/60 space-y-1.5">
+                    <div className="text-sm font-bold text-indigo-900 dark:text-indigo-200">
+                      {settings.lang === 'bilingual'
+                        ? 'Hỏi đáp & giải đề 3 môn trực tiếp với Gemini'
+                        : 'Ask anything or paste an exam screenshot'}
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                      {settings.lang === 'bilingual'
+                        ? 'Gõ câu hỏi hoặc dán ảnh chụp đề bài (Ctrl+V), hỗ trợ công thức KaTeX và nhớ ngữ cảnh từng môn. Chọn nhanh gợi ý bên dưới:'
+                        : 'Type a question or Ctrl+V paste a screenshot of any problem with full KaTeX math formatting. Try a starter below:'}
+                    </p>
+                  </div>
 
-        {/* Chat Feed */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {messages.length === 0 ? (
-            <div className="space-y-4 pt-2">
-              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-50 via-sky-50 to-white dark:from-indigo-950/40 dark:via-slate-900 dark:to-slate-900 border border-indigo-200/80 dark:border-indigo-800/60 space-y-1.5">
-                <div className="text-xs font-bold text-indigo-800 dark:text-indigo-300">
-                  {settings.lang === 'bilingual'
-                    ? 'Hỏi đáp & giải đề 3 môn trực tiếp với Gemini của bạn'
-                    : 'Ask questions or paste exam screenshots directly'}
+                  <div className="space-y-2">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">
+                      Quick Starters ({badge.label})
+                    </div>
+                    {QUICK_STARTERS[subject].map((starter) => (
+                      <button
+                        key={starter}
+                        type="button"
+                        disabled={streaming}
+                        onClick={() => void handleSend(starter)}
+                        className="group w-full text-left px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 hover:border-indigo-400 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/30 text-[13px] text-slate-700 dark:text-slate-200 flex items-center justify-between gap-2 transition-colors cursor-pointer"
+                      >
+                        <span>{starter}</span>
+                        <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-indigo-500 transition-opacity shrink-0" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {settings.lang === 'bilingual'
-                    ? 'Hỗ trợ gõ câu hỏi, dán ảnh chụp đề bài (Ctrl+V) và hiển thị công thức toán KaTeX. Nhấn thử một gợi ý bên dưới:'
-                    : 'Type a question or Ctrl+V paste a screenshot of any problem. Try a quick starter below:'}
-                </p>
+              ) : (
+                messages.map((msg) =>
+                  msg.role === 'user' ? (
+                    <div key={msg.id} className="flex justify-end">
+                      <div className="max-w-[85%] rounded-2xl rounded-br-md bg-indigo-600 text-white px-4 py-2.5 text-[13.5px] leading-relaxed shadow-xs">
+                        {msg.imageDataUrl ? (
+                          <img
+                            src={msg.imageDataUrl}
+                            alt={msg.imageName || 'Attached question'}
+                            className="max-h-44 rounded-lg mb-2 border border-white/20 object-contain"
+                          />
+                        ) : msg.imageName ? (
+                          <div className="text-[11px] opacity-80 mb-1 font-mono">
+                            [Image: {msg.imageName}]
+                          </div>
+                        ) : null}
+                        <div className="whitespace-pre-wrap break-words">{msg.text}</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div key={msg.id} className="flex items-start gap-2.5">
+                      <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-1">
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="rounded-2xl rounded-tl-md bg-slate-50 dark:bg-slate-800/75 border border-slate-200/80 dark:border-slate-700/80 px-4 py-3 text-[13.5px] leading-relaxed text-slate-900 dark:text-slate-100">
+                          {msg.text ? (
+                            <RichMathText text={msg.text} />
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              Thinking...
+                            </span>
+                          )}
+                        </div>
+                        {msg.text && (
+                          <button
+                            type="button"
+                            onClick={() => void handleCopyMessage(msg)}
+                            className="px-2 py-0.5 rounded-md text-[11px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            {copiedMsgId === msg.id ? (
+                              <>
+                                <Check className="w-3 h-3 text-emerald-500" /> Copied
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" /> Copy
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ),
+                )
+              )}
+              <div ref={feedEndRef} />
+            </div>
+
+            {/* Error Banner */}
+            {errorMsg && (
+              <div className="mx-5 mb-2 px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 flex items-start justify-between gap-2 shrink-0">
+                <span>{errorMsg}</span>
+                <button
+                  type="button"
+                  onClick={() => setErrorMsg(null)}
+                  className="text-rose-500 hover:text-rose-700 shrink-0 cursor-pointer"
+                  aria-label="Dismiss error"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
+            )}
 
-              <div className="space-y-1.5">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">
-                  Quick Starters ({badge.label})
+            {/* Unified Modern Composer */}
+            <div className="px-4 py-3.5 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900">
+              <div className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-950/90 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 p-2.5 space-y-2 transition-all">
+                {image && (
+                  <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <img
+                        src={image.dataUrl}
+                        alt={image.name}
+                        className="w-9 h-9 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0"
+                      />
+                      <span className="text-xs font-mono truncate text-slate-600 dark:text-slate-300">
+                        {image.name}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setImage(null)}
+                      className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer"
+                      title="Remove image"
+                      aria-label="Remove image"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                <textarea
+                  rows={2}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onPaste={handlePaste}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      if (!streaming) void handleSend();
+                    }
+                  }}
+                  placeholder="Ask Gemini or paste screenshot (Ctrl+V)... Enter to send"
+                  className="w-full px-1.5 py-1 bg-transparent border-0 focus:outline-none focus:ring-0 focus:!shadow-none text-sm leading-relaxed resize-none"
+                />
+
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-200/70 dark:border-slate-800/80">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        handleImageFile(e.target.files?.[0]);
+                        e.target.value = '';
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={streaming}
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-1.5 rounded-lg hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-50 cursor-pointer transition-colors shrink-0"
+                      title="Attach screenshot or paste Ctrl+V"
+                      aria-label="Attach image"
+                    >
+                      <ImagePlus className="w-4 h-4" />
+                    </button>
+
+                    <select
+                      value={settings.geminiModel}
+                      onChange={(e) => {
+                        setGeminiModel(e.target.value as GeminiModelId);
+                        setPreviousInteractionId(undefined);
+                      }}
+                      aria-label="Select Gemini Model"
+                      className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px] font-medium text-slate-700 dark:text-slate-200 max-w-[165px] truncate cursor-pointer"
+                    >
+                      {GEMINI_MODEL_OPTIONS.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.shortLabel}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => void openGeminiWebWindow(input, 'side')}
+                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-semibold text-slate-600 dark:text-slate-300 inline-flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Copy question & open gemini.google.com side-by-side"
+                    >
+                      <span>Web</span>
+                      <ExternalLink className="w-3 h-3 text-sky-500" />
+                    </button>
+
+                    {streaming ? (
+                      <button
+                        type="button"
+                        onClick={() => abortRef.current?.abort()}
+                        className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Square className="w-3 h-3 fill-current" />
+                        Stop
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => void handleSend()}
+                        className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold inline-flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        Send
+                      </button>
+                    )}
+                  </div>
                 </div>
-                {QUICK_STARTERS[subject].map((starter) => (
-                  <button
-                    key={starter}
-                    type="button"
-                    disabled={streaming}
-                    onClick={() => void handleSend(starter)}
-                    className="w-full text-left px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 hover:border-indigo-400 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/30 text-xs text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
-                  >
-                    {starter}
-                  </button>
-                ))}
               </div>
             </div>
-          ) : (
-            messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
-              >
-                <div
-                  className={`max-w-[92%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
-                    msg.role === 'user'
-                      ? 'bg-indigo-600 text-white rounded-br-sm'
-                      : 'bg-slate-100 dark:bg-slate-800/90 text-slate-900 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700/80 rounded-bl-sm'
-                  }`}
-                >
-                  {msg.imageDataUrl ? (
-                    <img
-                      src={msg.imageDataUrl}
-                      alt={msg.imageName || 'Attached question'}
-                      className="max-h-40 rounded-lg mb-2 border border-white/20 object-contain"
-                    />
-                  ) : msg.imageName ? (
-                    <div className="text-[10px] opacity-80 mb-1 font-mono">
-                      [Image: {msg.imageName}]
-                    </div>
-                  ) : null}
-
-                  {msg.role === 'assistant' ? (
-                    msg.text ? (
-                      <RichMathText text={msg.text} />
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        Thinking...
-                      </span>
-                    )
-                  ) : (
-                    <div className="whitespace-pre-wrap break-words">{msg.text}</div>
-                  )}
-                </div>
-
-                {msg.role === 'assistant' && msg.text && (
-                  <button
-                    type="button"
-                    onClick={() => void handleCopyMessage(msg)}
-                    className="mt-1 px-2 py-0.5 rounded-md text-[10px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    {copiedMsgId === msg.id ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-500" /> Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3" /> Copy
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-            ))
-          )}
-          <div ref={feedEndRef} />
-        </div>
-
-        {/* Error Alert */}
-        {errorMsg && (
-          <div className="mx-4 mb-2 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-[11px] text-rose-700 dark:text-rose-300 flex items-start justify-between gap-2 shrink-0">
-            <span>{errorMsg}</span>
-            <button
-              type="button"
-              onClick={() => setErrorMsg(null)}
-              className="text-rose-500 hover:text-rose-700 shrink-0 cursor-pointer"
-              aria-label="Dismiss error"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          </>
         )}
 
-        {/* Composer Footer */}
-        <div className="p-3 border-t border-slate-200 dark:border-slate-800 space-y-2 shrink-0 bg-white dark:bg-slate-900">
-          {image && (
-            <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
-              <div className="flex items-center gap-2 min-w-0">
-                <img
-                  src={image.dataUrl}
-                  alt={image.name}
-                  className="w-10 h-10 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0"
-                />
-                <span className="text-[11px] font-mono truncate text-slate-600 dark:text-slate-300">
-                  {image.name}
+        {/* ================= TAB 2: WEB GEMINI (NO KEY) ================= */}
+        {activeTab === 'web' && (
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-sky-50 via-indigo-50/50 to-white dark:from-sky-950/40 dark:via-slate-900 dark:to-slate-900 border border-sky-200/80 dark:border-sky-800/60 space-y-1.5">
+              <div className="flex items-center gap-2 text-sm font-bold text-sky-900 dark:text-sky-200">
+                <Globe className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                <span>
+                  {settings.lang === 'bilingual'
+                    ? 'Dùng tài khoản Gemini Web cá nhân (Không cần API Key)'
+                    : 'Use Your Regular Web Gemini Side-by-Side (No API Key)'}
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => setImage(null)}
-                className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 cursor-pointer"
-                title="Remove image"
-                aria-label="Remove image"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                {settings.lang === 'bilingual'
+                  ? 'Google chặn nhúng gemini.google.com vào trong trang khác, nên cách mượt nhất là mở cửa sổ Gemini đặt song song ngay cạnh Exam Studio. Chọn câu hỏi hoặc gõ đề bài rồi nhấn một nút để tự copy ngữ cảnh môn học.'
+                  : 'Because Google blocks embedding gemini.google.com in an iframe, this opens your own Gemini in a docked side-by-side window next to Exam Studio with your subject context copied automatically.'}
+              </p>
             </div>
-          )}
 
-          <div className="flex items-end gap-1.5">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                handleImageFile(e.target.files?.[0]);
-                e.target.value = '';
-              }}
-            />
-            <button
-              type="button"
-              disabled={streaming}
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-50 cursor-pointer shrink-0"
-              title="Attach screenshot or paste Ctrl+V"
-              aria-label="Attach image"
-            >
-              <ImagePlus className="w-4 h-4" />
-            </button>
-
-            <textarea
-              rows={2}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onPaste={handlePaste}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  if (!streaming) void handleSend();
-                }
-              }}
-              placeholder="Ask Gemini or paste screenshot (Ctrl+V)... Enter to send"
-              className="flex-1 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs resize-none"
-            />
-          </div>
-
-          <div className="flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => void handleOpenGeminiWeb()}
-              className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-200 inline-flex items-center gap-1 cursor-pointer"
-              title="Copy question & open gemini.google.com in a new tab (works without an API key)"
-            >
-              <ExternalLink className="w-3.5 h-3.5 text-indigo-500" />
-              {webCopiedNotice ? 'Copied! Opening...' : 'Gemini Web ↗'}
-            </button>
-
-            {streaming ? (
-              <button
-                type="button"
-                onClick={() => abortRef.current?.abort()}
-                className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <Square className="w-3 h-3 fill-current" />
-                Stop
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void handleSend()}
-                className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold inline-flex items-center gap-1.5 shadow-xs cursor-pointer"
-              >
-                <Send className="w-3.5 h-3.5" />
-                Send
-              </button>
+            {webStatus && (
+              <div className="px-3.5 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-2 animate-fade-in">
+                <Check className="w-4 h-4 shrink-0" />
+                <span>{webStatus}</span>
+              </div>
             )}
+
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 p-3.5 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <label className="font-bold text-slate-700 dark:text-slate-200">
+                  Your Question or Problem
+                </label>
+                <span className="text-[11px] text-slate-400 font-mono">
+                  Tagged: {badge.label} · {settings.lang === 'bilingual' ? 'EN+VI' : 'EN'}
+                </span>
+              </div>
+              <textarea
+                rows={4}
+                value={webPrompt}
+                onChange={(e) => setWebPrompt(e.target.value)}
+                onKeyDown={(e) => {
+                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    void openGeminiWebWindow(webPrompt, 'side');
+                  }
+                }}
+                placeholder="Paste or type your question here... (Ctrl+Enter to open side-by-side)"
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm leading-relaxed resize-y"
+              />
+
+              <button
+                type="button"
+                onClick={() => void openGeminiWebWindow(webPrompt, 'side')}
+                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-xs font-bold inline-flex items-center justify-center gap-2 shadow-sm cursor-pointer transition-all"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Copy &amp; Open Gemini Side-by-Side ↗
+              </button>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => void openGeminiWebWindow(webPrompt, 'tab')}
+                  className="py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+                  Open in New Tab
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void copyWebPromptOnly(webPrompt)}
+                  className="py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Copy className="w-3.5 h-3.5 text-slate-500" />
+                  Copy Prompt Only
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">
+                1-Click Quick Starters ({badge.label})
+              </div>
+              {QUICK_STARTERS[subject].map((starter) => (
+                <button
+                  key={starter}
+                  type="button"
+                  onClick={() => {
+                    setWebPrompt(starter);
+                    void openGeminiWebWindow(starter, 'side');
+                  }}
+                  className="group w-full text-left px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sky-400 hover:bg-sky-50/50 dark:hover:bg-sky-950/30 text-[13px] text-slate-700 dark:text-slate-200 flex items-center justify-between gap-2 transition-colors cursor-pointer"
+                >
+                  <span>{starter}</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-sky-500 transition-opacity shrink-0" />
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </aside>
     </div>
   );
