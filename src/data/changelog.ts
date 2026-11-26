@@ -22,8 +22,8 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
         vi: 'Trợ lý My Gemini AI tích hợp sẵn (cả 3 môn): trả lời theo luồng trực tiếp, hiển thị công thức KaTeX, dán ảnh chụp đề (Ctrl+V), nhập key Google AI Studio miễn phí lưu ngay trên trình duyệt.',
       },
       {
-        en: 'No API key? Click "Gemini Web ↗" inside the tutor to copy your subject-tagged prompt and open gemini.google.com directly in one click.',
-        vi: 'Không cần API key? Nhấn nút "Gemini Web ↗" để tự động copy câu hỏi kèm ngữ cảnh môn học và mở ngay trang Gemini cá nhân của bạn.',
+        en: 'No API key? Web Gemini (No Key) tab auto-attaches matching website formulas & exam traps into every copied prompt + lets you download a full .md Course Knowledge Pack to attach once inside gemini.google.com.',
+        vi: 'Không cần API key? Tab Web Gemini tự động đính kèm công thức & bẫy thi khớp câu hỏi từ web vào prompt + cho phép tải file .md toàn bộ kiến thức môn để thả vào gemini.google.com.',
       },
     ],
   },

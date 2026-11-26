@@ -1,4 +1,8 @@
 import { GoogleGenAI } from '@google/genai';
+import {
+  formatKnowledgeContextBlock,
+  getMatchedKnowledgeSnippets,
+} from '../utils/knowledgeBridge';
 import type { GeminiModelId, SubjectId } from '../types';
 
 export interface GeminiModelOption {
@@ -61,11 +65,15 @@ export function buildTutorSystemPrompt(
   subject: SubjectId,
   routeLabel: string,
   bilingual: boolean,
+  queryHint?: string,
 ): string {
   const syllabus = SUBJECT_SYLLABUS_CONTEXT[subject];
   const langRule = bilingual
     ? 'Respond clearly in structured English AND include concise Vietnamese exam tips / key technical terms in parentheses or a short "Tóm tắt tiếng Việt" takeaway when helpful.'
     : 'Respond clearly and concisely in structured English tailored for university exam prep.';
+
+  const matched = getMatchedKnowledgeSnippets(subject, queryHint ?? '', 3);
+  const notesBlock = formatKnowledgeContextBlock(matched);
 
   return [
     `You are "My Gemini AI Tutor", an expert, encouraging university exam study assistant embedded inside Exam Studio Hub.`,
@@ -75,27 +83,38 @@ export function buildTutorSystemPrompt(
     `1. Write mathematical expressions cleanly using LaTeX wrapped in single $...$ for inline formulas and $$...$$ on its own line for key display equations so the UI KaTeX renderer formats them crisply.`,
     `2. Show numbered step-by-step reasoning, name theorems/rules/table lookups explicitly, and highlight common exam traps.`,
     `3. ${langRule}`,
-  ].join('\n');
+    notesBlock ? `\n${notesBlock}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
 }
 
 export function buildGeminiWebHandoffPrompt(
   subject: SubjectId,
   question: string,
   bilingual: boolean,
+  includeKnowledge = true,
 ): string {
   const cleanQ = question.trim() || 'Help me review the key exam traps and formulas for this course.';
   const langLine = bilingual
     ? 'Please explain step by step in English and summarize key exam terms in Vietnamese.'
     : 'Please explain clearly step by step.';
 
+  const notesBlock = includeKnowledge
+    ? formatKnowledgeContextBlock(getMatchedKnowledgeSnippets(subject, cleanQ, 3))
+    : '';
+
   return [
     `[Exam Studio Hub · ${SUBJECT_LABELS[subject]}]`,
     langLine,
     `Use LaTeX ($...$ / $$...$$) for formulas when needed.`,
+    notesBlock ? `\n${notesBlock}` : '',
     '',
     `Question:`,
     cleanQ,
-  ].join('\n');
+  ]
+    .filter((line) => line !== undefined)
+    .join('\n');
 }
 
 function formatGeminiError(err: unknown): Error {
@@ -183,6 +202,7 @@ export async function streamGeminiTutor(
     params.subject,
     params.routeLabel,
     params.bilingual,
+    cleanPrompt,
   );
 
   const inputPayload = params.image

@@ -10,6 +10,11 @@ import {
   buildGeminiWebHandoffPrompt,
   buildTutorSystemPrompt,
 } from '../src/services/geminiTutor';
+import {
+  buildSubjectKnowledgeMarkdown,
+  getKnowledgeFileName,
+  getMatchedKnowledgeSnippets,
+} from '../src/utils/knowledgeBridge';
 import { formatRelativeTime, isInAppBrowser } from '../src/utils/browserDetect';
 import { clearExamDraft, loadExamDraft, saveExamDraft } from '../src/utils/examDraft';
 import { buildGlobalSearchItems, searchGlobalItems } from '../src/utils/searchIndex';
@@ -191,15 +196,37 @@ describe('Changelog & Cross-Subject Data Integrity', () => {
     const probPrompt = buildTutorSystemPrompt('probstat', 'SB Stat Tables', true);
     expect(probPrompt).toContain('SB Statistical Tables');
 
-    const handoff = buildGeminiWebHandoffPrompt('mfc', 'Explain CRT step-by-step', true);
+    const handoff = buildGeminiWebHandoffPrompt('mfc', 'Explain CRT step-by-step', true, true);
     expect(handoff).toContain('Math for Computing (MFC)');
+    expect(handoff).toContain('EXAM STUDIO COURSE NOTES');
     expect(handoff).toContain('Explain CRT step-by-step');
+
+    const handoffNoNotes = buildGeminiWebHandoffPrompt('mfc', 'Explain CRT step-by-step', true, false);
+    expect(handoffNoNotes).not.toContain('EXAM STUDIO COURSE NOTES');
 
     const ids = GEMINI_MODEL_OPTIONS.map((m) => m.id);
     expect(ids).toContain('gemini-4-hydrogen');
     expect(ids).toContain('gemini-3.5-flash-lite');
     for (const id of ids) {
       expect(id).not.toMatch(/gemini-(1\.5|2\.0|2\.5)/);
+    }
+  });
+
+  it('matches relevant course knowledge notes and exports complete .md Knowledge Packs', () => {
+    const mfcHits = getMatchedKnowledgeSnippets('mfc', 'Warshall transitive closure', 3);
+    expect(mfcHits.some((h) => `${h.title} ${h.block}`.toLowerCase().includes('warshall'))).toBe(true);
+
+    const econHits = getMatchedKnowledgeSnippets('econ', 'CPI substitution bias olive oil', 3);
+    expect(econHits.some((h) => h.id === 'econ-ch24')).toBe(true);
+
+    const probHits = getMatchedKnowledgeSnippets('probstat', 'Geometric Dr. Hoang memoryless', 3);
+    expect(probHits.some((h) => h.id === 'ps-ch1')).toBe(true);
+
+    for (const subj of ['mfc', 'econ', 'probstat'] as const) {
+      const md = buildSubjectKnowledgeMarkdown(subj, true);
+      expect(md.length).toBeGreaterThan(1000);
+      expect(md).toContain('Glossary');
+      expect(getKnowledgeFileName(subj)).toMatch(/^ExamStudio-.*-Knowledge\.md$/);
     }
   });
 });
