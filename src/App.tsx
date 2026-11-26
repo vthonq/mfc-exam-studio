@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { AppProvider } from './context/AppContext';
 import { AuthProvider } from './context/AuthContext';
 import { AccessGate } from './components/AccessGate';
+import { AnimatedIntroSplash } from './components/AnimatedIntroSplash';
 import { Layout } from './components/Layout';
 import type {
   ChapterId,
@@ -297,6 +298,7 @@ function AppShell() {
 export default function App() {
   return (
     <AuthProvider>
+      <AnimatedIntroSplash />
       <AccessGate>
         <AppProvider>
           <AppShell />

@@ -49,6 +49,7 @@ const WelcomeIntroModal = lazy(() =>
   import('./WelcomeIntroModal').then((m) => ({ default: m.WelcomeIntroModal })),
 );
 const INTRO_SEEN_KEY = 'exam_studio_intro_seen_v1';
+const REPLAY_SPLASH_EVENT = 'exam-studio:replay-splash';
 import type {
   EconPageRoute,
   GeminiModelId,
@@ -992,25 +993,37 @@ export const Layout: React.FC<LayoutProps> = ({
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/70 flex items-center justify-between gap-3">
+            <div className="p-3.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/70 space-y-2.5">
               <div className="text-xs">
                 <div className="font-semibold text-indigo-950 dark:text-indigo-100">
-                  Website Intro Tour
+                  Website Intros
                 </div>
                 <div className="text-slate-500 dark:text-slate-400">
-                  Replay the 3-step welcome walkthrough anytime.
+                  Replay the animated splash intro or the 3-step welcome walkthrough anytime.
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setSettingsOpen(false);
-                  setIntroOpen(true);
-                }}
-                className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shrink-0 cursor-pointer"
-              >
-                Replay Intro
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSettingsOpen(false);
+                    window.dispatchEvent(new CustomEvent(REPLAY_SPLASH_EVENT));
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 text-xs font-semibold cursor-pointer"
+                >
+                  Animated Intro
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSettingsOpen(false);
+                    setIntroOpen(true);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold cursor-pointer"
+                >
+                  3-Step Tour
+                </button>
+              </div>
             </div>
           </div>
         </div>
