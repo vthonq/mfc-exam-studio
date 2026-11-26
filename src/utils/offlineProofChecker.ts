@@ -175,6 +175,82 @@ const PROOF_CHECKPOINTS: Record<string, Checkpoint[]> = {
     { label: 'Explains crowding out (r↑ reduces I)', points: 1.25, patterns: [/crowding/i] },
     { label: 'Links central bank credibility / rational expectations to lower sacrifice ratio', points: 1.25, patterns: [/credib|rational|sacrifice/i] },
   ],
+  'ps1-p1': [
+    { label: 'Uses ΣP(X=x) = 1 and E(X) = 0.4 to solve p & q', points: 2, patterns: [/0\.15|q\s*=\s*0\.15/i, /0\.175|p\s*=\s*0\.175/i] },
+    { label: 'Computes Var(X) = E(X²) − [E(X)]²', points: 1, patterns: [/var|2\.115|2\.275/i] },
+    { label: 'Compares S vs 1/X cases', points: 1, patterns: [/0\.475|1\/x|sarah/i] },
+  ],
+  'ps1-p2': [
+    { label: 'Uses complement 1 − P(0) − P(1) for Bin(10, 0.05)', points: 2, patterns: [/binomial|0\.95|complement|1\s*-/i] },
+    { label: 'Solves 0.95^n < 0.25 with log to find n = 28', points: 2, patterns: [/log|ln|28/i] },
+  ],
+  'ps1-p5': [
+    { label: 'Solves 1 − e^{-λ} = 0.8647 to find λ = 2', points: 2, patterns: [/e\^|poisson|lambda|λ|2/i] },
+    { label: 'Computes 1 − P(X ≤ 5)', points: 2, patterns: [/0\.016|0\.983/i] },
+  ],
+  'ps1-p9': [
+    { label: 'Applies Geo(p) E=1/p & Var=(1−p)/p²', points: 2, patterns: [/geo|2\.85|1\/0\.35/i] },
+    { label: 'Applies NB(3, 0.35) scaling by r = 3', points: 2, patterns: [/8\.57|3\/0\.35|neg/i] },
+  ],
+  'ps2-p1': [
+    { label: 'Integrates cx²(6−x) over [0,6] to find c = 1/108', points: 1.5, patterns: [/108|integral|∫/i] },
+    { label: 'Computes P(X>2) = 8/9 and E(X) = 3.6', points: 2.5, patterns: [/3\.6|8\/9|0\.888/i] },
+  ],
+  'ps2-p6': [
+    { label: 'Looks up SB Appendix C-2 z-scores (-1.645 & 1.282)', points: 1.5, patterns: [/1\.64|1\.28|c-2|z/i] },
+    { label: 'Solves μ ≈ 66.86, σ ≈ 10.25, and IQR ≈ 13.83', points: 2.5, patterns: [/10\.2|66\.8|13\.8|iqr/i] },
+  ],
+  'ps2-p8': [
+    { label: 'Identifies λ = 0.1 and Var = 100', points: 1.5, patterns: [/0\.1|100/i] },
+    { label: 'Cites Memoryless Property to compute 1 − e^{-2}', points: 2.5, patterns: [/memoryless|0\.864|e\^?-2/i] },
+  ],
+  'ps3-p2': [
+    { label: 'Finds marginal PMFs f_X and f_Y', points: 1.5, patterns: [/0\.35|0\.65|marginal/i] },
+    { label: 'Computes E(C) = 2E(X) + 10E(Y²) = 34.7', points: 2.5, patterns: [/2\.6|2\.95|34\.7/i] },
+  ],
+  'ps3-p4': [
+    { label: 'Integrates over y ∈ [0, 1−x]', points: 1.5, patterns: [/1\s*-\s*x|12x/i] },
+    { label: 'Derives Cov = −2/75 and ρ = −2/3', points: 2.5, patterns: [/cov|corr|0\.66|0\.026/i] },
+  ],
+  'ps4-p1': [
+    { label: 'Derives ℓ(λ) = n ln λ − λ Σx_i and solves λ̂ = 1/X̄', points: 2, patterns: [/likelihood|ln|log|1\s*\/\s*x/i] },
+    { label: 'Applies CLT with SE = 35/√40 ≈ 5.534', points: 2, patterns: [/clt|central limit|5\.53|0\.0026|0\.929/i] },
+  ],
+  'ps5-p1': [
+    { label: 'Uses z_{0.005} ≈ 2.576 for 99% CI [19.18, 20.42]', points: 2.5, patterns: [/2\.57|2\.58|19\.18|20\.4/i] },
+    { label: 'Computes sample size n = 956 (rounds up)', points: 1.5, patterns: [/956/i] },
+  ],
+  'ps5-p5': [
+    { label: 'States H₀/H₁ and computes t_obs = 2.088 (df=99)', points: 2, patterns: [/2\.08|h0|h_0/i] },
+    { label: 'Uses SB Appendix D & identifies Type I error', points: 2, patterns: [/reject|type i|appendix d/i] },
+  ],
+  'ps5-p7': [
+    { label: 'Computes 95% proportion CI & z_obs = −0.818', points: 2, patterns: [/0\.65|0\.81|proportion|1\.96/i] },
+    { label: 'Compares χ²_obs = 17.455 against SB Appendix E (16.92)', points: 2, patterns: [/17\.45|16\.92|chi|χ²/i] },
+  ],
+  'prob-final-ch1': [
+    { label: 'Identifies Bin(n,p) & computes complement 1−P(0)−P(1)', points: 7, patterns: [/bin|1\s*-|np/i] },
+    { label: 'Uses Geometric 1/p', points: 4, patterns: [/geo|1\s*\//i] },
+    { label: 'Uses Poisson complement 1−P(W≤2)', points: 9, patterns: [/poisson|e\^/i] },
+  ],
+  'prob-final-ch2': [
+    { label: 'Standardizes z=(x−μ)/σ & reads SB C-1/C-2', points: 10, patterns: [/z\s*=|c-1|c-2|phi|Φ/i] },
+    { label: 'Solves Exp(λ) & cites Memoryless Property', points: 10, patterns: [/exp|memoryless|λ|lambda/i] },
+  ],
+  'prob-final-ch3': [
+    { label: 'Finds marginals & checks independence f(x,y)=f_X f_Y', points: 7, patterns: [/marginal|independ|depend/i] },
+    { label: 'Finds conditional expectation E(X|Y=2)', points: 6, patterns: [/conditional|y\s*=\s*2/i] },
+    { label: 'Computes E(X), E(Y), E(XY), and Cov(X,Y)', points: 7, patterns: [/cov|e\(xy\)/i] },
+  ],
+  'prob-final-ch4': [
+    { label: 'Derives log-likelihood ℓ(π) and solves MLE π̂=1/X̄', points: 10, patterns: [/likelihood|log|ln|dℓ|derivative/i] },
+    { label: 'Applies CLT and χ²_{n−1} with SB Tables', points: 10, patterns: [/clt|central limit|chi|χ²|appendix/i] },
+  ],
+  'prob-final-ch5': [
+    { label: 'Computes 95% t-CI with df = n−1 (App. D)', points: 7, patterns: [/appendix d|t_|ci|confidence/i] },
+    { label: 'States H₀/H₁, t_obs, critical value & conclusion', points: 9, patterns: [/h0|h_0|reject|t_obs|conclusion/i] },
+    { label: 'Finds sample size n = ceil((z·σ/E)²)', points: 4, patterns: [/2\.57|2\.58|sample size|n\s*=/i] },
+  ],
 };
 
 export function analyzeWrittenProofOffline(

@@ -6,6 +6,7 @@ import type {
   ExamAttemptRecord,
   GeminiModelId,
   LangMode,
+  ProbTopicId,
   ProgressState,
   ThemeMode,
 } from '../types';
@@ -27,6 +28,14 @@ const DEFAULT_ECON_MASTERY: ProgressState['econMastery'] = {
   part9: { correct: 0, attempts: 0 },
 };
 
+const DEFAULT_PROB_MASTERY: ProgressState['probMastery'] = {
+  'ps-ch1': { correct: 0, attempts: 0 },
+  'ps-ch2': { correct: 0, attempts: 0 },
+  'ps-ch3': { correct: 0, attempts: 0 },
+  'ps-ch4': { correct: 0, attempts: 0 },
+  'ps-ch5': { correct: 0, attempts: 0 },
+};
+
 const DEFAULT_PROGRESS: ProgressState = {
   mastery: {
     ch1: { correct: 0, attempts: 0 },
@@ -37,11 +46,14 @@ const DEFAULT_PROGRESS: ProgressState = {
     ch12: { correct: 0, attempts: 0 },
   },
   econMastery: { ...DEFAULT_ECON_MASTERY },
+  probMastery: { ...DEFAULT_PROB_MASTERY },
   completedAssignments: [],
   completedProofs: [],
   completedEconScenarios: [],
+  completedProbProblems: [],
   examHistory: [],
   econExamHistory: [],
+  probExamHistory: [],
 };
 
 interface AppContextValue {
@@ -53,11 +65,14 @@ interface AppContextValue {
   setGeminiModel: (model: GeminiModelId) => void;
   recordPractice: (chapter: ChapterId, isCorrect: boolean) => void;
   recordEconPractice: (topic: EconTopicId, isCorrect: boolean) => void;
+  recordProbPractice: (topic: ProbTopicId, isCorrect: boolean) => void;
   toggleAssignmentDone: (id: string) => void;
   markProofDone: (id: string) => void;
   markEconScenarioDone: (id: string) => void;
+  markProbProblemDone: (id: string) => void;
   addExamRecord: (record: ExamAttemptRecord) => void;
   addEconExamRecord: (record: ExamAttemptRecord) => void;
+  addProbExamRecord: (record: ExamAttemptRecord) => void;
   exportProgressJson: () => string;
   importProgressJson: (json: string) => boolean;
   resetProgress: () => void;
@@ -70,6 +85,7 @@ function hydrateProgress(rawObj: Partial<ProgressState> | null | undefined): Pro
   return {
     mastery: { ...DEFAULT_PROGRESS.mastery, ...(rawObj.mastery || {}) },
     econMastery: { ...DEFAULT_ECON_MASTERY, ...(rawObj.econMastery || {}) },
+    probMastery: { ...DEFAULT_PROB_MASTERY, ...(rawObj.probMastery || {}) },
     completedAssignments: Array.isArray(rawObj.completedAssignments)
       ? rawObj.completedAssignments
       : [],
@@ -77,8 +93,12 @@ function hydrateProgress(rawObj: Partial<ProgressState> | null | undefined): Pro
     completedEconScenarios: Array.isArray(rawObj.completedEconScenarios)
       ? rawObj.completedEconScenarios
       : [],
+    completedProbProblems: Array.isArray(rawObj.completedProbProblems)
+      ? rawObj.completedProbProblems
+      : [],
     examHistory: Array.isArray(rawObj.examHistory) ? rawObj.examHistory : [],
     econExamHistory: Array.isArray(rawObj.econExamHistory) ? rawObj.econExamHistory : [],
+    probExamHistory: Array.isArray(rawObj.probExamHistory) ? rawObj.probExamHistory : [],
   };
 }
 
@@ -161,6 +181,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  const recordProbPractice = (topic: ProbTopicId, isCorrect: boolean) => {
+    setProgress((p) => ({
+      ...p,
+      probMastery: {
+        ...p.probMastery,
+        [topic]: {
+          correct: (p.probMastery[topic]?.correct ?? 0) + (isCorrect ? 1 : 0),
+          attempts: (p.probMastery[topic]?.attempts ?? 0) + 1,
+        },
+      },
+    }));
+  };
+
   const toggleAssignmentDone = (id: string) => {
     setProgress((p) => {
       const exists = p.completedAssignments.includes(id);
@@ -187,6 +220,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const markProbProblemDone = (id: string) => {
+    setProgress((p) => {
+      if (p.completedProbProblems.includes(id)) return p;
+      return { ...p, completedProbProblems: [...p.completedProbProblems, id] };
+    });
+  };
+
   const addExamRecord = (record: ExamAttemptRecord) => {
     setProgress((p) => ({
       ...p,
@@ -198,6 +238,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProgress((p) => ({
       ...p,
       econExamHistory: [record, ...p.econExamHistory].slice(0, 20),
+    }));
+  };
+
+  const addProbExamRecord = (record: ExamAttemptRecord) => {
+    setProgress((p) => ({
+      ...p,
+      probExamHistory: [record, ...p.probExamHistory].slice(0, 20),
     }));
   };
 
@@ -227,11 +274,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setGeminiModel,
         recordPractice,
         recordEconPractice,
+        recordProbPractice,
         toggleAssignmentDone,
         markProofDone,
         markEconScenarioDone,
+        markProbProblemDone,
         addExamRecord,
         addEconExamRecord,
+        addProbExamRecord,
         exportProgressJson,
         importProgressJson,
         resetProgress,

@@ -13,19 +13,28 @@ import {
   Settings,
   Share2,
   Sun,
+  Table2,
   TrendingUp,
   X,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import type { EconPageRoute, GeminiModelId, PageRoute, SubjectId } from '../types';
+import type {
+  EconPageRoute,
+  GeminiModelId,
+  PageRoute,
+  ProbPageRoute,
+  SubjectId,
+} from '../types';
 
 interface LayoutProps {
   subject: SubjectId;
   onSelectSubject: (subject: SubjectId) => void;
   mfcRoute: PageRoute;
   econRoute: EconPageRoute;
+  probRoute: ProbPageRoute;
   onNavigateMfc: (route: PageRoute) => void;
   onNavigateEcon: (route: EconPageRoute) => void;
+  onNavigateProb: (route: ProbPageRoute) => void;
   children: React.ReactNode;
 }
 
@@ -56,13 +65,29 @@ const ECON_NAV: Array<{
   { id: 'exam', label: 'Mock Econ Exam', labelVi: 'Thi thử Kinh tế', icon: ClipboardCheck },
 ];
 
+const PROB_NAV: Array<{
+  id: ProbPageRoute;
+  label: string;
+  labelVi: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { id: 'dashboard', label: 'Prob Dashboard', labelVi: 'Tổng quan XSTK', icon: LayoutDashboard },
+  { id: 'tables', label: 'SB Stat Tables', labelVi: 'Tra bảng SB (C1–F)', icon: Table2 },
+  { id: 'labs', label: 'Stat Simulators', labelVi: 'Mô phỏng phân phối', icon: FlaskConical },
+  { id: 'problems', label: 'Problem Sets 1–5', labelVi: 'Bài tập Chương 1–5', icon: FileText },
+  { id: 'knowledge', label: 'Formula Sheets', labelVi: 'Tóm tắt A4 & Từ vựng', icon: BookOpen },
+  { id: 'exam', label: 'Mock Prob Exam', labelVi: 'Thi thử XSTK', icon: ClipboardCheck },
+];
+
 export const Layout: React.FC<LayoutProps> = ({
   subject,
   onSelectSubject,
   mfcRoute,
   econRoute,
+  probRoute,
   onNavigateMfc,
   onNavigateEcon,
+  onNavigateProb,
   children,
 }) => {
   const {
@@ -147,13 +172,13 @@ export const Layout: React.FC<LayoutProps> = ({
               className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left flex items-center justify-between cursor-pointer ${
                 subject === 'probstat'
                   ? 'bg-sky-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
               }`}
             >
               <span className="flex items-center gap-1.5">
                 <BarChart3 className="w-3.5 h-3.5" /> Prob &amp; Statistics
               </span>
-              <span className="text-[10px] opacity-80">Soon</span>
+              <span className="text-[10px] opacity-80">Ch.1–5 · SB</span>
             </button>
           </div>
         </div>
@@ -195,6 +220,31 @@ export const Layout: React.FC<LayoutProps> = ({
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-colors cursor-pointer ${
                     active
                       ? 'bg-emerald-50 text-emerald-700 font-semibold dark:bg-emerald-950/60 dark:text-emerald-300'
+                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <div className="leading-tight">
+                    <div>{item.label}</div>
+                    {settings.lang === 'bilingual' && (
+                      <div className="text-[11px] font-normal opacity-75">{item.labelVi}</div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+
+          {subject === 'probstat' &&
+            PROB_NAV.map((item) => {
+              const Icon = item.icon;
+              const active = probRoute === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onNavigateProb(item.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-colors cursor-pointer ${
+                    active
+                      ? 'bg-sky-50 text-sky-700 font-semibold dark:bg-sky-950/60 dark:text-sky-300'
                       : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/70'
                   }`}
                 >
@@ -318,30 +368,35 @@ export const Layout: React.FC<LayoutProps> = ({
       </main>
 
       {/* Mobile Bottom Nav */}
-      {subject !== 'probstat' && (
-        <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around py-1.5">
-          {(subject === 'mfc' ? MFC_NAV : ECON_NAV).map((item) => {
-            const Icon = item.icon;
-            const active = subject === 'mfc' ? mfcRoute === item.id : econRoute === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() =>
-                  subject === 'mfc'
-                    ? onNavigateMfc(item.id as PageRoute)
-                    : onNavigateEcon(item.id as EconPageRoute)
-                }
-                className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] ${
-                  active ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-slate-500'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span className="truncate max-w-[56px]">{item.label.split(' ')[0]}</span>
-              </button>
-            );
-          })}
-        </nav>
-      )}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around py-1.5">
+        {(subject === 'mfc' ? MFC_NAV : subject === 'econ' ? ECON_NAV : PROB_NAV).map((item) => {
+          const Icon = item.icon;
+          const active =
+            subject === 'mfc'
+              ? mfcRoute === item.id
+              : subject === 'econ'
+              ? econRoute === item.id
+              : probRoute === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() =>
+                subject === 'mfc'
+                  ? onNavigateMfc(item.id as PageRoute)
+                  : subject === 'econ'
+                  ? onNavigateEcon(item.id as EconPageRoute)
+                  : onNavigateProb(item.id as ProbPageRoute)
+              }
+              className={`flex flex-col items-center gap-0.5 px-1.5 py-1 text-[10px] ${
+                active ? 'text-sky-600 dark:text-sky-400 font-semibold' : 'text-slate-500'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              <span className="truncate max-w-[52px]">{item.label.split(' ')[0]}</span>
+            </button>
+          );
+        })}
+      </nav>
 
       {/* Settings Modal */}
       {settingsOpen && (

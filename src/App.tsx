@@ -1,5 +1,4 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
-import { BarChart3 } from 'lucide-react';
 import { AppProvider } from './context/AppContext';
 import { Layout } from './components/Layout';
 import type {
@@ -9,6 +8,9 @@ import type {
   EconTopicId,
   LabTab,
   PageRoute,
+  ProbLabTab,
+  ProbPageRoute,
+  ProbTopicId,
   SubjectId,
 } from './types';
 
@@ -47,10 +49,30 @@ const EconExamPage = lazy(() =>
   import('./pages/econ/EconExamPage').then((m) => ({ default: m.EconExamPage })),
 );
 
+const ProbDashboardPage = lazy(() =>
+  import('./pages/probstat/ProbDashboardPage').then((m) => ({ default: m.ProbDashboardPage })),
+);
+const SbTablesPage = lazy(() =>
+  import('./pages/probstat/SbTablesPage').then((m) => ({ default: m.SbTablesPage })),
+);
+const ProbLabsPage = lazy(() =>
+  import('./pages/probstat/ProbLabsPage').then((m) => ({ default: m.ProbLabsPage })),
+);
+const ProbProblemsPage = lazy(() =>
+  import('./pages/probstat/ProbProblemsPage').then((m) => ({ default: m.ProbProblemsPage })),
+);
+const ProbKnowledgePage = lazy(() =>
+  import('./pages/probstat/ProbKnowledgePage').then((m) => ({ default: m.ProbKnowledgePage })),
+);
+const ProbExamPage = lazy(() =>
+  import('./pages/probstat/ProbExamPage').then((m) => ({ default: m.ProbExamPage })),
+);
+
 interface ParsedRoute {
   subject: SubjectId;
   mfcRoute: PageRoute;
   econRoute: EconPageRoute;
+  probRoute: ProbPageRoute;
   params: URLSearchParams;
 }
 
@@ -65,11 +87,23 @@ function parseHash(): ParsedRoute {
     const econRoute = validEcon.includes(sub as EconPageRoute)
       ? (sub as EconPageRoute)
       : 'dashboard';
-    return { subject: 'econ', mfcRoute: 'dashboard', econRoute, params };
+    return { subject: 'econ', mfcRoute: 'dashboard', econRoute, probRoute: 'dashboard', params };
   }
 
   if (pathPart.startsWith('probstat')) {
-    return { subject: 'probstat', mfcRoute: 'dashboard', econRoute: 'dashboard', params };
+    const sub = pathPart.replace(/^probstat\/?/, '') || 'dashboard';
+    const validProb: ProbPageRoute[] = [
+      'dashboard',
+      'tables',
+      'labs',
+      'problems',
+      'knowledge',
+      'exam',
+    ];
+    const probRoute = validProb.includes(sub as ProbPageRoute)
+      ? (sub as ProbPageRoute)
+      : 'dashboard';
+    return { subject: 'probstat', mfcRoute: 'dashboard', econRoute: 'dashboard', probRoute, params };
   }
 
   const validMfc: PageRoute[] = [
@@ -83,7 +117,7 @@ function parseHash(): ParsedRoute {
   const mfcRoute = validMfc.includes(pathPart as PageRoute)
     ? (pathPart as PageRoute)
     : 'dashboard';
-  return { subject: 'mfc', mfcRoute, econRoute: 'dashboard', params };
+  return { subject: 'mfc', mfcRoute, econRoute: 'dashboard', probRoute: 'dashboard', params };
 }
 
 function AppShell() {
@@ -107,13 +141,16 @@ function AppShell() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const navigateProb = (route: ProbPageRoute, query?: string) => {
+    window.location.hash = query ? `#/probstat/${route}?${query}` : `#/probstat/${route}`;
+    setNav(parseHash());
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const selectSubject = (s: SubjectId) => {
     if (s === 'mfc') navigateMfc('dashboard');
     else if (s === 'econ') navigateEcon('dashboard');
-    else {
-      window.location.hash = '#/probstat';
-      setNav(parseHash());
-    }
+    else navigateProb('dashboard');
   };
 
   const activeLab = (nav.params.get('tab') as LabTab) || 'logic';
@@ -125,14 +162,20 @@ function AppShell() {
   const econTopic = (nav.params.get('topic') as EconTopicId) || undefined;
   const econExamMode = (nav.params.get('mode') as 'final' | 'quiz3' | 'quiz4' | 'quiz5') || 'final';
 
+  const probLabTab = (nav.params.get('tab') as ProbLabTab) || 'discrete';
+  const probTopic = (nav.params.get('topic') as ProbTopicId) || undefined;
+  const probExamMode = (nav.params.get('mode') as 'final' | 'midterm') || 'final';
+
   return (
     <Layout
       subject={nav.subject}
       onSelectSubject={selectSubject}
       mfcRoute={nav.mfcRoute}
       econRoute={nav.econRoute}
+      probRoute={nav.probRoute}
       onNavigateMfc={(r) => navigateMfc(r)}
       onNavigateEcon={(r) => navigateEcon(r)}
+      onNavigateProb={(r) => navigateProb(r)}
     >
       <Suspense
         fallback={
@@ -188,14 +231,29 @@ function AppShell() {
         )}
 
         {nav.subject === 'probstat' && (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center space-y-3">
-            <BarChart3 className="w-10 h-10 text-sky-600 mx-auto" />
-            <h1 className="text-xl font-extrabold">Probability &amp; Statistics — Ready to Add!</h1>
-            <p className="text-sm text-slate-500 max-w-md mx-auto">
-              Upload or point to your Probability &amp; Statistics slides/assignments folder to add
-              Bayes trees, distributions, confidence intervals, hypothesis tests, and regression labs right here.
-            </p>
-          </div>
+          <>
+            {nav.probRoute === 'dashboard' && <ProbDashboardPage onNavigate={navigateProb} />}
+            {nav.probRoute === 'tables' && <SbTablesPage />}
+            {nav.probRoute === 'labs' && (
+              <ProbLabsPage
+                activeTab={probLabTab}
+                onSelectTab={(tab) => navigateProb('labs', `tab=${tab}`)}
+              />
+            )}
+            {nav.probRoute === 'problems' && <ProbProblemsPage />}
+            {nav.probRoute === 'knowledge' && (
+              <ProbKnowledgePage initialTopic={probTopic} onNavigate={navigateProb} />
+            )}
+            {nav.probRoute === 'exam' && (
+              <ProbExamPage
+                initialSeed={examSeed}
+                initialMode={probExamMode}
+                onSeedChange={(s, m) =>
+                  navigateProb('exam', `seed=${encodeURIComponent(s)}&mode=${m}`)
+                }
+              />
+            )}
+          </>
         )}
       </Suspense>
     </Layout>
