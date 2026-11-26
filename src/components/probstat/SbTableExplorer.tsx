@@ -61,25 +61,34 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
 
   // Appendix C-1 state: P(0 <= Z <= z)
   const [c1Z, setC1Z] = useState<number>(1.96);
+  const [c1ZStr, setC1ZStr] = useState<string>('1.96');
   const [c1RevArea, setC1RevArea] = useState<string>('0.4750');
 
   // Appendix C-2 state: Cumulative Phi(z)
   const [c2Z, setC2Z] = useState<number>(-1.96);
+  const [c2ZStr, setC2ZStr] = useState<string>('-1.96');
+  const [c2PreferNeg, setC2PreferNeg] = useState<boolean>(true);
   const [c2Mode, setC2Mode] = useState<'left' | 'right' | 'between' | 'raw'>('left');
   const [c2Z2, setC2Z2] = useState<number>(1.96);
+  const [c2Z2Str, setC2Z2Str] = useState<string>('1.96');
   const [rawX, setRawX] = useState<number>(85);
+  const [rawXStr, setRawXStr] = useState<string>('85');
   const [rawMu, setRawMu] = useState<number>(80);
+  const [rawMuStr, setRawMuStr] = useState<string>('80');
   const [rawSigma, setRawSigma] = useState<number>(5);
+  const [rawSigmaStr, setRawSigmaStr] = useState<string>('5');
   const [c2RevProb, setC2RevProb] = useState<string>('0.9750');
 
   // Appendix D state: Student's t
   const [tDf, setTDf] = useState<number>(15);
+  const [tDfStr, setTDfStr] = useState<string>('15');
   const [tInf, setTInf] = useState<boolean>(false);
   const [tColIdx, setTColIdx] = useState<number>(2); // .95 / .05 two-tail / .025 one-tail
   const [tObsInput, setTObsInput] = useState<string>('');
 
   // Appendix E state: Chi-Square
   const [chiDf, setChiDf] = useState<number>(15);
+  const [chiDfStr, setChiDfStr] = useState<string>('15');
   const [chiMode, setChiMode] = useState<'single' | 'ci'>('single');
   const [chiAlpha, setChiAlpha] = useState<number>(0.05);
   const [chiCiLevel, setChiCiLevel] = useState<0.9 | 0.95 | 0.98 | 0.99>(0.95);
@@ -88,10 +97,30 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
   // Appendix F state: F
   const [fAlpha, setFAlpha] = useState<(typeof SB_F_ALPHAS)[number]>(0.05);
   const [fDf1, setFDf1] = useState<number>(4);
+  const [fDf1Str, setFDf1Str] = useState<string>('4');
   const [fDf2, setFDf2] = useState<number>(12);
+  const [fDf2Str, setFDf2Str] = useState<string>('12');
   const [fDf1Inf, setFDf1Inf] = useState<boolean>(false);
   const [fDf2Inf, setFDf2Inf] = useState<boolean>(false);
   const [fPagePart, setFPagePart] = useState<'left' | 'right'>('left');
+
+  const updateSignedDecimal = (
+    raw: string,
+    setStr: (s: string) => void,
+    setNum: (n: number) => void,
+    minVal?: number,
+    maxVal?: number,
+  ) => {
+    setStr(raw);
+    const trimmed = raw.trim();
+    if (trimmed === '' || trimmed === '-' || trimmed === '.' || trimmed === '-.') return;
+    const n = Number(trimmed);
+    if (!Number.isFinite(n)) return;
+    let clamped = n;
+    if (minVal !== undefined) clamped = Math.max(minVal, clamped);
+    if (maxVal !== undefined) clamped = Math.min(maxVal, clamped);
+    setNum(clamped);
+  };
 
   // ==================== DERIVED LOOKUPS ====================
 
@@ -111,7 +140,8 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
     return c2Z;
   }, [c2Mode, c2Z, rawX, rawMu, rawSigma]);
 
-  const c2IsNegative = effectiveC2Z < 0;
+  const c2IsNegative =
+    c2Mode === 'raw' ? effectiveC2Z < 0 : effectiveC2Z < 0 || (effectiveC2Z === 0 && c2PreferNeg);
   const c2Rows = useMemo(() => {
     if (c2IsNegative) {
       return Array.from({ length: 38 }, (_, i) => -Number(((37 - i) * 0.1).toFixed(1)));
@@ -188,20 +218,34 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
   const nearestFDf2 = fDf2Inf ? Infinity : nearestInList(effFDf2, SB_F_DF2);
   const exactFCrit = fCritUpper(fAlpha, effFDf1, effFDf2);
 
+  const setC1Value = (val: number) => {
+    const clamped = Math.max(-3.79, Math.min(3.79, Math.round(val * 100) / 100));
+    setC1Z(clamped);
+    setC1ZStr(clamped.toFixed(2));
+  };
+
+  const setC2Value = (val: number, negHint?: boolean) => {
+    const clamped = Math.max(-3.79, Math.min(3.79, Math.round(val * 100) / 100));
+    const isNeg = clamped < 0 || (clamped === 0 && Boolean(negHint));
+    setC2Z(clamped);
+    setC2PreferNeg(isNeg);
+    setC2ZStr(clamped === 0 && isNeg ? '-0.00' : clamped.toFixed(2));
+  };
+
   // Quick presets handler
   const applyPreset = (preset: string) => {
     if (preset === 'p-less') {
       setTab('c2');
       setC2Mode('left');
-      setC2Z(-1.96);
+      setC2Value(-1.96);
     } else if (preset === '0-to-z') {
       setTab('c1');
-      setC1Z(1.96);
+      setC1Value(1.96);
     } else if (preset === 'rev-95') {
       setTab('c2');
       setC2Mode('left');
       setC2RevProb('0.9750');
-      setC2Z(1.96);
+      setC2Value(1.96);
     } else if (preset === 'raw-x') {
       setTab('c2');
       setC2Mode('raw');
@@ -209,11 +253,13 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
       setTab('d');
       setTInf(false);
       setTDf(15);
+      setTDfStr('15');
       setTColIdx(2);
     } else if (preset === 'chi-ci') {
       setTab('e');
       setChiMode('ci');
       setChiDf(15);
+      setChiDfStr('15');
       setChiCiLevel(0.95);
     } else if (preset === 'f-crit') {
       setTab('f');
@@ -221,7 +267,9 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
       setFDf1Inf(false);
       setFDf2Inf(false);
       setFDf1(4);
+      setFDf1Str('4');
       setFDf2(12);
+      setFDf2Str('12');
       setFPagePart('left');
     }
   };
@@ -296,12 +344,13 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                     Enter z (Forward Lookup)
                   </label>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="-3.79"
-                    max="3.79"
-                    value={c1Z}
-                    onChange={(e) => setC1Z(Number(e.target.value) || 0)}
+                    type="text"
+                    inputMode="decimal"
+                    value={c1ZStr}
+                    onChange={(e) =>
+                      updateSignedDecimal(e.target.value, setC1ZStr, setC1Z, -3.79, 3.79)
+                    }
+                    placeholder="1.96"
                     className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono text-sm"
                   />
                 </div>
@@ -321,7 +370,7 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                       onClick={() => {
                         const area = Math.min(0.49995, Math.max(0, Number(c1RevArea) || 0));
                         const zFound = normalInv(0.5 + area);
-                        setC1Z(Math.round(zFound * 100) / 100);
+                        setC1Value(zFound);
                       }}
                       className="px-2.5 py-1.5 rounded-lg bg-sky-600 text-white text-xs font-semibold shrink-0 cursor-pointer"
                     >
@@ -398,7 +447,7 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                         return (
                           <td
                             key={ci}
-                            onClick={() => setC1Z(Number(z.toFixed(2)))}
+                            onClick={() => setC1Value(z)}
                             className={`p-1.5 text-center cursor-pointer transition-colors ${
                               isCell
                                 ? 'bg-amber-400 text-slate-950 font-extrabold ring-2 ring-amber-600'
@@ -457,31 +506,32 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                   <div>
                     <label className="text-[11px] text-slate-500 block">x</label>
                     <input
-                      type="number"
-                      step="0.5"
-                      value={rawX}
-                      onChange={(e) => setRawX(Number(e.target.value) || 0)}
+                      type="text"
+                      inputMode="decimal"
+                      value={rawXStr}
+                      onChange={(e) => updateSignedDecimal(e.target.value, setRawXStr, setRawX)}
                       className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono text-sm"
                     />
                   </div>
                   <div>
                     <label className="text-[11px] text-slate-500 block">Mean μ</label>
                     <input
-                      type="number"
-                      step="0.5"
-                      value={rawMu}
-                      onChange={(e) => setRawMu(Number(e.target.value) || 0)}
+                      type="text"
+                      inputMode="decimal"
+                      value={rawMuStr}
+                      onChange={(e) => updateSignedDecimal(e.target.value, setRawMuStr, setRawMu)}
                       className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono text-sm"
                     />
                   </div>
                   <div>
                     <label className="text-[11px] text-slate-500 block">SD σ</label>
                     <input
-                      type="number"
-                      step="0.5"
-                      min="0.01"
-                      value={rawSigma}
-                      onChange={(e) => setRawSigma(Math.max(0.01, Number(e.target.value) || 1))}
+                      type="text"
+                      inputMode="decimal"
+                      value={rawSigmaStr}
+                      onChange={(e) =>
+                        updateSignedDecimal(e.target.value, setRawSigmaStr, setRawSigma, 0.01)
+                      }
                       className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono text-sm"
                     />
                   </div>
@@ -493,12 +543,16 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                       {c2Mode === 'between' ? 'Lower z (a)' : 'Enter z (-3.79 to +3.79)'}
                     </label>
                     <input
-                      type="number"
-                      step="0.01"
-                      min="-3.79"
-                      max="3.79"
-                      value={c2Z}
-                      onChange={(e) => setC2Z(Number(e.target.value) || 0)}
+                      type="text"
+                      inputMode="decimal"
+                      value={c2ZStr}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        if (raw.trim().startsWith('-')) setC2PreferNeg(true);
+                        else if (raw.trim() !== '') setC2PreferNeg(false);
+                        updateSignedDecimal(raw, setC2ZStr, setC2Z, -3.79, 3.79);
+                      }}
+                      placeholder="-1.96"
                       className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono text-sm"
                     />
                   </div>
@@ -508,12 +562,13 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                         Upper z (b)
                       </label>
                       <input
-                        type="number"
-                        step="0.01"
-                        min="-3.79"
-                        max="3.79"
-                        value={c2Z2}
-                        onChange={(e) => setC2Z2(Number(e.target.value) || 0)}
+                        type="text"
+                        inputMode="decimal"
+                        value={c2Z2Str}
+                        onChange={(e) =>
+                          updateSignedDecimal(e.target.value, setC2Z2Str, setC2Z2, -3.79, 3.79)
+                        }
+                        placeholder="1.96"
                         className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono text-sm"
                       />
                     </div>
@@ -534,7 +589,7 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                           onClick={() => {
                             const p = Math.min(0.99992, Math.max(0.00008, Number(c2RevProb) || 0.5));
                             const zFound = normalInv(p);
-                            setC2Z(Math.round(zFound * 100) / 100);
+                            setC2Value(zFound, p < 0.5);
                           }}
                           className="px-2.5 py-1.5 rounded-lg bg-sky-600 text-white text-xs font-semibold shrink-0 cursor-pointer"
                         >
@@ -559,7 +614,7 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                     key={q.label}
                     onClick={() => {
                       setC2Mode('left');
-                      setC2Z(q.z);
+                      setC2Value(q.z, false);
                     }}
                     className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-900/50 font-mono cursor-pointer"
                   >
@@ -602,7 +657,10 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
               Showing SB Page {c2IsNegative ? '768 (Negative z: -3.7 to -0.0)' : '769 (Positive z: 0.0 to 3.7)'}
             </span>
             <button
-              onClick={() => setC2Z((prev) => (prev === 0 ? -0.5 : -prev))}
+              onClick={() => {
+                if (c2Mode === 'raw') setC2Mode('left');
+                setC2Value(c2Z === 0 ? (c2PreferNeg ? 0.5 : -0.5) : -c2Z, !c2IsNegative);
+              }}
               className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 font-medium hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
             >
               Flip Sign (±z) to view {c2IsNegative ? 'Positive p.769' : 'Negative p.768'}
@@ -659,7 +717,7 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                             key={ci}
                             onClick={() => {
                               if (c2Mode === 'raw') setC2Mode('left');
-                              setC2Z(Number(z.toFixed(2)));
+                              setC2Value(z, c2IsNegative);
                             }}
                             className={`p-1.5 text-center cursor-pointer transition-colors ${
                               isCell
@@ -697,12 +755,13 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                   </label>
                   <div className="flex gap-1.5">
                     <input
-                      type="number"
-                      min={1}
-                      max={1000}
+                      type="text"
+                      inputMode="numeric"
                       disabled={tInf}
-                      value={tDf}
-                      onChange={(e) => setTDf(Math.max(1, Number(e.target.value) || 1))}
+                      value={tDfStr}
+                      onChange={(e) =>
+                        updateSignedDecimal(e.target.value, setTDfStr, setTDf, 1, 1000)
+                      }
                       className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono text-sm disabled:opacity-50"
                     />
                     <button
@@ -739,7 +798,7 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
               <div className="grid sm:grid-cols-2 gap-3 items-end">
                 <div>
                   <label className="text-xs font-medium text-slate-500 block mb-1">
-                    Optional: Enter |t_obs| for p-value range
+                    Optional: Enter |t<sub>obs</sub>| for p-value range
                   </label>
                   <input
                     type="text"
@@ -759,7 +818,7 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
 
               <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-1">
                 <div className="text-sm font-bold font-mono text-slate-900 dark:text-slate-100">
-                  t_({activeTCol.oneTail}, {tInf ? '∞' : effectiveTDf}) = {formatSbT(exactTCrit)}
+                  t<sub>{activeTCol.oneTail}, {tInf ? '∞' : effectiveTDf}</sub> = {formatSbT(exactTCrit)}
                 </div>
                 <div className="text-xs text-slate-600 dark:text-slate-300">
                   {tInf || effectiveTDf === nearestTableTDf ? (
@@ -850,6 +909,7 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                               else {
                                 setTInf(false);
                                 setTDf(dfRow);
+                                setTDfStr(String(dfRow));
                               }
                             }}
                             className={`p-1.5 text-center cursor-pointer ${
@@ -912,11 +972,12 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                     Degrees of Freedom (d.f. = n − 1)
                   </label>
                   <input
-                    type="number"
-                    min={1}
-                    max={200}
-                    value={chiDf}
-                    onChange={(e) => setChiDf(Math.max(1, Number(e.target.value) || 1))}
+                    type="text"
+                    inputMode="numeric"
+                    value={chiDfStr}
+                    onChange={(e) =>
+                      updateSignedDecimal(e.target.value, setChiDfStr, setChiDf, 1, 200)
+                    }
                     className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono text-sm"
                   />
                 </div>
@@ -961,7 +1022,7 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
               <div className="grid sm:grid-cols-2 gap-3 items-end">
                 <div>
                   <label className="text-xs font-medium text-slate-500 block mb-1">
-                    Optional: Enter χ²_obs for upper-tail p
+                    Optional: Enter χ²<sub>obs</sub> for upper-tail p
                   </label>
                   <input
                     type="text"
@@ -981,14 +1042,14 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
               <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-1">
                 {chiMode === 'single' ? (
                   <div className="text-sm font-bold font-mono">
-                    χ²_({chiAlpha}, {effectiveChiDf}) = {formatSbChiSq(chiSingleCrit)}
+                    χ²<sub>{chiAlpha}, {effectiveChiDf}</sub> = {formatSbChiSq(chiSingleCrit)}
                   </div>
                 ) : (
                   <>
                     <div className="text-sm font-bold font-mono">
-                      Lower χ²_({(1 - ciTailAlpha).toFixed(3)}, {effectiveChiDf}) ={' '}
-                      {formatSbChiSq(chiLowerCrit)} · Upper χ²_({ciTailAlpha.toFixed(3)},{' '}
-                      {effectiveChiDf}) = {formatSbChiSq(chiUpperCrit)}
+                      Lower χ²<sub>{(1 - ciTailAlpha).toFixed(3)}, {effectiveChiDf}</sub> ={' '}
+                      {formatSbChiSq(chiLowerCrit)} · Upper χ²<sub>{ciTailAlpha.toFixed(3)},{' '}
+                      {effectiveChiDf}</sub> = {formatSbChiSq(chiUpperCrit)}
                     </div>
                     <div className="text-xs text-slate-600 dark:text-slate-300 flex items-start gap-1">
                       <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-600" />
@@ -1070,6 +1131,7 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                             key={a}
                             onClick={() => {
                               setChiDf(dfRow);
+                              setChiDfStr(String(dfRow));
                               if (chiMode === 'single') setChiAlpha(a);
                             }}
                             className={`p-1.5 text-center cursor-pointer ${
@@ -1099,7 +1161,7 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
           <div className="grid lg:grid-cols-2 gap-4 items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
             <div className="space-y-3">
               <div className="text-xs font-bold uppercase tracking-wider text-sky-600">
-                Appendix F ({F_PAGE_MAP[fAlpha]}): Critical Values of F_{String(fAlpha).replace(/^0/, '')}
+                Appendix F ({F_PAGE_MAP[fAlpha]}): Critical Values of F<sub>{String(fAlpha).replace(/^0/, '')}</sub>
               </div>
 
               <div className="flex flex-wrap gap-1.5">
@@ -1125,15 +1187,18 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                   </label>
                   <div className="flex gap-1.5">
                     <input
-                      type="number"
-                      min={1}
-                      max={500}
+                      type="text"
+                      inputMode="numeric"
                       disabled={fDf1Inf}
-                      value={fDf1}
+                      value={fDf1Str}
                       onChange={(e) => {
-                        const v = Math.max(1, Number(e.target.value) || 1);
-                        setFDf1(v);
-                        setFPagePart(v <= 12 ? 'left' : 'right');
+                        setFDf1Str(e.target.value);
+                        const n = Number(e.target.value);
+                        if (Number.isFinite(n) && n >= 1) {
+                          const v = Math.min(500, Math.round(n));
+                          setFDf1(v);
+                          setFPagePart(v <= 12 ? 'left' : 'right');
+                        }
                       }}
                       className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono text-sm disabled:opacity-50"
                     />
@@ -1156,12 +1221,13 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                   </label>
                   <div className="flex gap-1.5">
                     <input
-                      type="number"
-                      min={1}
-                      max={500}
+                      type="text"
+                      inputMode="numeric"
                       disabled={fDf2Inf}
-                      value={fDf2}
-                      onChange={(e) => setFDf2(Math.max(1, Number(e.target.value) || 1))}
+                      value={fDf2Str}
+                      onChange={(e) =>
+                        updateSignedDecimal(e.target.value, setFDf2Str, setFDf2, 1, 500)
+                      }
                       className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono text-sm disabled:opacity-50"
                     />
                     <button
@@ -1178,11 +1244,11 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
 
               <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-1">
                 <div className="text-sm font-bold font-mono">
-                  F_{String(fAlpha).replace(/^0/, '')}({fDf1Inf ? '∞' : effFDf1},{' '}
+                  F<sub>{String(fAlpha).replace(/^0/, '')}</sub>({fDf1Inf ? '∞' : effFDf1},{' '}
                   {fDf2Inf ? '∞' : effFDf2}) = {formatSbF(exactFCrit)}
                 </div>
                 <div className="text-xs text-slate-600 dark:text-slate-300">
-                  Reverse F note: left-tail F_(1−α)(df₁, df₂) = 1 / F_α(df₂, df₁) ={' '}
+                  Reverse F note: left-tail F<sub>1−α</sub>(df₁, df₂) = 1 / F<sub>α</sub>(df₂, df₁) ={' '}
                   <strong className="font-mono">
                     {(1 / fCritUpper(fAlpha, effFDf2, effFDf1)).toFixed(4)}
                   </strong>
@@ -1284,11 +1350,13 @@ export const SbTableExplorer: React.FC<SbTableExplorerProps> = ({
                                   else {
                                     setFDf1Inf(false);
                                     setFDf1(c);
+                                    setFDf1Str(String(c));
                                   }
                                   if (r === Infinity) setFDf2Inf(true);
                                   else {
                                     setFDf2Inf(false);
                                     setFDf2(r);
+                                    setFDf2Str(String(r));
                                   }
                                 }}
                                 className={`p-1.5 text-center cursor-pointer ${

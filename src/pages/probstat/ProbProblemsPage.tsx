@@ -3,6 +3,7 @@ import { CheckCircle2, ChevronDown, ChevronUp, Copy, FileText, Sparkles, Table2 
 import { PROB_PROBLEM_SETS, type ProbProblemItem } from '../../data/probStat';
 import { useApp } from '../../context/AppContext';
 import { BiText } from '../../components/BiText';
+import { RichMathText } from '../../components/Math';
 import { gradeProofWithGemini, type ProofGradeResult } from '../../services/geminiGrader';
 import {
   analyzeWrittenProofOffline,
@@ -170,13 +171,13 @@ export const ProbProblemsPage: React.FC = () => {
 
               {isOpen && (
                 <div className="p-4 pt-0 border-t border-slate-100 dark:border-slate-800 space-y-4">
-                  <pre className="whitespace-pre-wrap font-sans text-sm text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-950/60 p-3.5 rounded-xl mt-3">
-                    {prob.prompt}
-                  </pre>
+                  <div className="font-sans text-sm text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-950/60 p-3.5 rounded-xl mt-3 leading-relaxed">
+                    <RichMathText text={prob.prompt} />
+                  </div>
 
                   {prob.sbHint && (
                     <div className="text-xs text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
-                      <strong>SB Table Tip:</strong> {prob.sbHint}
+                      <strong>SB Table Tip:</strong> <RichMathText text={prob.sbHint} />
                     </div>
                   )}
 
@@ -191,7 +192,9 @@ export const ProbProblemsPage: React.FC = () => {
                         const res = numResults[key];
                         return (
                           <div key={nc.id}>
-                            <label className="text-[11px] text-slate-500 block mb-1">{nc.label}</label>
+                            <label className="text-[11px] text-slate-500 block mb-1">
+                              <RichMathText text={nc.label} />
+                            </label>
                             <input
                               type="text"
                               value={numInputs[key] ?? ''}
@@ -235,7 +238,9 @@ export const ProbProblemsPage: React.FC = () => {
                     {hintShown > 0 && (
                       <ul className="text-xs text-amber-800 dark:text-amber-300 list-disc pl-5 space-y-1">
                         {prob.hints.slice(0, hintShown).map((h, i) => (
-                          <li key={i}>{h}</li>
+                          <li key={i}>
+                            <RichMathText text={h} />
+                          </li>
                         ))}
                       </ul>
                     )}
@@ -315,9 +320,9 @@ export const ProbProblemsPage: React.FC = () => {
                   {showSolution[prob.id] && (
                     <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/70 space-y-2 text-xs">
                       <div className="font-bold text-slate-800 dark:text-slate-100">Official Worked Solution</div>
-                      <pre className="whitespace-pre-wrap font-sans text-slate-700 dark:text-slate-200 leading-relaxed">
-                        {prob.modelSolution}
-                      </pre>
+                      <div className="font-sans text-slate-700 dark:text-slate-200 leading-relaxed">
+                        <RichMathText text={prob.modelSolution} />
+                      </div>
                     </div>
                   )}
                 </div>

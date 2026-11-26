@@ -16,6 +16,7 @@ import {
   type OfflineCheckResult,
 } from '../../utils/offlineProofChecker';
 import { SbTableModal } from '../../components/probstat/SbTableModal';
+import { RichMathText } from '../../components/Math';
 
 type ProbExamMode = 'final' | 'midterm';
 
@@ -53,15 +54,21 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
 
+  const [lastResult, setLastResult] = useState<{
+    score: number;
+    maxScore: number;
+    byChapter: Record<string, { earned: number; total: number }>;
+  } | null>(null);
+
   useEffect(() => {
-    if (initialSeed && initialSeed !== activeSeed) {
+    if (initialSeed) {
       setSeedInput(initialSeed);
       setActiveSeed(initialSeed);
     }
-    if (initialMode && initialMode !== mode) {
+    if (initialMode) {
       setMode(initialMode);
     }
-  }, [initialSeed, initialMode, activeSeed, mode]);
+  }, [initialSeed, initialMode]);
 
   const midtermPaper: ProbMcqItem[] = useMemo(() => {
     const rng = createRng(`probstat-midterm:${activeSeed}`);
@@ -108,6 +115,7 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
     setOfflineResults({});
     setAiResults({});
     setAiErrors({});
+    setLastResult(null);
     onSeedChange(clean, nextMode);
   };
 
@@ -138,6 +146,7 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
         }
         recordProbPractice(q.topic, ok);
       }
+      setLastResult({ score, maxScore: midtermPaper.length, byChapter });
       addProbExamRecord({
         id: `ps-mid-${Date.now()}`,
         seed: activeSeed,
@@ -167,12 +176,14 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
         byChapter[q.topic] = { earned: qEarned, total: 20 };
         recordProbPractice(q.topic, qEarned >= 13);
       }
+      const roundedScore = Math.round(earnedTotal);
       setOfflineResults(nextOffline);
+      setLastResult({ score: roundedScore, maxScore: 100, byChapter });
       addProbExamRecord({
         id: `ps-fin-${Date.now()}`,
         seed: activeSeed,
         mode: 'Final (5 Written Qs)',
-        score: Math.round(earnedTotal),
+        score: roundedScore,
         maxScore: 100,
         dateIso: new Date().toISOString(),
         byChapter,
@@ -309,6 +320,42 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
         </div>
       </div>
 
+      {/* Timer & Submitted Score Banners */}
+      {started && !submitted && secondsLeft === 0 && (
+        <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-xs font-semibold text-rose-800 dark:text-rose-200">
+          Time&apos;s up! Review your answers and click &quot;Submit &amp; Grade Exam&quot; below.
+        </div>
+      )}
+
+      {submitted && lastResult && (
+        <div className="p-4 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="font-extrabold text-base text-sky-900 dark:text-sky-100">
+              {mode === 'midterm' ? 'Midterm Score:' : 'Estimated Final Score:'}{' '}
+              <span className="font-mono">
+                {lastResult.score} / {lastResult.maxScore} (
+                {Math.round((lastResult.score / lastResult.maxScore) * 100)}%)
+              </span>
+            </div>
+            <span className="text-xs text-slate-500">
+              {mode === 'final'
+                ? 'Combines auto-graded numeric answers + offline step checkpoints. Use Copy Prompt or AI Grade for deep methodology feedback.'
+                : 'Saved to dashboard mastery & exam history.'}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5 text-xs font-mono">
+            {Object.entries(lastResult.byChapter).map(([tid, st]) => (
+              <span
+                key={tid}
+                className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-sky-200 dark:border-sky-800"
+              >
+                {PROB_TOPIC_META[tid as ProbTopicId]?.code ?? tid}: {st.earned}/{st.total}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Exam Paper Body */}
       {started && mode === 'midterm' && (
         <div className="space-y-4">
@@ -325,7 +372,9 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
                   </span>
                   <span>{q.tag}</span>
                 </div>
-                <p className="text-sm font-semibold">{q.question}</p>
+                <p className="text-sm font-semibold">
+                  <RichMathText text={q.question} />
+                </p>
                 <div className="grid sm:grid-cols-2 gap-2">
                   {q.choices.map((ch, ci) => {
                     const picked = chosen === ci;
@@ -347,15 +396,19 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
                             : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
                         }`}
                       >
-                        {String.fromCharCode(65 + ci)}. {ch}
+                        {String.fromCharCode(65 + ci)}. <RichMathText text={ch} />
                       </button>
                     );
                   })}
                 </div>
                 {submitted && (
                   <div className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl">
-                    <strong>Explanation:</strong> {q.explanation}
-                    {settings.lang === 'bilingual' && <div className="mt-0.5 text-slate-500">{q.explanationVi}</div>}
+                    <strong>Explanation:</strong> <RichMathText text={q.explanation} />
+                    {settings.lang === 'bilingual' && (
+                      <div className="mt-0.5 text-slate-500">
+                        <RichMathText text={q.explanationVi} />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -380,11 +433,13 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-bold text-sm text-sky-700 dark:text-sky-300">{q.title}</span>
-                  <span className="text-xs font-mono text-amber-600">20 pts · {q.sbTableHint}</span>
+                  <span className="text-xs font-mono text-amber-600">
+                    20 pts · <RichMathText text={q.sbTableHint} />
+                  </span>
                 </div>
-                <pre className="whitespace-pre-wrap font-sans text-sm bg-slate-50 dark:bg-slate-950/60 p-3.5 rounded-xl">
-                  {q.prompt}
-                </pre>
+                <div className="font-sans text-sm bg-slate-50 dark:bg-slate-950/60 p-3.5 rounded-xl leading-relaxed">
+                  <RichMathText text={q.prompt} />
+                </div>
 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
                   {q.numericChecks.map((nc) => {
@@ -398,7 +453,9 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
                       Math.abs(val - nc.expected) <= nc.tolerance;
                     return (
                       <div key={nc.id}>
-                        <label className="text-[11px] text-slate-500 block mb-1">{nc.label}</label>
+                        <label className="text-[11px] text-slate-500 block mb-1">
+                          <RichMathText text={nc.label} />
+                        </label>
                         <input
                           type="text"
                           value={raw}
@@ -467,7 +524,9 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
 
                     <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/70 text-xs">
                       <div className="font-bold mb-1">Full Reference Solution:</div>
-                      <pre className="whitespace-pre-wrap font-sans leading-relaxed">{q.modelSolution}</pre>
+                      <div className="font-sans leading-relaxed">
+                        <RichMathText text={q.modelSolution} />
+                      </div>
                     </div>
                   </div>
                 )}

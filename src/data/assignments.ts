@@ -361,9 +361,9 @@ Decrypting "JFFG JF DG GAF KSHYTF" yields: "MEET ME AT THE BRIDGE".
         promptVi:
           'Chứng minh số nguyên tố Mersenne đòi hỏi n nguyên tố (nhưng chiều ngược lại sai với n=11) và có vô hạn số nguyên tố dạng 4k + 3.',
         hints: [
-          'For (a), factor x^s − 1 = (x − 1)(x^{s-1} + ... + 1) with x = 2^r.',
+          'For (a), factor xˢ − 1 = (x − 1)(xˢ⁻¹ + ... + 1) with x = 2ʳ.',
         ],
-        solution: `(a) Contrapositive: if n = rs with 1 < r < n (and s > 1), set x = 2^r. Then 2ⁿ − 1 = x^s − 1 = (2^r − 1)(2^{r(s-1)} + … + 1), where both factors exceed 1, so 2ⁿ − 1 is composite. Together with Q3(c) (2¹¹ − 1 = 23·89), n being prime is NECESSARY but NOT SUFFICIENT for 2ⁿ − 1 to be prime.
+        solution: `(a) Contrapositive: if n = rs with 1 < r < n (and s > 1), set x = 2ʳ. Then 2ⁿ − 1 = xˢ − 1 = (2ʳ − 1)(2ʳ⁽ˢ⁻¹⁾ + … + 1), where both factors exceed 1, so 2ⁿ − 1 is composite. Together with Q3(c) (2¹¹ − 1 = 23·89), n being prime is NECESSARY but NOT SUFFICIENT for 2ⁿ − 1 to be prime.
 (b) Suppose p₁,…,pₘ are all primes ≡ 3 (mod 4) and form N = 4p₁···pₘ − 1 ≡ 3 (mod 4). Not all prime factors of N can be ≡ 1 (mod 4), so N has a prime factor q ≡ 3 (mod 4), which cannot divide 4p₁···pₘ (else q | 1).`,
         solutionVi:
           'n nguyên tố là điều kiện CẦN nhưng KHÔNG ĐỦ để 2ⁿ − 1 là số nguyên tố (phản ví dụ n = 11 cho 2047 = 23·89).',
@@ -419,23 +419,23 @@ Decrypting "JFFG JF DG GAF KSHYTF" yields: "MEET ME AT THE BRIDGE".
         points: 2,
         prompt: `Given M_R on {1, 2, 3, 4}: rows [0,1,1,0], [0,0,1,0], [0,0,0,1], [1,0,0,0].
 (a) Draw the directed graph of R.
-(b) Compute M_{R²} = M_R ⊙ M_R and M_{R³}, and interpret row 4, col 3 of M_{R²}.
+(b) Compute M(R²) = M_R ⊙ M_R and M(R³), and interpret row 4, col 3 of M(R²).
 (c) Prove R transitive ⇔ R² ⊆ R, and decide if R is transitive.
-(d) Find M_{R⁻¹} and M_{R ∪ R⁻¹}.`,
+(d) Find M(R⁻¹) and M(R ∪ R⁻¹).`,
         promptVi:
-          'Tính tích Boolean M_R², M_R³, giải thích đường đi và tìm bao đóng đối xứng.',
+          'Tính tích Boolean M(R²), M(R³), giải thích đường đi và tìm bao đóng đối xứng.',
         hints: [
-          'Entry (4,3) of M_{R²} equals 1 because of the path 4 → 1 → 3 of length 2.',
+          'Entry (4,3) of M(R²) equals 1 because of the path 4 → 1 → 3 of length 2.',
         ],
         solution: `(b)
-  M_{R²} = [[0,0,1,1], [0,0,0,1], [1,0,0,0], [0,1,1,0]]
-  M_{R³} = [[1,0,0,1], [1,0,0,0], [0,1,1,0], [0,0,1,1]]
-  Row 4, col 3 of M_{R²} is 1, meaning there is a directed path of length 2 from 4 to 3 (specifically 4 → 1 → 3).
+  M(R²) = [[0,0,1,1], [0,0,0,1], [1,0,0,0], [0,1,1,0]]
+  M(R³) = [[1,0,0,1], [1,0,0,0], [0,1,1,0], [0,0,1,1]]
+  Row 4, col 3 of M(R²) is 1, meaning there is a directed path of length 2 from 4 to 3 (specifically 4 → 1 → 3).
 
-(c) R² ⊆ R ⇔ whenever (a,b),(b,c)∈R we have (a,c)∈R² ⊆ R ⇔ R is transitive. Here M_{R²}[1][4] = 1 while M_R[1][4] = 0, so R² ⊈ R and R is NOT transitive.
+(c) R² ⊆ R ⇔ whenever (a,b),(b,c)∈R we have (a,c)∈R² ⊆ R ⇔ R is transitive. Here M(R²)[1][4] = 1 while M_R[1][4] = 0, so R² ⊈ R and R is NOT transitive.
 
-(d) M_{R⁻¹} = (M_R)^T = [[0,0,0,1], [1,0,0,0], [1,1,0,0], [0,0,1,0]].
-    M_{R ∪ R⁻¹} = M_R ∨ M_{R⁻¹} = [[0,1,1,1], [1,0,1,0], [1,1,0,1], [1,0,1,0]].`,
+(d) M(R⁻¹) = (M_R)^T = [[0,0,0,1], [1,0,0,0], [1,1,0,0], [0,0,1,0]].
+    M(R ∪ R⁻¹) = M_R ∨ M(R⁻¹) = [[0,1,1,1], [1,0,1,0], [1,1,0,1], [1,0,1,0]].`,
         solutionVi:
           'Sử dụng chế độ Assignment Preset trong Relations Lab để xem đồ thị có hướng và kiểm tra từng ô ma trận.',
         relatedLab: 'relations',
@@ -579,7 +579,7 @@ In ({1,2,3,4,5,6}, |), the pair {2, 5} (or {4, 6}) has NO upper bound in the set
 (b) Five women & six men:
   (i) Find a complete matching from {A,B,C,D,E} to {J,K,L,M,N,O}.
   (ii) With A→{L,M}, B→{L}, E→{M}, prove via Hall's theorem no complete matching exists and find a maximum matching.
-(c) Determine whether K_{3,3} and the prism graph are isomorphic.`,
+(c) Determine whether K₃,₃ and the prism graph are isomorphic.`,
         promptVi:
           'Chứng minh Q_n là đồ thị hai phía, định lý Hall và bất biến đẳng cấu.',
         hints: [
@@ -592,7 +592,7 @@ In ({1,2,3,4,5,6}, |), the pair {2, 5} (or {4, 6}) has NO upper bound in the set
   (i) Example complete matching: Anna–Larry, Barbara–Kevin, Carol–Nick, Diane–Oscar, Elizabeth–Jason.
   (ii) Let S = {Anna, Barbara, Elizabeth}. Then |S| = 3, while N(S) = {Larry, Matt} has |N(S)| = 2 < 3, violating Hall's Marriage Theorem! Maximum matching size = 4 (e.g., B–L, E–M, C–N, D–J).
 
-(c) NOT isomorphic: the prism graph contains triangles (3-cycles), whereas K_{3,3} is bipartite so it has no odd cycles.`,
+(c) NOT isomorphic: the prism graph contains triangles (3-cycles), whereas K₃,₃ is bipartite so it has no odd cycles.`,
         solutionVi:
           'Tập S = {Anna, Barbara, Elizabeth} chỉ nối với 2 người nam {Larry, Matt}, vi phạm điều kiện Hall |N(S)| ≥ |S|.',
         relatedProofId: 'proof-k33-prism',
@@ -603,10 +603,10 @@ In ({1,2,3,4,5,6}, |), the pair {2, 5} (or {4, 6}) has NO upper bound in the set
         title: 'Dijkstra’s Shortest Path, Euler & Hamilton Circuits',
         points: 2,
         prompt: `(a) Graph on {a,b,c,d,e,z} with edges ab:3, ac:2, bc:2, bd:5, cd:8, ce:10, de:2, dz:6, ez:3. Use Dijkstra's algorithm from a to find shortest distance to every vertex and shortest path a → z.
-(b) When does K_{m,n} have an Euler circuit? An Euler path (no circuit)?
-(c) Prove if m ≠ n, K_{m,n} has no Hamilton circuit.`,
+(b) When does Kₘ,ₙ have an Euler circuit? An Euler path (no circuit)?
+(c) Prove if m ≠ n, Kₘ,ₙ has no Hamilton circuit.`,
         promptVi:
-          'Chạy bảng nhãn Dijkstra từ đỉnh a và điều kiện Euler/Hamilton trên K_{m,n}.',
+          'Chạy bảng nhãn Dijkstra từ đỉnh a và điều kiện Euler/Hamilton trên Kₘ,ₙ.',
         hints: [
           'Order settled in Dijkstra: a(0) → c(2) → b(3) → d(8) → e(10) → z(13).',
         ],
@@ -614,9 +614,9 @@ In ({1,2,3,4,5,6}, |), the pair {2, 5} (or {4, 6}) has NO upper bound in the set
   • Final shortest distances: d(a)=0, d(c)=2, d(b)=3, d(d)=8, d(e)=10, d(z)=13.
   • Shortest path a → z: a → b → d → e → z (3 + 5 + 2 + 3 = 13).
 
-(b) In K_{m,n}, m vertices have degree n and n vertices have degree m:
+(b) In Kₘ,ₙ, m vertices have degree n and n vertices have degree m:
   • Euler circuit: both m and n are EVEN (with m,n ≥ 2).
-  • Euler path (not circuit): exactly 2 odd-degree vertices, i.e., either (m = 2 and n is odd) or (n = 2 and m is odd), OR m = n = 1 (K_{1,1}).
+  • Euler path (not circuit): exactly 2 odd-degree vertices, i.e., either (m = 2 and n is odd) or (n = 2 and m is odd), OR m = n = 1 (K₁,₁).
 
 (c) Proved in Proofs Trainer (Hamilton circuit alternates between both parts so m = n).`,
         solutionVi:

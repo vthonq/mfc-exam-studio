@@ -265,7 +265,7 @@ export const RelationsLab: React.FC = () => {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="text-sm font-semibold">
-              Warshall&apos;s Algorithm Stepper (W₀ → W_{warshallBase.length})
+              Warshall&apos;s Algorithm Stepper (W₀ → W<sub>{warshallBase.length}</sub>)
             </div>
             <div className="flex gap-2">
               <button
@@ -350,7 +350,7 @@ export const RelationsLab: React.FC = () => {
               {stepIdx < wSteps.length - 1 && (
                 <div className="pt-2 space-y-2">
                   <div className="text-xs font-semibold">
-                    Try predicting W_{stepIdx + 1} (via vertex {stepIdx + 1}):
+                    Try predicting W<sub>{stepIdx + 1}</sub> (via vertex {stepIdx + 1}):
                   </div>
                   <div
                     className="inline-grid gap-1 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60"
@@ -390,7 +390,7 @@ export const RelationsLab: React.FC = () => {
                       }}
                       className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-semibold cursor-pointer"
                     >
-                      Verify W_{stepIdx + 1}
+                      Verify W<sub>{stepIdx + 1}</sub>
                     </button>
                     {wCheckMsg && <span className="ml-2 text-xs">{wCheckMsg}</span>}
                   </div>

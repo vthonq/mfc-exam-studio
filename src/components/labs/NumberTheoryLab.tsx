@@ -518,7 +518,7 @@ export const NumberTheoryLab: React.FC = () => {
               <div>M = {crtRes.M}</div>
               {crtRes.entries.map((e, i) => (
                 <div key={i}>
-                  k={i + 1}: a_{i + 1}={e.a}, M_{i + 1}={e.Mk}, y_{i + 1}=M_{i + 1}⁻¹ mod {e.m}={e.yk} → term = {e.term}
+                  k={i + 1}: a<sub>{i + 1}</sub>={e.a}, M<sub>{i + 1}</sub>={e.Mk}, y<sub>{i + 1}</sub>=M<sub>{i + 1}</sub>⁻¹ mod {e.m}={e.yk} → term = {e.term}
                 </div>
               ))}
               <div className="pt-1 font-bold text-emerald-600 dark:text-emerald-400">

@@ -732,22 +732,22 @@ By the Pigeonhole Principle, at least two vertices must have the same degree.`,
   {
     id: 'proof-kmn-hamilton',
     chapter: 'ch10',
-    title: 'Hamilton Circuit in K_{m,n} Requires m = n',
-    titleVi: 'Chu trình Hamilton trong K_{m,n} đòi hỏi m = n',
+    title: 'Hamilton Circuit in Kₘ,ₙ Requires m = n',
+    titleVi: 'Chu trình Hamilton trong Kₘ,ₙ đòi hỏi m = n',
     method: 'Direct Proof',
     difficulty: 'Exam Standard',
-    prompt: 'Prove that if m ≠ n, then the complete bipartite graph K_{m,n} has no Hamilton circuit.',
-    promptVi: 'Chứng minh rằng nếu m ≠ n thì đồ thị hai phía đầy đủ K_{m,n} không có chu trình Hamilton.',
+    prompt: 'Prove that if m ≠ n, then the complete bipartite graph Kₘ,ₙ has no Hamilton circuit.',
+    promptVi: 'Chứng minh rằng nếu m ≠ n thì đồ thị hai phía đầy đủ Kₘ,ₙ không có chu trình Hamilton.',
     parsonsSteps: [
       {
         id: 's1',
-        statement: 'Let (V₁, V₂) be the bipartition of K_{m,n} with |V₁| = m and |V₂| = n.',
+        statement: 'Let (V₁, V₂) be the bipartition of Kₘ,ₙ with |V₁| = m and |V₂| = n.',
         rule: 'Bipartite Graph Definition',
         distractorRules: ['Handshaking Theorem', 'Prim’s Cut Property'],
       },
       {
         id: 's2',
-        statement: 'Suppose K_{m,n} has a Hamilton circuit v₀, v₁, …, v_{m+n−1}, v₀ visiting all m + n vertices.',
+        statement: 'Suppose Kₘ,ₙ has a Hamilton circuit v₀, v₁, …, vₘ₊ₙ₋₁, v₀ visiting all m + n vertices.',
         rule: 'Contradiction Assumption',
         distractorRules: ['Direct Construction', 'Pigeonhole Principle'],
       },
@@ -769,8 +769,8 @@ By the Pigeonhole Principle, at least two vertices must have the same degree.`,
       { label: 'Show a Hamilton circuit alternates V₁ → V₂ → V₁ → … and returns to start', points: 2 },
       { label: 'Conclude equal vertices in both parts (m = n), contradicting m ≠ n', points: 1 },
     ],
-    modelSolution: `Let V₁ and V₂ be the two parts of K_{m,n} with |V₁| = m and |V₂| = n.
-Suppose K_{m,n} has a Hamilton circuit. Since every edge goes between V₁ and V₂, consecutive vertices along the circuit alternate between V₁ and V₂.
+    modelSolution: `Let V₁ and V₂ be the two parts of Kₘ,ₙ with |V₁| = m and |V₂| = n.
+Suppose Kₘ,ₙ has a Hamilton circuit. Since every edge goes between V₁ and V₂, consecutive vertices along the circuit alternate between V₁ and V₂.
 Because a Hamilton circuit visits every vertex in V₁ ∪ V₂ exactly once and returns to its starting part, the circuit must have even length and contain the exact same number of vertices from V₁ as from V₂.
 Thus m = n, contradicting m ≠ n.`,
     modelSolutionVi:
@@ -779,14 +779,14 @@ Thus m = n, contradicting m ≠ n.`,
   {
     id: 'proof-k33-prism',
     chapter: 'ch10',
-    title: 'Non-Isomorphism: K_{3,3} vs. Triangular Prism Graph',
-    titleVi: 'Không đẳng cấu: K_{3,3} và đồ thị Lăng trụ tam giác',
+    title: 'Non-Isomorphism: K₃,₃ vs. Triangular Prism Graph',
+    titleVi: 'Không đẳng cấu: K₃,₃ và đồ thị Lăng trụ tam giác',
     method: 'Counterexample',
     difficulty: 'Exam Standard',
     prompt:
-      'Both K_{3,3} and the triangular prism graph have 6 vertices, 9 edges, and all vertices of degree 3. Prove they are NOT isomorphic using a graph invariant.',
+      'Both K₃,₃ and the triangular prism graph have 6 vertices, 9 edges, and all vertices of degree 3. Prove they are NOT isomorphic using a graph invariant.',
     promptVi:
-      'Cả K_{3,3} và đồ thị lăng trụ đều có 6 đỉnh, 9 cạnh, đều bậc 3. Chứng minh chúng KHÔNG đẳng cấu bằng một bất biến đồ thị.',
+      'Cả K₃,₃ và đồ thị lăng trụ đều có 6 đỉnh, 9 cạnh, đều bậc 3. Chứng minh chúng KHÔNG đẳng cấu bằng một bất biến đồ thị.',
     parsonsSteps: [
       {
         id: 's1',
@@ -802,28 +802,28 @@ Thus m = n, contradicting m ≠ n.`,
       },
       {
         id: 's3',
-        statement: 'K_{3,3} is bipartite, so it has NO odd cycles and therefore contains ZERO triangles.',
+        statement: 'K₃,₃ is bipartite, so it has NO odd cycles and therefore contains ZERO triangles.',
         rule: 'Bipartite Graphs Have No Odd Cycles',
         distractorRules: ['Euler Circuit Theorem', 'Bézout’s Theorem'],
       },
       {
         id: 's4',
-        statement: 'Since one graph has 3-cycles and the other does not, K_{3,3} and the prism graph are not isomorphic.',
+        statement: 'Since one graph has 3-cycles and the other does not, K₃,₃ and the prism graph are not isomorphic.',
         rule: 'Invariant Mismatch Conclusion',
         distractorRules: ['Direct Proof', 'Modus Ponens'],
       },
     ],
     rubric: [
       { label: 'Name a valid distinguishing invariant (e.g., number of 3-cycles / bipartiteness)', points: 2 },
-      { label: 'Verify the prism has triangles (a₁a₂a₃) while K_{3,3} is bipartite (no odd cycles)', points: 2 },
+      { label: 'Verify the prism has triangles (a₁a₂a₃) while K₃,₃ is bipartite (no odd cycles)', points: 2 },
     ],
     modelSolution: `Although both graphs have 6 vertices, 9 edges, and degree sequence (3,3,3,3,3,3), they are NOT isomorphic.
 Invariant: Existence of a cycle of length 3 (a triangle), or equivalently bipartiteness.
 - The prism graph contains the 3-cycle a₁ − a₂ − a₃ − a₁ (so it is not bipartite).
-- K_{3,3} is bipartite, and a bipartite graph cannot contain any odd cycle, so K_{3,3} has no 3-cycles.
+- K₃,₃ is bipartite, and a bipartite graph cannot contain any odd cycle, so K₃,₃ has no 3-cycles.
 Because an isomorphism preserves cycle lengths, the two graphs are not isomorphic.`,
     modelSolutionVi:
-      'Dù cùng số đỉnh (6), số cạnh (9) và đều bậc 3, đồ thị lăng trụ có tam giác (chu trình độ dài 3: a₁a₂a₃), còn K_{3,3} là đồ thị hai phía nên không có chu trình lẻ nào.',
+      'Dù cùng số đỉnh (6), số cạnh (9) và đều bậc 3, đồ thị lăng trụ có tam giác (chu trình độ dài 3: a₁a₂a₃), còn K₃,₃ là đồ thị hai phía nên không có chu trình lẻ nào.',
   },
   {
     id: 'proof-tree-2leaves',
@@ -862,7 +862,7 @@ Because an isomorphism preserves cycle lengths, the two graphs are not isomorphi
     ],
     rubric: [
       { label: 'Pick a longest simple path v₀…vₖ (with k ≥ 1 since n ≥ 2)', points: 1 },
-      { label: 'Explain why v₀ and vₖ have no neighbors outside P (maximality) and none in P except v₁ / v_{k-1} (no cycles)', points: 2 },
+      { label: 'Explain why v₀ and vₖ have no neighbors outside P (maximality) and none in P except v₁ / vₖ₋₁ (no cycles)', points: 2 },
       { label: 'Conclude v₀ and vₖ are two distinct leaves (also valid: Handshaking ∑deg = 2n−2)', points: 1 },
     ],
     modelSolution: `Let T be a tree with n ≥ 2 vertices.

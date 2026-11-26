@@ -13,6 +13,7 @@ import {
   tCritUpper,
 } from '../../math/probStat';
 import { BiText } from '../../components/BiText';
+import { RichMathText } from '../../components/Math';
 
 interface DrillChallenge {
   id: string;
@@ -43,34 +44,34 @@ const DRILL_BANK: DrillChallenge[] = [
   {
     id: 'd3',
     appendix: 'd',
-    prompt: 'Using Appendix D (p.770), find the 95% confidence critical value t_{0.025, 15}.',
+    prompt: 'Using Appendix D (p.770), find the 95% confidence critical value $t_{0.025, 15}$.',
     answer: tCritUpper(0.025, 15),
     tolerance: 0.002,
-    hint: `Go to App. D row d.f.=15, Conf .95 / 1-tail .025 ⇒ ${formatSbT(tCritUpper(0.025, 15))}.`,
+    hint: `Go to App. D row d.f.=15, Conf .95 / 1-tail .025 $\\implies$ ${formatSbT(tCritUpper(0.025, 15))}.`,
   },
   {
     id: 'd4',
     appendix: 'e',
-    prompt: 'Using Appendix E (p.771), find χ²_{0.05, 12} (upper tail = .05, d.f. = 12).',
+    prompt: 'Using Appendix E (p.771), find $\\chi^2_{0.05, 12}$ (upper tail $= .05$, d.f. $= 12$).',
     answer: chiSqCritUpper(0.05, 12),
     tolerance: 0.02,
-    hint: `Go to App. E row d.f.=12, column .05 ⇒ ${formatSbChiSq(chiSqCritUpper(0.05, 12))}.`,
+    hint: `Go to App. E row d.f.=12, column .05 $\\implies$ ${formatSbChiSq(chiSqCritUpper(0.05, 12))}.`,
   },
   {
     id: 'd5',
     appendix: 'e',
-    prompt: 'Using Appendix E (p.771), find the LOWER-tail denominator χ²_{0.975, 15} needed for a 95% CI for σ² with n=16.',
+    prompt: 'Using Appendix E (p.771), find the LOWER-tail denominator $\\chi^2_{0.975, 15}$ needed for a 95% CI for $\\sigma^2$ with $n=16$.',
     answer: chiSqCritUpper(0.975, 15),
     tolerance: 0.02,
-    hint: `Go to App. E row d.f.=15, column .975 ⇒ ${formatSbChiSq(chiSqCritUpper(0.975, 15))}.`,
+    hint: `Go to App. E row d.f.=15, column .975 $\\implies$ ${formatSbChiSq(chiSqCritUpper(0.975, 15))}.`,
   },
   {
     id: 'd6',
     appendix: 'f',
-    prompt: 'Using Appendix F (p.774), find F_{0.05}(df₁ = 4, df₂ = 12).',
+    prompt: 'Using Appendix F (p.774), find $F_{0.05}(\\mathrm{df}_1 = 4, \\mathrm{df}_2 = 12)$.',
     answer: fCritUpper(0.05, 4, 12),
     tolerance: 0.02,
-    hint: `Open App. F α=.05, col df₁=4, row df₂=12 ⇒ ${formatSbF(fCritUpper(0.05, 4, 12))}.`,
+    hint: `Open App. F $\\alpha=.05$, col $\\mathrm{df}_1=4$, row $\\mathrm{df}_2=12 \\implies$ ${formatSbF(fCritUpper(0.05, 4, 12))}.`,
   },
 ];
 
@@ -155,7 +156,7 @@ export const SbTablesPage: React.FC = () => {
           </div>
 
           <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            {currentDrill.prompt}
+            <RichMathText text={currentDrill.prompt} />
           </p>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -195,7 +196,7 @@ export const SbTablesPage: React.FC = () => {
 
           {showHint && (
             <div className="text-xs text-amber-900 dark:text-amber-200 font-mono bg-white/70 dark:bg-slate-900/70 p-2 rounded-lg">
-              {currentDrill.hint}
+              <RichMathText text={currentDrill.hint} />
             </div>
           )}
         </div>

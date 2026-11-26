@@ -35,6 +35,7 @@ import {
   testProportionZ,
   testVarianceChiSq,
 } from '../src/math/probStat';
+import { parseRichMathTokens } from '../src/components/Math';
 
 describe('SB Statistical Tables accuracy (matching scanned Appendices C-1..F)', () => {
   it('matches Appendix C-1 (Standard Normal Area between 0 and z, p.767)', () => {
@@ -181,5 +182,39 @@ describe('Chapters 1-5 Distributions & Problem Set Ground Truths', () => {
     const pwr = powerMeanZ(72, 80, 20, 30, 0.02, 'right');
     expect(pwr.beta).toBeGreaterThan(0);
     expect(pwr.power + pwr.beta).toBeCloseTo(1, 6);
+  });
+});
+
+describe('RichMathText tokenizer', () => {
+  it('parses inline LaTeX, escaped currency inside math, bold+math, and standalone prices safely', () => {
+    const t1 = parseRichMathTokens('Follows $X \\sim N(\\mu, \\sigma^2)$ today.');
+    expect(t1).toEqual([
+      { type: 'text', value: 'Follows ' },
+      { type: 'math', value: 'X \\sim N(\\mu, \\sigma^2)', display: false },
+      { type: 'text', value: ' today.' },
+    ]);
+
+    const t2 = parseRichMathTokens('Mean is $\\mu = \\$115.50$ per week.');
+    expect(t2).toEqual([
+      { type: 'text', value: 'Mean is ' },
+      { type: 'math', value: '\\mu = \\$115.50', display: false },
+      { type: 'text', value: ' per week.' },
+    ]);
+
+    const t3 = parseRichMathTokens('Decision: **David rejects $H_0$** here.');
+    expect(t3).toEqual([
+      { type: 'text', value: 'Decision: ' },
+      {
+        type: 'bold',
+        children: [
+          { type: 'text', value: 'David rejects ' },
+          { type: 'math', value: 'H_0', display: false },
+        ],
+      },
+      { type: 'text', value: ' here.' },
+    ]);
+
+    const t4 = parseRichMathTokens('Exceeds $50 on average.');
+    expect(t4).toEqual([{ type: 'text', value: 'Exceeds $50 on average.' }]);
   });
 });

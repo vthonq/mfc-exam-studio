@@ -534,7 +534,7 @@ export const ProbLabsPage: React.FC<ProbLabsPageProps> = ({ activeTab, onSelectT
               </div>
               <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/70 font-mono space-y-0.5">
                 <div>λ = {expLam.toFixed(4)}, Var = {expSt.variance.toFixed(2)}</div>
-                <div>P(X &gt; {expT}) = e^(−λt) = <strong>{expPgt.toFixed(4)}</strong></div>
+                <div>P(X &gt; {expT}) = e<sup>−λt</sup> = <strong>{expPgt.toFixed(4)}</strong></div>
                 <div>P(X &gt; s+{expT} | X &gt; s) = <strong>{expPgt.toFixed(4)}</strong></div>
               </div>
             </div>
@@ -638,7 +638,7 @@ export const ProbLabsPage: React.FC<ProbLabsPageProps> = ({ activeTab, onSelectT
                     </th>
                   ))}
                   <th className="p-2 border border-slate-200 dark:border-slate-700 text-sky-700 dark:text-sky-300">
-                    f_Y(y)
+                    f<sub>Y</sub>(y)
                   </th>
                 </tr>
               </thead>
@@ -674,7 +674,7 @@ export const ProbLabsPage: React.FC<ProbLabsPageProps> = ({ activeTab, onSelectT
                   </tr>
                 ))}
                 <tr className="bg-sky-50/70 dark:bg-sky-950/30 font-bold">
-                  <th className="p-2 border border-slate-200 dark:border-slate-700">f_X(x)</th>
+                  <th className="p-2 border border-slate-200 dark:border-slate-700">f<sub>X</sub>(x)</th>
                   {jointRes.marginalX.map((m, ci) => (
                     <td key={ci} className="p-2 border border-slate-200 dark:border-slate-700 text-center text-sky-700 dark:text-sky-300">
                       {m.toFixed(3)}
@@ -898,7 +898,7 @@ export const ProbLabsPage: React.FC<ProbLabsPageProps> = ({ activeTab, onSelectT
                     <div className="space-y-2 text-xs font-mono">
                       <div className="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 space-y-1">
                         <div>{((1 - infAlpha) * 100).toFixed(0)}% CI: <strong>[{ci.lower.toFixed(4)}, {ci.upper.toFixed(4)}]</strong> (z={ci.zCrit.toFixed(3)}, E={ci.margin.toFixed(3)})</div>
-                        <div>Test z_obs = <strong>{tst.stat.toFixed(4)}</strong> | Reject if {tst.critText}</div>
+                        <div>Test z<sub>obs</sub> = <strong>{tst.stat.toFixed(4)}</strong> | Reject if {tst.critText}</div>
                         <div>p-value = <strong>{tst.pValue.toFixed(5)}</strong> ⇒ <strong className={tst.reject ? 'text-rose-600' : 'text-emerald-600'}>{tst.reject ? 'REJECT H₀' : 'FAIL TO REJECT H₀'}</strong></div>
                         <div>Planning sample size for E={ci.margin.toFixed(2)}: n = {reqN}</div>
                       </div>
@@ -921,8 +921,8 @@ export const ProbLabsPage: React.FC<ProbLabsPageProps> = ({ activeTab, onSelectT
                   const tst = testMeanT(infXbar, infMu0, infS, infN, infAlpha, infTail);
                   return (
                     <div className="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 text-xs font-mono space-y-1">
-                      <div>df = {ci.df} · {((1 - infAlpha) * 100).toFixed(0)}% CI: <strong>[{ci.lower.toFixed(4)}, {ci.upper.toFixed(4)}]</strong> (t_crit={ci.tCrit.toFixed(3)})</div>
-                      <div>Test t_obs = <strong>{tst.stat.toFixed(4)}</strong> | Rejection: {tst.critText}</div>
+                      <div>df = {ci.df} · {((1 - infAlpha) * 100).toFixed(0)}% CI: <strong>[{ci.lower.toFixed(4)}, {ci.upper.toFixed(4)}]</strong> (t<sub>crit</sub>={ci.tCrit.toFixed(3)})</div>
+                      <div>Test t<sub>obs</sub> = <strong>{tst.stat.toFixed(4)}</strong> | Rejection: {tst.critText}</div>
                       <div>p-value = <strong>{tst.pValue.toFixed(5)}</strong> ⇒ <strong className={tst.reject ? 'text-rose-600' : 'text-emerald-600'}>{tst.reject ? 'REJECT H₀' : 'FAIL TO REJECT H₀'}</strong></div>
                       <button onClick={() => openSbAt('d')} className="text-sky-600 underline cursor-pointer">
                         Verify t critical value in SB Appendix D →
@@ -937,7 +937,7 @@ export const ProbLabsPage: React.FC<ProbLabsPageProps> = ({ activeTab, onSelectT
                   return (
                     <div className="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 text-xs font-mono space-y-1">
                       <div>p̂ = {ci.pHat.toFixed(4)} · {((1 - infAlpha) * 100).toFixed(0)}% CI: <strong>[{ci.lower.toFixed(4)}, {ci.upper.toFixed(4)}]</strong></div>
-                      <div>Null SE = {tst.se0.toFixed(4)} · z_obs = <strong>{tst.stat.toFixed(4)}</strong> ({tst.normalApproxOk ? 'np₀ ≥ 5 OK' : 'Small sample caution'})</div>
+                      <div>Null SE = {tst.se0.toFixed(4)} · z<sub>obs</sub> = <strong>{tst.stat.toFixed(4)}</strong> ({tst.normalApproxOk ? 'np₀ ≥ 5 OK' : 'Small sample caution'})</div>
                       <div>p-value = <strong>{tst.pValue.toFixed(5)}</strong> ⇒ <strong className={tst.reject ? 'text-rose-600' : 'text-emerald-600'}>{tst.reject ? 'REJECT H₀' : 'FAIL TO REJECT H₀'}</strong></div>
                       <div>Survey sample size for ±3% margin: n = {reqN}</div>
                     </div>
@@ -947,9 +947,9 @@ export const ProbLabsPage: React.FC<ProbLabsPageProps> = ({ activeTab, onSelectT
                 const tst = testVarianceChiSq(infS2, infSig0Sq, infN, infAlpha, infTail);
                 return (
                   <div className="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 text-xs font-mono space-y-1">
-                    <div>df = {ci.df} · χ²_lower = {ci.chiLower.toFixed(3)}, χ²_upper = {ci.chiUpper.toFixed(3)}</div>
+                    <div>df = {ci.df} · χ²<sub>lower</sub> = {ci.chiLower.toFixed(3)}, χ²<sub>upper</sub> = {ci.chiUpper.toFixed(3)}</div>
                     <div>{((1 - infAlpha) * 100).toFixed(0)}% CI for σ²: <strong>[{ci.lowerVar.toFixed(4)}, {ci.upperVar.toFixed(4)}]</strong> (σ: [{ci.lowerSd.toFixed(3)}, {ci.upperSd.toFixed(3)}])</div>
-                    <div>χ²_obs = <strong>{tst.stat.toFixed(4)}</strong> · p-value = <strong>{tst.pValue.toFixed(5)}</strong> ⇒ <strong className={tst.reject ? 'text-rose-600' : 'text-emerald-600'}>{tst.reject ? 'REJECT H₀' : 'FAIL TO REJECT H₀'}</strong></div>
+                    <div>χ²<sub>obs</sub> = <strong>{tst.stat.toFixed(4)}</strong> · p-value = <strong>{tst.pValue.toFixed(5)}</strong> ⇒ <strong className={tst.reject ? 'text-rose-600' : 'text-emerald-600'}>{tst.reject ? 'REJECT H₀' : 'FAIL TO REJECT H₀'}</strong></div>
                     <button onClick={() => openSbAt('e')} className="text-sky-600 underline cursor-pointer">
                       Verify in SB Appendix E →
                     </button>
