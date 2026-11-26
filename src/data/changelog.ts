@@ -7,9 +7,26 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v2.7';
+export const LATEST_UPDATE_ID = 'v2.8';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v2.8',
+    version: 'v2.8',
+    date: 'Nov 2026',
+    title: 'Website Intro Showcase, 3-Step Welcome Tour & Auto-Fill Claude',
+    titleVi: 'Trang Giới Thiệu Web, Tour Chào Mừng 3 Bước & Tự Điền Claude/ChatGPT',
+    items: [
+      {
+        en: 'Split-screen Website Intro on the Google Sign-In landing page + interactive 3-step Welcome Intro Tour (replayable anytime from Studio Settings).',
+        vi: 'Trang chào mừng giới thiệu đầy đủ 3 môn & tính năng ngay ở màn hình đăng nhập + Tour hướng dẫn 3 bước cho người mới (mở lại bất kỳ lúc nào trong Settings).',
+      },
+      {
+        en: 'Added Auto-Fill Claude (claude.ai/new?q=...) alongside Auto-Fill ChatGPT, synced prompt copy with live preview & 1-click Full Knowledge Pack copy/download.',
+        vi: 'Bổ sung nút Auto-Fill Claude (tự điền câu hỏi & công thức vào ô chat) bên cạnh ChatGPT, kèm xem trước prompt và tải/copy toàn bộ kiến thức môn.',
+      },
+    ],
+  },
   {
     id: 'v2.7',
     version: 'v2.7',

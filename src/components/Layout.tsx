@@ -45,6 +45,10 @@ const ReviewBankModal = lazy(() =>
 const GeminiTutorDrawer = lazy(() =>
   import('./GeminiTutorDrawer').then((m) => ({ default: m.GeminiTutorDrawer })),
 );
+const WelcomeIntroModal = lazy(() =>
+  import('./WelcomeIntroModal').then((m) => ({ default: m.WelcomeIntroModal })),
+);
+const INTRO_SEEN_KEY = 'exam_studio_intro_seen_v1';
 import type {
   EconPageRoute,
   GeminiModelId,
@@ -144,6 +148,13 @@ export const Layout: React.FC<LayoutProps> = ({
   const [updatesOpen, setUpdatesOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [tutorOpen, setTutorOpen] = useState(false);
+  const [introOpen, setIntroOpen] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(INTRO_SEEN_KEY) !== '1';
+    } catch {
+      return false;
+    }
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [keyTestLoading, setKeyTestLoading] = useState(false);
   const [keyTestResult, setKeyTestResult] = useState<{ ok: boolean; message: string } | null>(null);
@@ -980,6 +991,27 @@ export const Layout: React.FC<LayoutProps> = ({
                 {importStatus && <span className="text-xs text-emerald-600">{importStatus}</span>}
               </div>
             </div>
+
+            <div className="p-3.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/70 flex items-center justify-between gap-3">
+              <div className="text-xs">
+                <div className="font-semibold text-indigo-950 dark:text-indigo-100">
+                  Website Intro Tour
+                </div>
+                <div className="text-slate-500 dark:text-slate-400">
+                  Replay the 3-step welcome walkthrough anytime.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSettingsOpen(false);
+                  setIntroOpen(true);
+                }}
+                className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shrink-0 cursor-pointer"
+              >
+                Replay Intro
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1006,6 +1038,24 @@ export const Layout: React.FC<LayoutProps> = ({
             onClose={() => setTutorOpen(false)}
             subject={subject}
             routeLabel={activeRouteLabel}
+          />
+        )}
+
+        {introOpen && (
+          <WelcomeIntroModal
+            open={introOpen}
+            onClose={() => {
+              try {
+                localStorage.setItem(INTRO_SEEN_KEY, '1');
+              } catch {
+                // ignore storage errors
+              }
+              setIntroOpen(false);
+            }}
+            activeSubject={subject}
+            onSelectSubject={onSelectSubject}
+            onOpenGuide={onNavigateGuide}
+            onOpenTutor={() => setTutorOpen(true)}
           />
         )}
       </Suspense>
