@@ -34,7 +34,7 @@ import { useAuth } from '../context/AuthContext';
 import { UpdatesBanner, UpdatesModal } from './UpdatesBox';
 import { LATEST_UPDATE_ID } from '../data/changelog';
 import { ASK_AI_EVENT, type AskAiPayload } from '../utils/askAiBridge';
-import { OPEN_FOCUS_EVENT } from '../utils/smartFocus';
+import { OPEN_FOCUS_EVENT } from '../utils/smartFocusPlan';
 
 const AdminPanelModal = lazy(() =>
   import('./AdminPanelModal').then((m) => ({ default: m.AdminPanelModal })),

@@ -7,9 +7,26 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v3.0';
+export const LATEST_UPDATE_ID = 'v3.1';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v3.1',
+    version: 'v3.1',
+    date: 'Nov 2026',
+    title: 'Faster Load (-155 kB), True Offline PWA Cache & Mobile Polish',
+    titleVi: 'Tải Trang Nhanh Hơn (-155 kB), Hỗ Trợ Học Offline PWA & Tối Ưu Mobile',
+    items: [
+      {
+        en: 'Split smart-drill bank loading cleanly out of the initial JS bundle (~34% smaller main script for faster page loads).',
+        vi: 'Tách dữ liệu bài tập thông minh khỏi gói khởi động chính giúp tải trang nhanh hơn rõ rệt trên mạng yếu và điện thoại.',
+      },
+      {
+        en: 'Added a production Service Worker (public/sw.js) with network-first HTML updates and cached static assets so installed/mobile sessions keep working even on weak campus Wi-Fi, plus refined 375px mobile wrapping.',
+        vi: 'Thêm Service Worker (sw.js) lưu bộ nhớ đệm thông minh để web mở nhanh & học mượt khi Wi-Fi trường yếu, đồng thời chỉnh gọn bố cục màn hình nhỏ.',
+      },
+    ],
+  },
   {
     id: 'v3.0',
     version: 'v3.0',

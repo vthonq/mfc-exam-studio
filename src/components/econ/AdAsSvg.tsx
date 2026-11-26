@@ -436,7 +436,7 @@ export const AdAsSvg: React.FC<{ shockId: MacroShockId }> = ({ shockId }) => {
                       {item.swatch === 'ad' && <span className="w-4 h-0.5 bg-indigo-600 dark:bg-indigo-400 inline-block" />}
                       {item.swatch === 'eq' && <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 dark:bg-emerald-400 inline-block" />}
                     </span>
-                    <span className="leading-snug text-slate-600 dark:text-slate-300">
+                    <span className="leading-snug text-slate-600 dark:text-slate-300 min-w-0 break-words">
                       <strong className="text-slate-900 dark:text-slate-100">{item.label}:</strong> {item.desc}
                     </span>
                   </button>
@@ -593,7 +593,7 @@ export const AdAsSvg: React.FC<{ shockId: MacroShockId }> = ({ shockId }) => {
                       {item.swatch === 'srpc' && <span className="w-4 h-0.5 bg-amber-600 dark:bg-amber-400 inline-block" />}
                       {item.swatch === 'eq' && <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 dark:bg-emerald-400 inline-block" />}
                     </span>
-                    <span className="leading-snug text-slate-600 dark:text-slate-300">
+                    <span className="leading-snug text-slate-600 dark:text-slate-300 min-w-0 break-words">
                       <strong className="text-slate-900 dark:text-slate-100">{item.label}:</strong> {item.desc}
                     </span>
                   </button>

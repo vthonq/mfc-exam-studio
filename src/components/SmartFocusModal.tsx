@@ -286,9 +286,9 @@ export const SmartFocusModal: React.FC<SmartFocusModalProps> = ({
                       type="button"
                       disabled={picked !== null}
                       onClick={() => handleChoose(ci)}
-                      className={`p-3 rounded-xl border text-left text-xs flex items-center justify-between gap-2 transition-colors cursor-pointer ${cls}`}
+                      className={`p-3 rounded-xl border text-left text-xs flex items-center justify-between gap-2 transition-colors cursor-pointer min-w-0 ${cls}`}
                     >
-                      <span>
+                      <span className="min-w-0 break-words">
                         <strong>{String.fromCharCode(65 + ci)}.</strong> <RichMathText text={ch} />
                       </span>
                       {picked !== null && isCorrect && (

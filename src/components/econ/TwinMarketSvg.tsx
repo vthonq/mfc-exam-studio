@@ -442,7 +442,7 @@ export const TwinMarketSvg: React.FC<{ policyId: OpenEconPolicyId }> = ({ policy
                 }`}
               >
                 <span className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${item.swatch}`} />
-                <span className="leading-snug text-slate-600 dark:text-slate-300">
+                <span className="leading-snug text-slate-600 dark:text-slate-300 min-w-0 break-words">
                   <strong className="text-slate-900 dark:text-slate-100 block">{item.label}</strong>
                   {item.desc}
                 </span>

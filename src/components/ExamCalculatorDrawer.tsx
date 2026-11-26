@@ -258,7 +258,7 @@ export const ExamCalculatorDrawer: React.FC<ExamCalculatorDrawerProps> = ({
                       )}
                     </button>
                   </div>
-                  <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 space-y-1">
+                  <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 space-y-1 overflow-x-auto">
                     {stats.workingLines.map((line, i) => (
                       <div key={i}>{line}</div>
                     ))}
@@ -295,7 +295,7 @@ export const ExamCalculatorDrawer: React.FC<ExamCalculatorDrawerProps> = ({
                     className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono"
                   />
                 </div>
-                <div className="font-mono text-[11px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 flex justify-between">
+                <div className="font-mono text-[11px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 flex flex-wrap justify-between gap-2">
                   <span>C({nComb},{rComb}) = {comb.nCr.toLocaleString()}</span>
                   <span>P({nComb},{rComb}) = {comb.nPr.toLocaleString()}</span>
                 </div>
@@ -377,7 +377,7 @@ export const ExamCalculatorDrawer: React.FC<ExamCalculatorDrawerProps> = ({
                       )}
                     </button>
                   </div>
-                  <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 space-y-1">
+                  <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 space-y-1 overflow-x-auto">
                     {modCalc.workingLines.map((line, i) => (
                       <div key={i}>{line}</div>
                     ))}
@@ -547,7 +547,7 @@ export const ExamCalculatorDrawer: React.FC<ExamCalculatorDrawerProps> = ({
                     )}
                   </button>
                 </div>
-                <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 space-y-1">
+                <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 space-y-1 overflow-x-auto">
                   {econCalc.workingLines.map((line, i) => (
                     <div key={i}>{line}</div>
                   ))}
