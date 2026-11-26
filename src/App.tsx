@@ -67,12 +67,16 @@ const ProbKnowledgePage = lazy(() =>
 const ProbExamPage = lazy(() =>
   import('./pages/probstat/ProbExamPage').then((m) => ({ default: m.ProbExamPage })),
 );
+const GuidePage = lazy(() =>
+  import('./pages/GuidePage').then((m) => ({ default: m.GuidePage })),
+);
 
 interface ParsedRoute {
   subject: SubjectId;
   mfcRoute: PageRoute;
   econRoute: EconPageRoute;
   probRoute: ProbPageRoute;
+  isGuide: boolean;
   params: URLSearchParams;
 }
 
@@ -81,13 +85,24 @@ function parseHash(): ParsedRoute {
   const [pathPart, queryPart] = raw.split('?');
   const params = new URLSearchParams(queryPart ?? '');
 
+  if (pathPart === 'guide') {
+    return {
+      subject: 'mfc',
+      mfcRoute: 'dashboard',
+      econRoute: 'dashboard',
+      probRoute: 'dashboard',
+      isGuide: true,
+      params,
+    };
+  }
+
   if (pathPart.startsWith('econ')) {
     const sub = pathPart.replace(/^econ\/?/, '') || 'dashboard';
     const validEcon: EconPageRoute[] = ['dashboard', 'labs', 'drill', 'knowledge', 'exam'];
     const econRoute = validEcon.includes(sub as EconPageRoute)
       ? (sub as EconPageRoute)
       : 'dashboard';
-    return { subject: 'econ', mfcRoute: 'dashboard', econRoute, probRoute: 'dashboard', params };
+    return { subject: 'econ', mfcRoute: 'dashboard', econRoute, probRoute: 'dashboard', isGuide: false, params };
   }
 
   if (pathPart.startsWith('probstat')) {
@@ -103,7 +118,7 @@ function parseHash(): ParsedRoute {
     const probRoute = validProb.includes(sub as ProbPageRoute)
       ? (sub as ProbPageRoute)
       : 'dashboard';
-    return { subject: 'probstat', mfcRoute: 'dashboard', econRoute: 'dashboard', probRoute, params };
+    return { subject: 'probstat', mfcRoute: 'dashboard', econRoute: 'dashboard', probRoute, isGuide: false, params };
   }
 
   const validMfc: PageRoute[] = [
@@ -117,7 +132,7 @@ function parseHash(): ParsedRoute {
   const mfcRoute = validMfc.includes(pathPart as PageRoute)
     ? (pathPart as PageRoute)
     : 'dashboard';
-  return { subject: 'mfc', mfcRoute, econRoute: 'dashboard', probRoute: 'dashboard', params };
+  return { subject: 'mfc', mfcRoute, econRoute: 'dashboard', probRoute: 'dashboard', isGuide: false, params };
 }
 
 function AppShell() {
@@ -153,6 +168,12 @@ function AppShell() {
     else navigateProb('dashboard');
   };
 
+  const navigateGuide = () => {
+    window.location.hash = '#/guide';
+    setNav(parseHash());
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const activeLab = (nav.params.get('tab') as LabTab) || 'logic';
   const proofId = nav.params.get('id') ?? undefined;
   const knowledgeChap = (nav.params.get('chapter') as ChapterId) || undefined;
@@ -173,6 +194,8 @@ function AppShell() {
       mfcRoute={nav.mfcRoute}
       econRoute={nav.econRoute}
       probRoute={nav.probRoute}
+      isGuide={nav.isGuide}
+      onNavigateGuide={navigateGuide}
       onNavigateMfc={(r) => navigateMfc(r)}
       onNavigateEcon={(r) => navigateEcon(r)}
       onNavigateProb={(r) => navigateProb(r)}
@@ -182,7 +205,15 @@ function AppShell() {
           <div className="p-8 text-center text-sm text-slate-500">Loading studio module...</div>
         }
       >
-        {nav.subject === 'mfc' && (
+        {nav.isGuide && (
+          <GuidePage
+            onNavigateMfc={navigateMfc}
+            onNavigateEcon={navigateEcon}
+            onNavigateProb={navigateProb}
+          />
+        )}
+
+        {!nav.isGuide && nav.subject === 'mfc' && (
           <>
             {nav.mfcRoute === 'dashboard' && <DashboardPage onNavigate={navigateMfc} />}
             {nav.mfcRoute === 'labs' && (
@@ -205,7 +236,7 @@ function AppShell() {
           </>
         )}
 
-        {nav.subject === 'econ' && (
+        {!nav.isGuide && nav.subject === 'econ' && (
           <>
             {nav.econRoute === 'dashboard' && <EconDashboardPage onNavigate={navigateEcon} />}
             {nav.econRoute === 'labs' && (
@@ -230,7 +261,7 @@ function AppShell() {
           </>
         )}
 
-        {nav.subject === 'probstat' && (
+        {!nav.isGuide && nav.subject === 'probstat' && (
           <>
             {nav.probRoute === 'dashboard' && <ProbDashboardPage onNavigate={navigateProb} />}
             {nav.probRoute === 'tables' && <SbTablesPage />}
