@@ -73,6 +73,16 @@ export interface MistakeItem {
   source: 'mistake' | 'bookmark';
 }
 
+export interface CustomFlashcard {
+  id: string;
+  subject: SubjectId;
+  badge: string;
+  front: string;
+  back: string;
+  trap?: string;
+  createdAtIso: string;
+}
+
 export interface ProgressState {
   mastery: Record<ChapterId, ChapterMastery>;
   econMastery: Record<EconTopicId, ChapterMastery>;
@@ -85,6 +95,7 @@ export interface ProgressState {
   econExamHistory: ExamAttemptRecord[];
   probExamHistory: ExamAttemptRecord[];
   mistakes: MistakeItem[];
+  customCards?: CustomFlashcard[];
   examDates?: Partial<Record<SubjectId, string>>;
   studyStreak?: { count: number; lastDate: string };
 }

@@ -237,12 +237,12 @@ export const WelcomeIntroModal: React.FC<WelcomeIntroModalProps> = ({
                   </div>
                   <div className="space-y-0.5 text-xs">
                     <div className="font-bold text-slate-900 dark:text-white">
-                      Step-by-Step Exam Trainers
+                      Step-by-Step Trainers &amp; Exam Calc
                     </div>
                     <p className="text-slate-600 dark:text-slate-300">
                       {bilingual
-                        ? 'Tự điền bảng ExtGCD/ModExp, click ma trận Warshall W_k, kiểm tra gom nhóm K-Map, đoán chiều cú sốc Vĩ mô (↑/↓) và điền bảng GDP.'
-                        : 'Fill blank ExtGCD/ModExp tables, click Warshall W_k cells, validate K-Map groups, and drill Mankiw Macro Shocks & T-Accounts.'}
+                        ? 'Điền bảng ExtGCD/ModExp/Warshall, kiểm tra K-Map, đoán cú sốc Vĩ mô kèm Line Guide giải thích từng đường & máy tính Exam Calc chép sẵn các bước giải.'
+                        : 'Fill blank ExtGCD/ModExp/Warshall tables, drill Mankiw Shocks with interactive Line Guides, and copy intermediate steps from Show-Your-Work Exam Calc.'}
                     </p>
                   </div>
                 </div>
@@ -253,12 +253,12 @@ export const WelcomeIntroModal: React.FC<WelcomeIntroModalProps> = ({
                   </div>
                   <div className="space-y-0.5 text-xs">
                     <div className="font-bold text-slate-900 dark:text-white">
-                      13-Page Interactive SB Tables &amp; Curve Graphs
+                      13-Page SB Tables, Flashcards &amp; My Custom Deck
                     </div>
                     <p className="text-slate-600 dark:text-slate-300">
                       {bilingual
-                        ? 'Tra trực tiếp Phụ lục C-1 đến F có đồ thị tô vùng Z/t/χ² + luyện tra bảng ngược, kèm biểu đồ AD–AS, Loanable Funds và Twin Markets.'
-                        : 'Shaded Normal/t/χ² SB Appendices C-1 through F with reverse lookup + interactive Mankiw macro diagrams.'}
+                        ? 'Tra Phụ lục C-1 đến F có chú thích đồ thị + ôn Flashcards công thức & tự nhập bộ thẻ riêng (My Deck) từ slide giảng viên.'
+                        : 'Shaded Normal/t/χ²/F SB Tables with clear legends + Quick Recall Flashcards & My Custom Deck importer from your lecture notes.'}
                     </p>
                   </div>
                 </div>
@@ -304,12 +304,12 @@ export const WelcomeIntroModal: React.FC<WelcomeIntroModalProps> = ({
                   </div>
                   <div className="space-y-0.5 text-xs">
                     <div className="font-bold text-slate-900 dark:text-white">
-                      Seeded Group Mock Exams + Sticky Timer HUD
+                      Live Class Study Rooms &amp; Leaderboards
                     </div>
                     <p className="text-slate-600 dark:text-slate-300">
                       {bilingual
-                        ? 'Gửi link Seed để cả nhóm giải chung một đề thi ngẫu nhiên y hệt nhau; bài làm & đồng hồ tự động lưu nếu lỡ tải lại trang.'
-                        : 'Share a Group Seed link so everyone solves the exact same generated exam paper, with auto-save drafts and a sticky timer HUD.'}
+                        ? 'Tạo phòng thi (mã ISB-XXXX) để cả nhóm làm chung 1 đề, xem bảng xếp hạng trực tiếp, câu cả lớp hay sai nhất & tự lưu bài nếu lỡ F5.'
+                        : 'Host shared Study Rooms (code like ISB-XXXX) with live class rankings, hardest-question miss heatmaps, and auto-saved exam drafts.'}
                     </p>
                   </div>
                 </div>
@@ -320,12 +320,12 @@ export const WelcomeIntroModal: React.FC<WelcomeIntroModalProps> = ({
                   </div>
                   <div className="space-y-0.5 text-xs">
                     <div className="font-bold text-slate-900 dark:text-white">
-                      Auto Review Bank &amp; Cloud Progress Sync
+                      Smart Focus Drills, Review Bank &amp; Offline PWA
                     </div>
                     <p className="text-slate-600 dark:text-slate-300">
                       {bilingual
-                        ? 'Câu làm sai được lưu vào mục Review để làm lại đến khi đúng; tiến độ được đồng bộ lên Cloud giữa máy tính và điện thoại.'
-                        : 'Missed exam & drill questions land in your Review Bank automatically, while mastery & history sync across devices.'}
+                        ? 'Đặt ngày thi, luyện Smart Focus Drill nhắm đúng chương yếu & câu sai trong Review Bank; mọi dữ liệu đồng bộ Cloud & chạy được cả khi Wi-Fi yếu.'
+                        : 'Set exam countdowns, drill weakest topics & mistakes with Smart Focus, sync progress across devices, and install as an offline-ready PWA.'}
                     </p>
                   </div>
                 </div>

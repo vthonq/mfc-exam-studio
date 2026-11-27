@@ -4,6 +4,7 @@ import { fetchCloudProgress, saveCloudProgress } from '../services/accessControl
 import type {
   AppSettings,
   ChapterId,
+  CustomFlashcard,
   EconTopicId,
   ExamAttemptRecord,
   GeminiModelId,
@@ -85,6 +86,7 @@ function hasMeaningfulProgress(p: ProgressState): boolean {
   if (mCount > 0) return true;
   if (p.examDates && Object.values(p.examDates).some((v) => Boolean(v?.trim()))) return true;
   if ((p.studyStreak?.count ?? 0) > 0) return true;
+  if ((p.customCards?.length ?? 0) > 0) return true;
   return (
     p.completedAssignments.length > 0 ||
     p.completedProofs.length > 0 ||
@@ -138,6 +140,7 @@ const DEFAULT_PROGRESS: ProgressState = {
   econExamHistory: [],
   probExamHistory: [],
   mistakes: [],
+  customCards: [],
   examDates: {},
   studyStreak: { count: 0, lastDate: '' },
 };
@@ -163,6 +166,10 @@ interface AppContextValue {
   recordMistake: (item: Omit<MistakeItem, 'savedAtIso'>) => void;
   removeMistake: (id: string) => void;
   clearMistakes: (subject?: SubjectId) => void;
+  addCustomCard: (card: Omit<CustomFlashcard, 'id' | 'createdAtIso'>) => void;
+  importCustomCards: (cards: CustomFlashcard[]) => number;
+  removeCustomCard: (id: string) => void;
+  clearCustomCards: (subject?: SubjectId) => void;
   setExamDate: (subject: SubjectId, dateIso: string) => void;
   recordStudyActivity: () => void;
   exportProgressJson: () => string;
@@ -192,6 +199,7 @@ function hydrateProgress(rawObj: Partial<ProgressState> | null | undefined): Pro
     econExamHistory: Array.isArray(rawObj.econExamHistory) ? rawObj.econExamHistory : [],
     probExamHistory: Array.isArray(rawObj.probExamHistory) ? rawObj.probExamHistory : [],
     mistakes: Array.isArray(rawObj.mistakes) ? rawObj.mistakes : [],
+    customCards: Array.isArray(rawObj.customCards) ? rawObj.customCards : [],
     examDates:
       rawObj.examDates && typeof rawObj.examDates === 'object' ? { ...rawObj.examDates } : {},
     studyStreak:
@@ -506,6 +514,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  const addCustomCard = (card: Omit<CustomFlashcard, 'id' | 'createdAtIso'>) => {
+    const nextCard: CustomFlashcard = {
+      ...card,
+      id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      createdAtIso: new Date().toISOString(),
+    };
+    setProgress((p) => ({
+      ...p,
+      customCards: [nextCard, ...(p.customCards ?? [])].slice(0, 150),
+    }));
+  };
+
+  const importCustomCards = (cards: CustomFlashcard[]): number => {
+    if (cards.length === 0) return 0;
+    setProgress((p) => {
+      const existing = p.customCards ?? [];
+      const existingKeys = new Set(
+        existing.map((c) => `${c.subject}:${c.front.trim().toLowerCase()}`),
+      );
+      const uniqueNew = cards.filter(
+        (c) => !existingKeys.has(`${c.subject}:${c.front.trim().toLowerCase()}`),
+      );
+      return {
+        ...p,
+        customCards: [...uniqueNew, ...existing].slice(0, 150),
+      };
+    });
+    return cards.length;
+  };
+
+  const removeCustomCard = (id: string) => {
+    setProgress((p) => ({
+      ...p,
+      customCards: (p.customCards ?? []).filter((c) => c.id !== id),
+    }));
+  };
+
+  const clearCustomCards = (subject?: SubjectId) => {
+    setProgress((p) => ({
+      ...p,
+      customCards: subject
+        ? (p.customCards ?? []).filter((c) => c.subject !== subject)
+        : [],
+    }));
+  };
+
   const exportProgressJson = () => JSON.stringify(progress, null, 2);
 
   const importProgressJson = (json: string): boolean => {
@@ -544,6 +598,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         recordMistake,
         removeMistake,
         clearMistakes,
+        addCustomCard,
+        importCustomCards,
+        removeCustomCard,
+        clearCustomCards,
         setExamDate,
         recordStudyActivity,
         exportProgressJson,

@@ -7,9 +7,26 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v4.0';
+export const LATEST_UPDATE_ID = 'v4.1';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v4.1',
+    version: 'v4.1',
+    date: 'Nov 2026',
+    title: 'Rebuilt Study Guide (v4.1), Custom Flashcard Decks & Dashboard Room Shortcuts',
+    titleVi: 'Làm Mới Toàn Bộ Trang Guide, Tự Nhập Bộ Thẻ Flashcards & Mở Nhanh Study Room',
+    items: [
+      {
+        en: 'Rebuilt the entire Study Guide & 3-Step Tour to cover Live Study Rooms, Smart Focus Drills, Show-Your-Work Exam Calc, Line Guides, Flashcards, and AI Tutor workflows with 1-click launchers.',
+        vi: 'Viết lại toàn bộ trang Guide & Tour chào mừng để hướng dẫn đầy đủ Study Rooms, Smart Focus, Exam Calc, Line Guides, Flashcards và AI Tutor kèm nút mở nhanh 1 chạm.',
+      },
+      {
+        en: 'Added cloud-synced "My Deck" custom flashcards inside FlashcardsModal supporting quick single-card entry, AI JSON / "Front :: Back" bulk import, and a 1-click Study Rooms button on every Dashboard.',
+        vi: 'Thêm tab "My Deck" trong Flashcards để tự tạo hoặc dán hàng loạt thẻ ghi chú (JSON từ AI hoặc "Front :: Back") đồng bộ Cloud + nút vào Study Room ngay trên mỗi Dashboard.',
+      },
+    ],
+  },
   {
     id: 'v4.0',
     version: 'v4.0',

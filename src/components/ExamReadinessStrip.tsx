@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Calendar, Flame, Pencil, Play, Target } from 'lucide-react';
+import { Calendar, Flame, Pencil, Play, Target, Users } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { buildSmartFocusPlan, daysUntilExam, dispatchOpenFocus } from '../utils/smartFocusPlan';
+import { dispatchOpenRoom } from '../utils/studyRoomStats';
 import type { SubjectId } from '../types';
 
 interface ExamReadinessStripProps {
@@ -130,14 +131,24 @@ export const ExamReadinessStrip: React.FC<ExamReadinessStripProps> = ({ subject 
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => dispatchOpenFocus(subject)}
-        className={`w-full lg:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-colors shrink-0 ${cls.btn}`}
-      >
-        <Play className="w-3.5 h-3.5 fill-current" />
-        Start Today&apos;s Smart Focus Drill
-      </button>
+      <div className="flex flex-col sm:flex-row lg:flex-nowrap items-stretch sm:items-center gap-2 shrink-0">
+        <button
+          type="button"
+          onClick={() => dispatchOpenRoom()}
+          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer transition-colors"
+        >
+          <Users className="w-3.5 h-3.5 text-emerald-500" />
+          Study Rooms
+        </button>
+        <button
+          type="button"
+          onClick={() => dispatchOpenFocus(subject)}
+          className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-colors shrink-0 ${cls.btn}`}
+        >
+          <Play className="w-3.5 h-3.5 fill-current" />
+          Start Today&apos;s Smart Focus Drill
+        </button>
+      </div>
     </div>
   );
 };

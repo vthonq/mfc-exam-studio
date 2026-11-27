@@ -3,15 +3,23 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  Check,
   CheckCircle2,
+  Copy,
   Layers,
+  Plus,
   RotateCcw,
   Shuffle,
   Sparkles,
+  Trash2,
   X,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { dispatchAskAi } from '../utils/askAiBridge';
+import {
+  buildAiFlashcardImportPrompt,
+  parseCustomCardsInput,
+} from '../utils/customDeckParser';
 import {
   buildFlashcardDeck,
   type FlashcardDeckKind,
@@ -25,6 +33,8 @@ interface FlashcardsModalProps {
   onClose: () => void;
   initialSubject: SubjectId;
 }
+
+type ModalDeckTab = FlashcardDeckKind | 'custom';
 
 const SUBJECT_TABS: Array<{ id: SubjectId; label: string; activeCls: string }> = [
   {
@@ -58,19 +68,51 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
   onClose,
   initialSubject,
 }) => {
-  const { settings } = useApp();
+  const {
+    settings,
+    progress,
+    addCustomCard,
+    importCustomCards,
+    removeCustomCard,
+    clearCustomCards,
+  } = useApp();
   const bilingual = settings.lang === 'bilingual';
 
   const [subject, setSubject] = useState<SubjectId>(initialSubject);
-  const [deckKind, setDeckKind] = useState<FlashcardDeckKind>('formulas');
+  const [deckKind, setDeckKind] = useState<ModalDeckTab>('formulas');
   const [queue, setQueue] = useState<FlashcardItem[]>([]);
   const [masteredIds, setMasteredIds] = useState<Set<string>>(() => new Set());
   const [flipped, setFlipped] = useState(false);
 
-  const baseDeck = useMemo(
-    () => buildFlashcardDeck(subject, deckKind, bilingual),
-    [subject, deckKind, bilingual],
+  // Custom Deck Author / Importer states
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [customBadge, setCustomBadge] = useState('Lecture Note');
+  const [customFront, setCustomFront] = useState('');
+  const [customBack, setCustomBack] = useState('');
+  const [customTrap, setCustomTrap] = useState('');
+  const [bulkInput, setBulkInput] = useState('');
+  const [importFeedback, setImportFeedback] = useState<string | null>(null);
+  const [copiedPrompt, setCopiedPrompt] = useState(false);
+
+  const customSubjectCards = useMemo(
+    () => (progress.customCards ?? []).filter((c) => c.subject === subject),
+    [progress.customCards, subject],
   );
+
+  const baseDeck: FlashcardItem[] = useMemo(() => {
+    if (deckKind === 'custom') {
+      return customSubjectCards.map((c) => ({
+        id: c.id,
+        subject: c.subject,
+        deck: 'formulas',
+        badge: c.badge,
+        front: c.front,
+        backSummary: c.back,
+        trap: c.trap,
+      }));
+    }
+    return buildFlashcardDeck(subject, deckKind, bilingual);
+  }, [subject, deckKind, bilingual, customSubjectCards]);
 
   const resetDeck = useCallback(
     (shuffled = false) => {
@@ -84,6 +126,7 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
   useEffect(() => {
     if (open) {
       setSubject(initialSubject);
+      setImportFeedback(null);
     }
   }, [open, initialSubject]);
 
@@ -147,6 +190,47 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
 
   if (!open) return null;
 
+  const handleAddSingleCustom = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customFront.trim() || !customBack.trim()) return;
+    addCustomCard({
+      subject,
+      badge: customBadge.trim().slice(0, 40) || 'My Note',
+      front: customFront.trim().slice(0, 300),
+      back: customBack.trim().slice(0, 800),
+      ...(customTrap.trim() ? { trap: customTrap.trim().slice(0, 240) } : {}),
+    });
+    setCustomFront('');
+    setCustomBack('');
+    setCustomTrap('');
+    setShowAddForm(false);
+    setImportFeedback('Added 1 custom card to My Deck!');
+  };
+
+  const handleBulkImport = () => {
+    const parsed = parseCustomCardsInput(bulkInput, subject);
+    if (parsed.length === 0) {
+      setImportFeedback(
+        'Could not parse cards — paste JSON array or lines like "Term :: Definition".',
+      );
+      return;
+    }
+    const added = importCustomCards(parsed);
+    setBulkInput('');
+    setShowAddForm(false);
+    setImportFeedback(`Imported ${added} custom flashcard${added === 1 ? '' : 's'}!`);
+  };
+
+  const handleCopyAiPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(buildAiFlashcardImportPrompt(subject, bilingual));
+      setCopiedPrompt(true);
+      window.setTimeout(() => setCopiedPrompt(false), 2000);
+    } catch {
+      // ignore clipboard errors
+    }
+  };
+
   return (
     <div
       className="no-print fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center p-4"
@@ -167,12 +251,12 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
             </div>
             <div className="min-w-0">
               <h2 className="font-bold text-sm tracking-tight text-slate-900 dark:text-white truncate">
-                Quick Recall Flashcards
+                Quick Recall &amp; Custom Flashcards
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                 {bilingual
-                  ? 'Ôn nhanh công thức, bẫy thi & thuật ngữ · Nhấn Space để lật thẻ'
-                  : 'Formulas, exam traps & glossary · Press Space to flip'}
+                  ? 'Ôn công thức, thuật ngữ & bộ thẻ tự tạo · Space để lật thẻ'
+                  : 'Formulas, glossary & your own custom decks · Space to flip'}
               </p>
             </div>
           </div>
@@ -213,7 +297,7 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setDeckKind('formulas')}
-                  className={`px-2.5 py-1 rounded-lg font-semibold cursor-pointer ${
+                  className={`px-2 py-1 rounded-lg font-semibold cursor-pointer ${
                     deckKind === 'formulas'
                       ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
                       : 'text-slate-600 dark:text-slate-400'
@@ -224,13 +308,24 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setDeckKind('glossary')}
-                  className={`px-2.5 py-1 rounded-lg font-semibold cursor-pointer ${
+                  className={`px-2 py-1 rounded-lg font-semibold cursor-pointer ${
                     deckKind === 'glossary'
                       ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
                       : 'text-slate-600 dark:text-slate-400'
                   }`}
                 >
-                  EN–VI Terms
+                  EN–VI
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeckKind('custom')}
+                  className={`px-2 py-1 rounded-lg font-semibold cursor-pointer ${
+                    deckKind === 'custom'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-2xs'
+                      : 'text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  My Deck ({customSubjectCards.length})
                 </button>
               </div>
               <button
@@ -244,6 +339,58 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
               </button>
             </div>
           </div>
+
+          {/* Custom Deck Action Strip */}
+          {deckKind === 'custom' && (
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5 text-xs">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm((v) => !v)}
+                  className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold inline-flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  {showAddForm ? 'Hide Editor' : 'Add / Import Cards'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleCopyAiPrompt()}
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                  title="Copy prompt to convert lecture notes into JSON flashcards via Gemini/ChatGPT/Claude"
+                >
+                  {copiedPrompt ? (
+                    <>
+                      <Check className="w-3 h-3 text-emerald-500" /> Prompt Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" /> Copy AI Prompt
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {customSubjectCards.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm(`Clear all custom cards for ${subject.toUpperCase()}?`)) {
+                      clearCustomCards(subject);
+                    }
+                  }}
+                  className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
+                >
+                  Clear My Deck
+                </button>
+              )}
+            </div>
+          )}
+
+          {importFeedback && deckKind === 'custom' && (
+            <div className="px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300">
+              {importFeedback}
+            </div>
+          )}
 
           {/* Mastery Progress Bar */}
           <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400">
@@ -260,9 +407,105 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
           </div>
         </div>
 
-        {/* Card Area */}
-        <div className="p-5 overflow-y-auto flex-1">
-          {!currentCard ? (
+        {/* Card Area or Custom Deck Editor */}
+        <div className="p-5 overflow-y-auto flex-1 space-y-4">
+          {deckKind === 'custom' && showAddForm && (
+            <div className="p-3.5 rounded-2xl border border-indigo-200 dark:border-indigo-800/70 bg-indigo-50/40 dark:bg-indigo-950/20 space-y-3 text-xs">
+              <form onSubmit={handleAddSingleCustom} className="space-y-2">
+                <div className="font-bold text-slate-900 dark:text-white">Quick Add 1 Card</div>
+                <div className="grid grid-cols-3 gap-2">
+                  <input
+                    type="text"
+                    value={customBadge}
+                    onChange={(e) => setCustomBadge(e.target.value)}
+                    placeholder="Topic/Ch."
+                    maxLength={40}
+                    className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  />
+                  <input
+                    type="text"
+                    value={customFront}
+                    onChange={(e) => setCustomFront(e.target.value)}
+                    placeholder="Front / Question *"
+                    maxLength={300}
+                    className="col-span-2 px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  />
+                </div>
+                <textarea
+                  rows={2}
+                  value={customBack}
+                  onChange={(e) => setCustomBack(e.target.value)}
+                  placeholder="Back / Formula or Answer (supports $LaTeX$) *"
+                  maxLength={800}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customTrap}
+                    onChange={(e) => setCustomTrap(e.target.value)}
+                    placeholder="Optional exam trap / note..."
+                    maxLength={240}
+                    className="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer"
+                  >
+                    Save Card
+                  </button>
+                </div>
+              </form>
+
+              <div className="pt-2 border-t border-indigo-200/70 dark:border-indigo-800/60 space-y-2">
+                <div className="font-bold text-slate-900 dark:text-white">
+                  Bulk Paste (AI JSON or <code className="font-mono">Front :: Back</code> lines)
+                </div>
+                <textarea
+                  rows={3}
+                  value={bulkInput}
+                  onChange={(e) => setBulkInput(e.target.value)}
+                  placeholder={'Paste AI JSON array OR lines like:\nBayes Theorem :: P(A|B) = P(B|A)P(A)/P(B) :: Always check partition'}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono text-[11px]"
+                />
+                <button
+                  type="button"
+                  onClick={handleBulkImport}
+                  className="w-full py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold cursor-pointer"
+                >
+                  Import Pasted Cards into {subject.toUpperCase()} My Deck
+                </button>
+              </div>
+            </div>
+          )}
+
+          {totalCount === 0 && deckKind === 'custom' ? (
+            <div className="py-8 text-center space-y-3">
+              <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 mx-auto flex items-center justify-center">
+                <Plus className="w-5 h-5" />
+              </div>
+              <div className="space-y-1 max-w-sm mx-auto">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Your {subject.toUpperCase()} Custom Deck is Empty
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {bilingual
+                    ? 'Tự thêm công thức ghi chú trên lớp hoặc dán hàng loạt bằng AI JSON (lưu đồng bộ Cloud trên tài khoản của bạn).'
+                    : 'Add your own lecture notes or bulk-import cards from Gemini/ChatGPT/Claude (cloud-synced to your account).'}
+                </p>
+              </div>
+              {!showAddForm && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm(true)}
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Create / Import Cards
+                </button>
+              )}
+            </div>
+          ) : !currentCard ? (
             <div className="py-10 text-center space-y-3">
               <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
                 <CheckCircle2 className="w-6 h-6" />
@@ -273,7 +516,7 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {bilingual
-                    ? 'Bạn đã ôn hết thẻ trong bộ này. Bấm Restart hoặc chuyển sang môn khác!'
+                    ? 'Bạn đã ôn hết thẻ trong bộ này. Bấm Restart hoặc chuyển sang bộ khác!'
                     : 'Great recall session! Restart shuffled or switch decks above.'}
                 </p>
               </div>
@@ -303,9 +546,25 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
                 <span className="font-mono font-bold px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400">
                   {currentCard.badge}
                 </span>
-                <span className="uppercase tracking-wider font-semibold text-slate-400">
-                  {flipped ? 'Answer / Notes' : 'Front · Click to Flip'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="uppercase tracking-wider font-semibold text-slate-400">
+                    {flipped ? 'Answer / Notes' : 'Front · Click to Flip'}
+                  </span>
+                  {deckKind === 'custom' && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeCustomCard(currentCard.id);
+                      }}
+                      className="p-1 rounded-md text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                      title="Delete this custom card"
+                      aria-label="Delete custom card"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {!flipped ? (

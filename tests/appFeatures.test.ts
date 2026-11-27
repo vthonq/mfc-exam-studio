@@ -20,6 +20,10 @@ import { buildExplainQuestionPrompt } from '../src/utils/askAiBridge';
 import { clearExamDraft, loadExamDraft, saveExamDraft } from '../src/utils/examDraft';
 import { buildFlashcardDeck } from '../src/utils/flashcards';
 import {
+  buildAiFlashcardImportPrompt,
+  parseCustomCardsInput,
+} from '../src/utils/customDeckParser';
+import {
   computeCombinatorics,
   computeEconQuickCalc,
   computeModularCalc,
@@ -429,5 +433,28 @@ describe('Changelog & Cross-Subject Data Integrity', () => {
 
     const heatmap = computeMissedHeatmap(ranked);
     expect(heatmap[0]).toEqual({ label: 'Ch. 4', missCount: 2, missPct: 67 });
+  });
+
+  it('parses custom JSON, fenced markdown, and "::" line flashcard imports cleanly', () => {
+    const jsonCards = parseCustomCardsInput(
+      '```json\n[{"badge":"Ch. 2","front":"Memoryless?","back":"$P(X>s+t|X>s)=P(X>t)$","trap":"Only Geo & Exp"}]\n```',
+      'probstat',
+    );
+    expect(jsonCards).toHaveLength(1);
+    expect(jsonCards[0].badge).toBe('Ch. 2');
+    expect(jsonCards[0].trap).toBe('Only Geo & Exp');
+
+    const lineCards = parseCustomCardsInput(
+      'Real Exchange Rate :: $\\varepsilon = (e \\cdot P) / P^*$ :: Watch foreign/domestic price\nFisher Equation :: $r = i - \\pi$',
+      'econ',
+    );
+    expect(lineCards).toHaveLength(2);
+    expect(lineCards[0].front).toBe('Real Exchange Rate');
+    expect(lineCards[0].trap).toBe('Watch foreign/domestic price');
+    expect(lineCards[1].subject).toBe('econ');
+
+    const prompt = buildAiFlashcardImportPrompt('mfc', true);
+    expect(prompt).toContain('Mathematics for Computing');
+    expect(prompt).toContain('JSON');
   });
 });
