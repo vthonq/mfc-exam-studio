@@ -76,16 +76,20 @@ export const AnimatedIntroSplash: React.FC = () => {
   return (
     <div
       key={runKey}
-      className={`no-print fixed inset-0 z-[70] bg-slate-950 text-white flex items-center justify-center overflow-hidden select-none transition-opacity duration-350 ease-out ${
+      className={`no-print fixed inset-0 z-[70] bg-[#09090b] text-white flex items-center justify-center overflow-hidden select-none transition-opacity duration-350 ease-out ${
         exiting ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
       role="dialog"
       aria-modal="true"
       aria-label="Exam Studio Hub Intro"
     >
-      {/* One soft, calm ambient glow */}
+      {/* Dual subtle radial spotlights */}
       <div
-        className="absolute w-96 h-96 rounded-full bg-indigo-500/12 blur-3xl pointer-events-none"
+        className="absolute -top-20 w-[28rem] h-[28rem] rounded-full bg-indigo-500/15 blur-3xl pointer-events-none"
+        aria-hidden="true"
+      />
+      <div
+        className="absolute -bottom-24 right-1/4 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"
         aria-hidden="true"
       />
 
@@ -93,7 +97,7 @@ export const AnimatedIntroSplash: React.FC = () => {
       <button
         type="button"
         onClick={dismiss}
-        className="absolute top-5 right-5 z-10 px-3 py-1 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 text-xs font-medium text-slate-300 cursor-pointer transition-colors"
+        className="absolute top-5 right-5 z-10 px-3 py-1 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 text-xs font-medium text-zinc-300 cursor-pointer transition-colors"
       >
         Skip
       </button>
@@ -103,18 +107,24 @@ export const AnimatedIntroSplash: React.FC = () => {
         <img
           src="./logo.png"
           alt="Exam Studio Hub"
-          className="intro-logo-fade w-16 h-16 rounded-2xl object-cover shadow-lg ring-1 ring-white/15 bg-slate-900"
+          className="intro-logo-fade w-16 h-16 rounded-2xl object-cover shadow-lg ring-1 ring-white/15 bg-zinc-900"
         />
 
         <div className="space-y-1.5">
+          <div
+            className="intro-text-rise inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-[10px] font-mono font-semibold text-indigo-300"
+            style={{ animationDelay: '80ms' }}
+          >
+            STUDIO 5.0
+          </div>
           <h1
-            className="intro-text-rise text-2xl sm:text-4xl font-bold tracking-tight text-white"
+            className="intro-text-rise font-display text-2xl sm:text-4xl font-extrabold tracking-tight text-white"
             style={{ animationDelay: '120ms' }}
           >
             Exam Studio Hub
           </h1>
           <p
-            className="intro-text-rise text-xs sm:text-sm text-slate-400"
+            className="intro-text-rise text-xs sm:text-sm text-zinc-400"
             style={{ animationDelay: '220ms' }}
           >
             MFC · Macroeconomics · Prob &amp; Statistics
@@ -126,10 +136,10 @@ export const AnimatedIntroSplash: React.FC = () => {
         </div>
 
         <p
-          className="intro-text-rise text-[11px] font-medium tracking-wide text-slate-500 pt-1"
+          className="intro-text-rise text-[11px] font-medium tracking-wide text-zinc-500 pt-1"
           style={{ animationDelay: '300ms' }}
         >
-          Built by <span className="text-slate-300 font-semibold">vthonq</span>
+          Built by <span className="text-zinc-300 font-semibold">vthonq</span>
         </p>
       </div>
     </div>

@@ -65,99 +65,107 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
 
   if (!firebaseUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-indigo-50/50 to-sky-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 px-4 py-8 sm:p-6">
-        <div className="max-w-5xl w-full grid lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#09090b] text-zinc-100 relative overflow-hidden px-4 py-8 sm:p-6">
+        <div
+          className="pointer-events-none fixed inset-0 opacity-90"
+          style={{
+            backgroundImage:
+              'radial-gradient(ellipse 75% 48% at 50% -10%, rgba(99,102,241,0.22), transparent 65%), radial-gradient(ellipse 45% 35% at 85% 90%, rgba(16,185,129,0.12), transparent 60%)',
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative z-10 max-w-5xl w-full grid lg:grid-cols-12 gap-6 lg:gap-8 items-center">
           {/* Left Column: Website Intro Showcase */}
           <div className="lg:col-span-7 space-y-5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-100/80 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 text-xs font-bold text-indigo-700 dark:text-indigo-300">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-400/25 text-xs font-bold text-indigo-300">
               <Sparkles className="w-3.5 h-3.5" />
-              UEH-ISB · Final Exam Studio Hub
+              UEH-ISB · Studio 5.0 · Exam Hub
             </div>
 
             <div className="flex items-start gap-4">
               <img
                 src="./logo.png"
                 alt="Exam Studio Hub"
-                className="w-14 h-14 rounded-2xl object-cover ring-2 ring-indigo-500/30 shadow-md shrink-0"
+                className="w-14 h-14 rounded-2xl object-cover ring-1 ring-white/15 shadow-lg shrink-0"
               />
               <div className="space-y-1.5">
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
+                <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">
                   Master{' '}
-                  <span className="bg-gradient-to-r from-indigo-600 via-emerald-600 to-sky-600 dark:from-indigo-400 dark:via-emerald-400 dark:to-sky-400 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-indigo-400 via-emerald-400 to-sky-400 bg-clip-text text-transparent">
                     MFC, Economics &amp; ProbStat
                   </span>{' '}
                   — In One Studio.
                 </h1>
-                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Interactive algorithm &amp; macro trainers, 13-page SB stat tables, synced group
-                  mock exams, printable A4 cheat sheets, and built-in Gemini AI tutoring.
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  Interactive algorithm &amp; macro trainers, 13-page SB stat tables, live study
+                  rooms, printable A4 cheat sheets, and built-in Gemini AI tutoring.
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Nền tảng ôn thi cuối kỳ chuẩn UEH-ISB: phòng lab tương tác, tra bảng SB, đề thi
-                  nhóm đồng bộ, in công thức A4 &amp; trợ lý AI bám sát giáo trình.
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Nền tảng ôn thi cuối kỳ chuẩn UEH-ISB: phòng lab tương tác, tra bảng SB, phòng
+                  thi nhóm trực tiếp, in công thức A4 &amp; trợ lý AI bám sát giáo trình.
                 </p>
               </div>
             </div>
 
             {/* 3 Subject Cards */}
             <div className="grid sm:grid-cols-3 gap-3">
-              <div className="rounded-2xl bg-white/85 dark:bg-slate-900/80 border border-indigo-200/80 dark:border-indigo-900/70 p-3.5 shadow-xs space-y-1.5">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300">
+              <div className="rounded-2xl bg-white/[0.03] border border-indigo-500/25 p-3.5 shadow-sm space-y-1.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-300">
                   <Scale className="w-4 h-4 shrink-0" />
                   <span>Math for Computing</span>
                 </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
                   Ch. 1, 4, 9–12 · Step-by-Step ExtGCD, ModExp, Warshall, K-Maps &amp; Proofs Trainer.
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-white/85 dark:bg-slate-900/80 border border-emerald-200/80 dark:border-emerald-900/70 p-3.5 shadow-xs space-y-1.5">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+              <div className="rounded-2xl bg-white/[0.03] border border-emerald-500/25 p-3.5 shadow-sm space-y-1.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-300">
                   <TrendingUp className="w-4 h-4 shrink-0" />
                   <span>Principles of Econ</span>
                 </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
                   ECO101 Parts 6–9 · Live Mankiw Curves (AD–AS, Twin Markets, Loanable Funds) &amp; Shock Drills.
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-white/85 dark:bg-slate-900/80 border border-sky-200/80 dark:border-sky-900/70 p-3.5 shadow-xs space-y-1.5">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-sky-700 dark:text-sky-300">
+              <div className="rounded-2xl bg-white/[0.03] border border-sky-500/25 p-3.5 shadow-sm space-y-1.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-sky-300">
                   <BarChart3 className="w-4 h-4 shrink-0" />
                   <span>Prob &amp; Statistics</span>
                 </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
                   Ch. 1–5 · 13-Page Interactive SB Tables (C-1 to F), Simulators &amp; Written Finals.
                 </p>
               </div>
             </div>
 
             {/* Highlights Strip */}
-            <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800">
-                <ClipboardCheck className="w-3.5 h-3.5 text-indigo-500" /> Synced Group Exams
+            <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-zinc-300">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08]">
+                <ClipboardCheck className="w-3.5 h-3.5 text-indigo-400" /> Live Study Rooms
               </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800">
-                <Search className="w-3.5 h-3.5 text-sky-500" /> Ctrl+K Search
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08]">
+                <Search className="w-3.5 h-3.5 text-sky-400" /> Ctrl+K Command Bar
               </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800">
-                <Sparkles className="w-3.5 h-3.5 text-violet-500" /> My Gemini AI &amp; Auto-Fill
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08]">
+                <Sparkles className="w-3.5 h-3.5 text-violet-400" /> Gemini AI &amp; 4 Palettes
               </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800">
-                <Cloud className="w-3.5 h-3.5 text-emerald-500" /> Cloud Sync &amp; A4 Print
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08]">
+                <Cloud className="w-3.5 h-3.5 text-emerald-400" /> Cloud Sync &amp; A4 Print
               </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800">
-                <BookOpen className="w-3.5 h-3.5 text-amber-500" /> Bilingual EN + VI
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08]">
+                <BookOpen className="w-3.5 h-3.5 text-amber-400" /> Bilingual EN + VI
               </span>
             </div>
 
-            <div className="text-xs text-slate-500 dark:text-slate-400 pt-1">
+            <div className="text-xs text-zinc-400 pt-1">
               Created by{' '}
               <a
                 href="https://github.com/vthonq"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-semibold text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                className="font-semibold text-zinc-200 hover:text-indigo-400 transition-colors"
               >
                 vthonq
               </a>{' '}
@@ -167,25 +175,25 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
 
           {/* Right Column: Class Access Sign-In Card */}
           <div className="lg:col-span-5">
-            <div className="w-full rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur border border-slate-200 dark:border-slate-800 shadow-xl p-6 space-y-5">
+            <div className="w-full rounded-2xl bg-[#111115]/95 backdrop-blur-xl border border-white/[0.1] shadow-2xl p-6 space-y-5">
               <div className="flex items-center gap-3">
                 <img
                   src="./logo.png"
                   alt="Exam Studio Hub"
-                  className="w-11 h-11 rounded-xl object-cover ring-2 ring-indigo-500/30 shrink-0"
+                  className="w-11 h-11 rounded-xl object-cover ring-1 ring-white/15 shrink-0"
                 />
                 <div>
-                  <h2 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
+                  <h2 className="font-display text-lg font-extrabold tracking-tight text-white">
                     Student Sign-In
                   </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-zinc-400">
                     Exam Studio Hub · UEH-ISB Class Gate
                   </p>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900 text-xs space-y-1.5 text-slate-700 dark:text-slate-300">
-                <div className="font-bold text-indigo-800 dark:text-indigo-300 flex items-center gap-1.5">
+              <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs space-y-1.5 text-zinc-300">
+                <div className="font-bold text-indigo-300 flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4" />
                   Class Access Control / Cổng xác thực lớp học
                 </div>
@@ -193,14 +201,14 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
                   Sign in with your Google / UEH student email to unlock all 3 subjects and sync
                   your study progress across devices.
                 </p>
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-zinc-400">
                   Đăng nhập bằng Google / Gmail sinh viên UEH để vào web và tự động đồng bộ tiến độ
                   ôn thi giữa laptop và điện thoại.
                 </p>
               </div>
 
               {inAppWebview && (
-                <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 space-y-2">
                   <div className="font-bold flex items-center gap-1.5">
                     <ExternalLink className="w-4 h-4 shrink-0" />
                     Đang mở trong Zalo / Messenger?
@@ -212,7 +220,7 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
                   </p>
                   <button
                     onClick={() => void copyCurrentUrl()}
-                    className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold inline-flex items-center gap-1 cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold inline-flex items-center gap-1 cursor-pointer"
                   >
                     <Copy className="w-3.5 h-3.5" />
                     {copiedUrl ? 'Đã sao chép link!' : 'Copy Link để mở bằng Chrome/Safari'}
@@ -221,14 +229,14 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
               )}
 
               {error && (
-                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300">
+                <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-300">
                   {error}
                 </div>
               )}
 
               <button
                 onClick={() => void signInWithGoogle()}
-                className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 cursor-pointer transition-colors"
               >
                 <svg className="w-4 h-4 bg-white rounded-full p-0.5" viewBox="0 0 24 24">
                   <path

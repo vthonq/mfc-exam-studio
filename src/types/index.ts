@@ -38,6 +38,7 @@ export type ProbLabTab = 'discrete' | 'continuous' | 'bivariate' | 'inference';
 
 export type LangMode = 'en' | 'bilingual';
 export type ThemeMode = 'light' | 'dark';
+export type StudioPalette = 'obsidian' | 'paper' | 'forest' | 'indigo';
 export type GeminiModelId =
   | 'gemini-4-hydrogen'
   | 'gemini-4-argon'
@@ -103,6 +104,8 @@ export interface ProgressState {
 export interface AppSettings {
   lang: LangMode;
   theme: ThemeMode;
+  palette?: StudioPalette;
+  sidebarCollapsed?: boolean;
   geminiKey: string;
   geminiModel: GeminiModelId;
 }

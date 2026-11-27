@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { fetchCloudProgress, saveCloudProgress } from '../services/accessControl';
+import { DEFAULT_PALETTE, getPaletteMeta, resolvePalette } from '../utils/studioTheme';
 import type {
   AppSettings,
   ChapterId,
@@ -12,6 +13,7 @@ import type {
   MistakeItem,
   ProbTopicId,
   ProgressState,
+  StudioPalette,
   SubjectId,
   ThemeMode,
 } from '../types';
@@ -101,7 +103,9 @@ function hasMeaningfulProgress(p: ProgressState): boolean {
 
 const DEFAULT_SETTINGS: AppSettings = {
   lang: 'bilingual',
-  theme: 'light',
+  theme: 'dark',
+  palette: DEFAULT_PALETTE,
+  sidebarCollapsed: false,
   geminiKey: '',
   geminiModel: 'gemini-4-hydrogen',
 };
@@ -151,6 +155,8 @@ interface AppContextValue {
   cloudSyncStatus: CloudSyncStatus;
   setLang: (lang: LangMode) => void;
   setTheme: (theme: ThemeMode) => void;
+  setPalette: (palette: StudioPalette) => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
   setGeminiKey: (key: string) => void;
   setGeminiModel: (model: GeminiModelId) => void;
   recordPractice: (chapter: ChapterId, isCorrect: boolean) => void;
@@ -223,13 +229,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const raw = localStorage.getItem(SETTINGS_KEY);
       if (raw) {
-        return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+        const parsed = JSON.parse(raw) as Partial<AppSettings>;
+        const palette = resolvePalette(parsed);
+        const theme = getPaletteMeta(palette).theme;
+        return { ...DEFAULT_SETTINGS, ...parsed, palette, theme };
       }
     } catch {
       // ignore malformed storage
     }
     return DEFAULT_SETTINGS;
   });
+
+  const lastDarkPaletteRef = useRef<StudioPalette>(
+    settings.palette && settings.palette !== 'paper' ? settings.palette : DEFAULT_PALETTE,
+  );
 
   const [progress, setProgress] = useState<ProgressState>(() =>
     loadLocalProgressForUid(firebaseUser?.uid),
@@ -246,10 +259,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // ignore quota
     }
     const root = document.documentElement;
-    if (settings.theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
+    const activePalette = resolvePalette(settings);
+    const meta = getPaletteMeta(activePalette);
+    root.dataset.palette = activePalette;
+    root.classList.toggle('dark', meta.theme === 'dark');
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) {
+      themeMeta.setAttribute('content', meta.metaThemeColor);
     }
   }, [settings]);
 
@@ -368,7 +384,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [progress, firebaseUser?.uid, canUseCloud]);
 
   const setLang = (lang: LangMode) => setSettings((s) => ({ ...s, lang }));
-  const setTheme = (theme: ThemeMode) => setSettings((s) => ({ ...s, theme }));
+  const setPalette = (palette: StudioPalette) => {
+    const meta = getPaletteMeta(palette);
+    if (meta.theme === 'dark') {
+      lastDarkPaletteRef.current = palette;
+    }
+    setSettings((s) => ({ ...s, palette, theme: meta.theme }));
+  };
+  const setTheme = (theme: ThemeMode) => {
+    const nextPalette = theme === 'light' ? 'paper' : lastDarkPaletteRef.current;
+    setSettings((s) => ({ ...s, theme, palette: nextPalette }));
+  };
+  const setSidebarCollapsed = (sidebarCollapsed: boolean) =>
+    setSettings((s) => ({ ...s, sidebarCollapsed }));
   const setGeminiKey = (geminiKey: string) => setSettings((s) => ({ ...s, geminiKey }));
   const setGeminiModel = (geminiModel: GeminiModelId) =>
     setSettings((s) => ({ ...s, geminiModel }));
@@ -583,6 +611,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         cloudSyncStatus,
         setLang,
         setTheme,
+        setPalette,
+        setSidebarCollapsed,
         setGeminiKey,
         setGeminiModel,
         recordPractice,

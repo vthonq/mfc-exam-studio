@@ -24,6 +24,13 @@ import {
   parseCustomCardsInput,
 } from '../src/utils/customDeckParser';
 import {
+  DEFAULT_PALETTE,
+  STUDIO_PALETTES,
+  getNextPalette,
+  getPaletteMeta,
+  resolvePalette,
+} from '../src/utils/studioTheme';
+import {
   computeCombinatorics,
   computeEconQuickCalc,
   computeModularCalc,
@@ -456,5 +463,20 @@ describe('Changelog & Cross-Subject Data Integrity', () => {
     const prompt = buildAiFlashcardImportPrompt('mfc', true);
     expect(prompt).toContain('Mathematics for Computing');
     expect(prompt).toContain('JSON');
+  });
+
+  it('resolves Studio 5.0 palettes, migrates legacy light/dark, and cycles cleanly', () => {
+    expect(STUDIO_PALETTES).toHaveLength(4);
+    expect(resolvePalette(null)).toBe(DEFAULT_PALETTE);
+    expect(resolvePalette({ theme: 'light' })).toBe('paper');
+    expect(resolvePalette({ theme: 'dark' })).toBe('obsidian');
+    expect(resolvePalette({ palette: 'forest', theme: 'light' })).toBe('forest');
+
+    const forestMeta = getPaletteMeta('forest');
+    expect(forestMeta.theme).toBe('dark');
+    expect(forestMeta.swatches).toHaveLength(3);
+
+    expect(getNextPalette('obsidian')).toBe('paper');
+    expect(getNextPalette('indigo')).toBe('obsidian');
   });
 });

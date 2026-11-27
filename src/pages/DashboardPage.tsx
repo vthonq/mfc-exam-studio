@@ -16,6 +16,7 @@ import { randomSeedCode } from '../math/prng';
 import { CHAPTER_META, type ChapterId, type LabTab, type PageRoute } from '../types';
 import { BiText } from '../components/BiText';
 import { ExamReadinessStrip } from '../components/ExamReadinessStrip';
+import { ReadinessRing } from '../components/ReadinessRing';
 
 interface DashboardPageProps {
   onNavigate: (route: PageRoute, query?: string) => void;
@@ -60,14 +61,19 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
   return (
     <div className="space-y-6">
-      {/* Hero Banner */}
-      <div className="rounded-2xl bg-gradient-to-br from-indigo-50/70 via-white to-white dark:from-indigo-950/35 dark:via-slate-900 dark:to-slate-900 border border-indigo-200/70 dark:border-indigo-900/60 text-slate-900 dark:text-slate-100 p-6 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-100/80 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-xs font-semibold">
+      {/* Studio 5.0 Hero Bento */}
+      <div className="studio-card relative overflow-hidden rounded-2xl p-6 lg:p-7">
+        <div
+          className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full bg-indigo-500/15 blur-3xl"
+          aria-hidden="true"
+        />
+
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+          <div className="space-y-2.5 max-w-xl">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/12 border border-indigo-500/25 text-indigo-600 dark:text-indigo-300 text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5" /> Mathematics for Computing — Final Exam Prep
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            <h1 className="font-display text-2xl md:text-[30px] font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
               Master Every Algorithm, Table &amp; Proof
             </h1>
             <BiText
@@ -78,30 +84,24 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             />
           </div>
 
-          <div className="bg-white/90 dark:bg-slate-950/60 rounded-2xl p-4 min-w-[190px] text-center border border-slate-200 dark:border-slate-800">
-            <div className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Exam Readiness
-            </div>
-            <div className="text-4xl font-extrabold mt-1 text-indigo-600 dark:text-indigo-400">
-              {readiness}%
-            </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-              {doneAssignments}/{totalQuestions} Assignment Qs · {progress.completedProofs.length}/
-              {PROOF_EXERCISES.length} Proofs
-            </div>
-          </div>
+          <ReadinessRing
+            pct={readiness}
+            subject="mfc"
+            label="Exam Readiness"
+            sublabel={`${doneAssignments}/${totalQuestions} Assign Qs · ${progress.completedProofs.length}/${PROOF_EXERCISES.length} Proofs`}
+          />
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-2.5">
+        <div className="relative mt-5 flex flex-wrap gap-2.5">
           <button
             onClick={launchGroupExam}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm cursor-pointer shadow-xs transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm cursor-pointer shadow-md shadow-indigo-500/20 transition-colors"
           >
             <Share2 className="w-4 h-4" /> Start / Share Group Mock Exam
           </button>
           <button
             onClick={() => onNavigate('labs', `tab=${CHAPTER_TO_LAB[weakest.id]}`)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm cursor-pointer transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50/90 hover:bg-slate-100 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-200/80 dark:border-white/[0.1] text-slate-700 dark:text-slate-200 font-semibold text-sm cursor-pointer transition-colors"
           >
             Practice Recommended: {CHAPTER_META[weakest.id].code} <ArrowRight className="w-4 h-4" />
           </button>
@@ -112,48 +112,51 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
       {/* 6 Chapter Mastery Grid */}
       <div>
-        <h2 className="text-base font-bold mb-3">Chapter Mastery Breakdown</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-display text-base font-bold">Chapter Mastery Breakdown</h2>
+          <span className="text-[11px] font-mono text-slate-400 tabular-nums">6 Chapters</span>
+        </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {chapterScores.map((c) => {
             const meta = CHAPTER_META[c.id];
             return (
               <div
                 key={c.id}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between gap-3"
+                className="studio-card-interactive rounded-2xl p-4 flex flex-col justify-between gap-3.5"
               >
                 <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/20">
                       {meta.code}
                     </span>
-                    <span className="text-xs font-mono text-slate-500">
-                      {c.attempts > 0 ? `${c.correct}/${c.attempts} (${c.pct}%)` : 'Not practiced yet'}
+                    <span className="text-xs font-mono text-slate-500 dark:text-slate-400 tabular-nums">
+                      {c.attempts > 0 ? `${c.correct}/${c.attempts} (${c.pct}%)` : 'Not practiced'}
                     </span>
                   </div>
                   <BiText
                     en={meta.title}
                     vi={meta.titleVi}
-                    className="font-semibold text-sm mt-1"
+                    className="font-semibold text-sm mt-2"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                <div className="space-y-2.5">
+                  <div className="h-1.5 rounded-full bg-slate-200/80 dark:bg-white/[0.07] overflow-hidden">
                     <div
-                      className="h-full bg-indigo-600 rounded-full transition-all"
+                      className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-300"
                       style={{ width: `${c.pct}%` }}
                     />
                   </div>
                   <div className="flex justify-between text-xs">
                     <button
                       onClick={() => onNavigate('labs', `tab=${CHAPTER_TO_LAB[c.id]}`)}
-                      className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline cursor-pointer"
+                      className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline cursor-pointer"
                     >
                       Open Lab →
                     </button>
                     <button
                       onClick={() => onNavigate('knowledge', `chapter=${c.id}`)}
-                      className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                      className="text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer"
                     >
                       Cheat Sheet
                     </button>
@@ -198,11 +201,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             <button
               key={card.route}
               onClick={() => onNavigate(card.route)}
-              className="text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 rounded-2xl p-4 space-y-2 transition-colors cursor-pointer"
+              className="studio-card-interactive text-left rounded-2xl p-4 space-y-2.5 cursor-pointer"
             >
-              <Icon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              <div className="font-bold text-sm">{card.title}</div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{card.desc}</p>
+              <div className="w-9 h-9 rounded-xl bg-indigo-500/12 border border-indigo-500/20 flex items-center justify-center">
+                <Icon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="font-display font-bold text-sm">{card.title}</div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{card.desc}</p>
             </button>
           );
         })}
@@ -210,28 +215,28 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
       {/* Recent Mock Exams */}
       {progress.examHistory.length > 0 && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
+        <div className="studio-card rounded-2xl p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold flex items-center gap-2">
-              <ClipboardCheck className="w-4 h-4 text-indigo-600" /> Recent Mock Exam History
+            <h2 className="font-display text-sm font-bold flex items-center gap-2">
+              <ClipboardCheck className="w-4 h-4 text-indigo-500" /> Recent Mock Exam History
             </h2>
           </div>
           <div className="space-y-2">
             {progress.examHistory.slice(0, 5).map((ex) => (
               <div
                 key={ex.id}
-                className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs"
+                className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 rounded-xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/70 dark:border-white/[0.06] text-xs"
               >
                 <div className="font-mono">
                   Seed <strong>{ex.seed}</strong> ({ex.mode}) — {new Date(ex.dateIso).toLocaleDateString()}
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 tabular-nums">
                   <span className="font-bold text-indigo-600 dark:text-indigo-400">
                     {ex.score} / {ex.maxScore} pts
                   </span>
                   <button
                     onClick={() => onNavigate('exam', `seed=${ex.seed}`)}
-                    className="underline text-slate-500 hover:text-indigo-600 cursor-pointer"
+                    className="underline text-slate-500 hover:text-indigo-500 cursor-pointer"
                   >
                     Retake
                   </button>

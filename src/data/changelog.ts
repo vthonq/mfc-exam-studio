@@ -7,9 +7,26 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v4.1';
+export const LATEST_UPDATE_ID = 'v5.0';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v5.0',
+    version: 'v5.0',
+    date: 'Nov 2026',
+    title: 'Studio 5.0: Linear/Raycast Redesign, Top Command Bar, Collapsible Rail & 4 Curated Palettes',
+    titleVi: 'Studio 5.0: Lột Xác Giao Diện Linear/Raycast, Thanh Lệnh Trên & 4 Bảng Màu Cao Cấp',
+    items: [
+      {
+        en: 'Introduced 4 live-switchable curated Studio 5.0 palettes (Midnight Obsidian, Warm Ivory Paper, Deep Forest Slate, Royal Indigo) with subject-aware ambient spotlights, frosted glass surfaces, and Plus Jakarta Sans typography.',
+        vi: 'Ra mắt 4 bảng màu Studio 5.0 chuyển trực tiếp (Đêm Obsidian, Giấy Ngà Ấm, Rừng Đêm Êm Mắt, Xanh Chàm Studio) cùng hiệu ứng kính mờ, đèn nền theo môn học và font chữ Plus Jakarta Sans sắc nét.',
+      },
+      {
+        en: 'Added a sleek Desktop Top Command Bar + Collapsible Sidebar Rail (Ctrl+B), a Floating Glass Mobile Bottom Dock, circular SVG Readiness Rings, and upgraded Bento Dashboards & Sign-In Showcase.',
+        vi: 'Nâng cấp thanh điều hướng Command Bar trên cùng + thanh bên thu gọn được (Ctrl+B), thanh Dock kính mờ trên điện thoại, vòng tròn Readiness Ring và giao diện Bento Dashboard mới.',
+      },
+    ],
+  },
   {
     id: 'v4.1',
     version: 'v4.1',

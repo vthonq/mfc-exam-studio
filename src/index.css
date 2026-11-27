@@ -2,6 +2,114 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Studio 5.0 Multi-Palette Tokens (placed after @layer theme to override :root cleanly) */
+:root,
+html[data-palette="obsidian"] {
+  --color-slate-950: #09090b;
+  --color-slate-900: #111115;
+  --color-slate-800: #1c1c23;
+  --color-slate-700: #2b2b36;
+  --color-slate-600: #525260;
+  --color-slate-500: #767686;
+  --color-slate-400: #a1a1b0;
+  --color-slate-300: #d4d4de;
+  --color-slate-200: #e5e5ee;
+  --color-slate-100: #f4f4f7;
+  --color-slate-50: #fafafa;
+  --studio-canvas: #09090b;
+  --studio-surface: #111115;
+  --studio-surface-elevated: #17171d;
+  --studio-glass: rgba(11, 11, 15, 0.78);
+  --studio-hairline: rgba(255, 255, 255, 0.08);
+  --studio-hairline-strong: rgba(255, 255, 255, 0.16);
+  --studio-grid-dot: rgba(255, 255, 255, 0.045);
+  --studio-spotlight-alpha: 0.14;
+  --studio-card-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset, 0 12px 32px -16px rgba(0, 0, 0, 0.72);
+}
+
+html[data-palette="paper"] {
+  --color-slate-50: #faf8f5;
+  --color-slate-100: #f2ede6;
+  --color-slate-200: #e5ddd2;
+  --color-slate-300: #d4c9ba;
+  --color-slate-400: #877f75;
+  --color-slate-500: #665f57;
+  --color-slate-600: #4a443e;
+  --color-slate-700: #35302c;
+  --color-slate-800: #25211e;
+  --color-slate-900: #1b1815;
+  --color-slate-950: #12100e;
+  --studio-canvas: #faf8f5;
+  --studio-surface: #ffffff;
+  --studio-surface-elevated: #ffffff;
+  --studio-glass: rgba(250, 248, 245, 0.84);
+  --studio-hairline: rgba(28, 25, 23, 0.09);
+  --studio-hairline-strong: rgba(28, 25, 23, 0.17);
+  --studio-grid-dot: rgba(28, 25, 23, 0.055);
+  --studio-spotlight-alpha: 0.08;
+  --studio-card-shadow: 0 1px 2px rgba(28, 25, 23, 0.04), 0 8px 24px -12px rgba(28, 25, 23, 0.08);
+}
+
+html[data-palette="forest"] {
+  --color-slate-950: #06110e;
+  --color-slate-900: #0b1b16;
+  --color-slate-800: #132a22;
+  --color-slate-700: #1e3d32;
+  --color-slate-600: #3b6355;
+  --color-slate-500: #5c8a7b;
+  --color-slate-400: #88b5a6;
+  --color-slate-300: #c2dfd5;
+  --color-slate-200: #ddf0e9;
+  --color-slate-100: #eef8f4;
+  --color-slate-50: #f6fcf9;
+  --studio-canvas: #06110e;
+  --studio-surface: #0b1b16;
+  --studio-surface-elevated: #10241d;
+  --studio-glass: rgba(6, 17, 14, 0.8);
+  --studio-hairline: rgba(52, 211, 153, 0.13);
+  --studio-hairline-strong: rgba(52, 211, 153, 0.24);
+  --studio-grid-dot: rgba(52, 211, 153, 0.055);
+  --studio-spotlight-alpha: 0.14;
+  --studio-card-shadow: 0 1px 0 0 rgba(167, 243, 208, 0.06) inset, 0 12px 32px -16px rgba(0, 0, 0, 0.72);
+}
+
+html[data-palette="indigo"] {
+  --color-slate-950: #070a19;
+  --color-slate-900: #0e132b;
+  --color-slate-800: #192044;
+  --color-slate-700: #273161;
+  --color-slate-600: #4a558c;
+  --color-slate-500: #6f7bb3;
+  --color-slate-400: #9da7d8;
+  --color-slate-300: #cdd4f4;
+  --color-slate-200: #e2e6fb;
+  --color-slate-100: #eef1fe;
+  --color-slate-50: #f7f8ff;
+  --studio-canvas: #070a19;
+  --studio-surface: #0e132b;
+  --studio-surface-elevated: #141b3b;
+  --studio-glass: rgba(7, 10, 25, 0.8);
+  --studio-hairline: rgba(129, 140, 248, 0.16);
+  --studio-hairline-strong: rgba(129, 140, 248, 0.28);
+  --studio-grid-dot: rgba(129, 140, 248, 0.06);
+  --studio-spotlight-alpha: 0.16;
+  --studio-card-shadow: 0 1px 0 0 rgba(199, 210, 254, 0.07) inset, 0 12px 32px -16px rgba(2, 6, 23, 0.78);
+}
+
+/* Subject-aware Ambient Spotlight */
+html[data-subject="mfc"] {
+  --studio-spotlight-rgb: 99, 102, 241;
+}
+html[data-subject="econ"] {
+  --studio-spotlight-rgb: 16, 185, 129;
+}
+html[data-subject="probstat"] {
+  --studio-spotlight-rgb: 14, 165, 233;
+}
+html[data-subject="guide"] {
+  --studio-spotlight-rgb: 245, 158, 11;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -10,9 +118,20 @@
 
   body {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--studio-canvas);
   }
 
-  code, pre, .font-mono {
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  code,
+  pre,
+  .font-mono {
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 
@@ -36,6 +155,47 @@
   }
 }
 
+/* Studio 5.0 Surfaces & Utilities */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.studio-glass {
+  background: var(--studio-glass);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+.studio-card {
+  background: var(--studio-surface);
+  border: 1px solid var(--studio-hairline);
+  box-shadow: var(--studio-card-shadow);
+}
+
+.studio-card-interactive {
+  background: var(--studio-surface);
+  border: 1px solid var(--studio-hairline);
+  box-shadow: var(--studio-card-shadow);
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), border-color 160ms ease, box-shadow 180ms ease;
+}
+
+.studio-card-interactive:hover {
+  transform: translateY(-2px);
+  border-color: var(--studio-hairline-strong);
+}
+
+.studio-ambient-canvas {
+  background-image:
+    radial-gradient(
+      ellipse 78% 42% at 50% -6%,
+      rgba(var(--studio-spotlight-rgb, 99, 102, 241), var(--studio-spotlight-alpha, 0.14)),
+      transparent 70%
+    ),
+    radial-gradient(var(--studio-grid-dot) 1px, transparent 1px);
+  background-size: 100% 420px, 24px 24px;
+  background-repeat: no-repeat, repeat-x;
+}
+
 /* Sleek thin scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
@@ -47,12 +207,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.4);
+  background: rgba(148, 163, 184, 0.35);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.65);
+  background: rgba(100, 116, 139, 0.6);
 }
 
 @keyframes fadeInDown {
@@ -133,8 +293,10 @@
 @media (prefers-reduced-motion: reduce) {
   .intro-logo-fade,
   .intro-text-rise,
-  .intro-progress-fill {
+  .intro-progress-fill,
+  .studio-card-interactive {
     animation: none !important;
+    transition: none !important;
   }
 }
 
@@ -166,6 +328,10 @@
     print-color-adjust: exact;
   }
 
+  .studio-ambient-canvas {
+    background-image: none !important;
+  }
+
   main {
     padding: 0 !important;
     margin: 0 !important;
@@ -177,6 +343,8 @@
   }
 
   .print-card,
+  .studio-card,
+  .studio-card-interactive,
   section {
     break-inside: avoid;
     page-break-inside: avoid;
