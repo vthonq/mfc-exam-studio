@@ -136,24 +136,24 @@ export const SmartFocusModal: React.FC<SmartFocusModalProps> = ({
 
   return (
     <div
-      className="no-print fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center p-4"
+      className="no-print fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
-        className="animate-fade-in bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="animate-fade-in studio-card rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label="Smart Focus Drill"
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+        <div className="px-5 py-4 border-b border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-800/70 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-indigo-500/12 text-indigo-600 dark:text-indigo-300 border border-indigo-500/25 flex items-center justify-center shrink-0">
               <Target className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <h2 className="font-bold text-sm tracking-tight text-slate-900 dark:text-white truncate">
+              <h2 className="font-display font-bold text-sm tracking-tight text-slate-900 dark:text-white truncate">
                 Today&apos;s Smart Focus Drill
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
@@ -165,7 +165,7 @@ export const SmartFocusModal: React.FC<SmartFocusModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-500 cursor-pointer"
             aria-label="Close Smart Focus Drill"
           >
             <X className="w-4 h-4" />
@@ -173,7 +173,7 @@ export const SmartFocusModal: React.FC<SmartFocusModalProps> = ({
         </div>
 
         {/* Controls & Progress */}
-        <div className="px-5 py-3 bg-slate-50/70 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 space-y-2.5">
+        <div className="px-5 py-3 bg-slate-50/70 dark:bg-white/[0.02] border-b border-slate-200/80 dark:border-white/[0.08] space-y-2.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-200/70 dark:bg-slate-800/90">
               {SUBJECT_TABS.map((tab) => (

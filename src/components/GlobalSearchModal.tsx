@@ -94,14 +94,14 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[1px] flex items-start justify-center p-4 pt-12 md:pt-20 no-print"
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px] flex items-start justify-center p-4 pt-12 md:pt-20 no-print"
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden"
+        className="animate-fade-in studio-card rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2.5 px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-2.5 px-4 py-3 border-b border-slate-200/80 dark:border-white/[0.08]">
           <Search className="w-4 h-4 text-slate-400 shrink-0" />
           <input
             ref={inputRef}
@@ -120,7 +120,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-slate-50/70 dark:bg-white/[0.02] border-b border-slate-200/80 dark:border-white/[0.08] text-xs">
           <div className="flex flex-wrap gap-1.5">
             {(
               [

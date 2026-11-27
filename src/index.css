@@ -343,6 +343,10 @@ html[data-subject="guide"] {
     padding: 0 !important;
   }
 
+  body.a4-print-only .a4-hide-on-print {
+    display: none !important;
+  }
+
   .print-card,
   .studio-card,
   .studio-card-interactive,

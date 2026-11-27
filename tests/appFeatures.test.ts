@@ -31,6 +31,17 @@ import {
   resolvePalette,
 } from '../src/utils/studioTheme';
 import {
+  formatNextInterval,
+  isCardDue,
+  reviewSrsCard,
+  serializeCustomDeckJson,
+} from '../src/utils/spacedRepetition';
+import {
+  estimateA4Pages,
+  getA4Catalog,
+  getWeakTopicIds,
+} from '../src/utils/a4SheetBuilder';
+import {
   computeCombinatorics,
   computeEconQuickCalc,
   computeModularCalc,
@@ -533,5 +544,79 @@ describe('Changelog & Cross-Subject Data Integrity', () => {
       }
     }
     expect(mfcCorrectIndices.size).toBeGreaterThan(1);
+  });
+
+  it('computes SM-2 spaced repetition intervals, serializes shared decks, and builds A4 cheat-sheet budgets', () => {
+    const firstGood = reviewSrsCard(undefined, 'good', 1_000_000);
+    expect(firstGood.reps).toBe(1);
+    expect(firstGood.intervalDays).toBe(1);
+    expect(isCardDue(firstGood, 1_000_000 + 1000)).toBe(false);
+    expect(isCardDue(firstGood, firstGood.dueAtMs + 1)).toBe(true);
+
+    const secondGood = reviewSrsCard(firstGood, 'good', firstGood.dueAtMs);
+    expect(secondGood.intervalDays).toBe(3);
+
+    const lapsed = reviewSrsCard(secondGood, 'again', secondGood.dueAtMs);
+    expect(lapsed.reps).toBe(0);
+    expect(lapsed.intervalDays).toBe(0);
+    expect(formatNextInterval(undefined, 'again')).toBe('Now');
+    expect(formatNextInterval(undefined, 'hard')).toBe('12h');
+    expect(formatNextInterval(undefined, 'easy')).toBe('4d');
+
+    const json = serializeCustomDeckJson([
+      {
+        id: 'c1',
+        subject: 'econ',
+        badge: 'Ch. 30',
+        front: 'Fisher Eq',
+        back: '$r = i - \\pi$',
+        trap: 'Nominal vs Real',
+        createdAtIso: '2026-11-27T00:00:00Z',
+      },
+    ]);
+    expect(json).toContain('Fisher Eq');
+    expect(json).toContain('Nominal vs Real');
+
+    for (const subj of ['mfc', 'econ', 'probstat'] as const) {
+      const items = getA4Catalog(subj, true);
+      expect(items.length).toBeGreaterThan(5);
+      const compactPages = estimateA4Pages(items.slice(0, 8), 'compact', false, false);
+      const standardPages = estimateA4Pages(items.slice(0, 8), 'standard', true, true);
+      expect(compactPages).toBeLessThanOrEqual(standardPages);
+    }
+
+    const weak = getWeakTopicIds('mfc', {
+      mastery: {
+        ch1: { correct: 9, attempts: 10 },
+        ch4: { correct: 2, attempts: 10 },
+        ch9: { correct: 8, attempts: 10 },
+        ch10: { correct: 9, attempts: 10 },
+        ch11: { correct: 9, attempts: 10 },
+        ch12: { correct: 10, attempts: 10 },
+      },
+      econMastery: {
+        part6: { correct: 0, attempts: 0 },
+        part7: { correct: 0, attempts: 0 },
+        part8: { correct: 0, attempts: 0 },
+        part9: { correct: 0, attempts: 0 },
+      },
+      probMastery: {
+        'ps-ch1': { correct: 0, attempts: 0 },
+        'ps-ch2': { correct: 0, attempts: 0 },
+        'ps-ch3': { correct: 0, attempts: 0 },
+        'ps-ch4': { correct: 0, attempts: 0 },
+        'ps-ch5': { correct: 0, attempts: 0 },
+      },
+      completedAssignments: [],
+      completedProofs: [],
+      completedEconScenarios: [],
+      completedProbProblems: [],
+      examHistory: [],
+      econExamHistory: [],
+      probExamHistory: [],
+      mistakes: [],
+    });
+    expect(weak.has('ch4')).toBe(true);
+    expect(weak.has('ch1')).toBe(false);
   });
 });

@@ -84,6 +84,16 @@ export interface CustomFlashcard {
   createdAtIso: string;
 }
 
+export type SrsRating = 'again' | 'hard' | 'good' | 'easy';
+
+export interface SrsCardState {
+  reps: number;
+  intervalDays: number;
+  ease: number;
+  dueAtMs: number;
+  lastRatedAtMs: number;
+}
+
 export interface ProgressState {
   mastery: Record<ChapterId, ChapterMastery>;
   econMastery: Record<EconTopicId, ChapterMastery>;
@@ -97,6 +107,7 @@ export interface ProgressState {
   probExamHistory: ExamAttemptRecord[];
   mistakes: MistakeItem[];
   customCards?: CustomFlashcard[];
+  flashcardSrs?: Record<string, SrsCardState>;
   examDates?: Partial<Record<SubjectId, string>>;
   studyStreak?: { count: number; lastDate: string };
 }

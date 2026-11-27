@@ -1,5 +1,5 @@
-const CACHE_NAME = 'exam-studio-v5.0.1';
-const SHELL_URLS = ['./', './index.html', './logo.png', './manifest.webmanifest'];
+const CACHE_NAME = 'exam-studio-v5.1';
+const SHELL_URLS = ['./', './index.html', './logo.png?v=51', './manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

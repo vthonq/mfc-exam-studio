@@ -54,16 +54,16 @@ export const ReviewBankModal: React.FC<ReviewBankModalProps> = ({ open, onClose 
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[1px] flex items-center justify-center p-4 no-print"
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-4 no-print"
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-3xl w-full shadow-2xl flex flex-col max-h-[88vh]"
+        className="animate-fade-in studio-card rounded-2xl max-w-3xl w-full shadow-2xl flex flex-col max-h-[88vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+        <div className="p-4 border-b border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between gap-2">
           <div>
-            <h2 className="text-lg font-bold flex items-center gap-2">
+            <h2 className="font-display text-lg font-bold flex items-center gap-2">
               <BookmarkCheck className="w-5 h-5 text-rose-500" />
               Mistakes &amp; Review Bank ({progress.mistakes.length})
             </h2>
@@ -73,14 +73,14 @@ export const ReviewBankModal: React.FC<ReviewBankModalProps> = ({ open, onClose 
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] cursor-pointer"
             aria-label="Close Review Bank"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+        <div className="px-4 py-2.5 bg-slate-50/70 dark:bg-white/[0.02] border-b border-slate-200/80 dark:border-white/[0.08] flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap gap-1.5 text-xs">
             {(
               [

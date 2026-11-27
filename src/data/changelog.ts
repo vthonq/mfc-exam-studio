@@ -7,9 +7,26 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v5.0';
+export const LATEST_UPDATE_ID = 'v5.1';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v5.1',
+    version: 'v5.1',
+    date: 'Nov 2026',
+    title: 'Gemini-Style Radiant Star Logo, 2-Page A4 Builder & SM-2 Spaced Flashcards',
+    titleVi: 'Logo Ngôi Sao Kiểu Gemini Mới, Tạo Tờ Công Thức A4 & Thẻ Nhớ SM-2',
+    items: [
+      {
+        en: 'Redesigned the app icon with a minimalist Gemini-inspired 4-point radiant gradient sparkle on deep obsidian, plus a 1-click Install App (PWA) button when supported.',
+        vi: 'Thay mới toàn bộ logo sang biểu tượng ngôi sao 4 cánh tối giản phong cách Gemini trên nền obsidian + thêm nút Cài App (PWA) 1 chạm.',
+      },
+      {
+        en: 'Launched the 2-Page A4 Cheat-Sheet Builder (Weakest Topics preset, Compact 2-column live preview & clean PDF printing) and upgraded Flashcards with SM-2 Spaced Repetition (Again/Hard/Good/Easy), Due filters & 1-click Share Deck JSON.',
+        vi: 'Ra mắt Trình Tạo Tờ Công Thức 2 Trang A4 (lọc tự động chương yếu & in PDF sắc nét) cùng nâng cấp Flashcards lên thuật toán lặp ngắt quãng SM-2 và nút chia sẻ bộ thẻ JSON cho bạn bè.',
+      },
+    ],
+  },
   {
     id: 'v5.0',
     version: 'v5.0',

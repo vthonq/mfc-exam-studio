@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   Cloud,
   Compass,
+  Download,
   ExternalLink,
   FileText,
   FlaskConical,
@@ -21,6 +22,7 @@ import {
   Palette,
   PanelLeftClose,
   PanelLeftOpen,
+  Printer,
   Scale,
   Search,
   Settings,
@@ -81,6 +83,14 @@ const GeminiTutorDrawer = lazy(() =>
 const WelcomeIntroModal = lazy(() =>
   import('./WelcomeIntroModal').then((m) => ({ default: m.WelcomeIntroModal })),
 );
+const A4BuilderModal = lazy(() =>
+  import('./A4BuilderModal').then((m) => ({ default: m.A4BuilderModal })),
+);
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 const INTRO_SEEN_KEY = 'exam_studio_intro_seen_v1';
 const REPLAY_SPLASH_EVENT = 'exam-studio:replay-splash';
 
@@ -205,6 +215,8 @@ export const Layout: React.FC<LayoutProps> = ({
   const [roomsOpen, setRoomsOpen] = useState(false);
   const [roomsCodeOverride, setRoomsCodeOverride] = useState<string | null>(null);
   const [calcOpen, setCalcOpen] = useState(false);
+  const [a4Open, setA4Open] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [introOpen, setIntroOpen] = useState(false);
   const [pendingAi, setPendingAi] = useState<{
     prompt: string;
@@ -300,6 +312,32 @@ export const Layout: React.FC<LayoutProps> = ({
     return () => window.removeEventListener(OPEN_ROOM_EVENT, onOpenRoom);
   }, []);
 
+  useEffect(() => {
+    const onBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e as BeforeInstallPromptEvent);
+    };
+    const onInstalled = () => setInstallPrompt(null);
+    window.addEventListener('beforeinstallprompt', onBeforeInstall);
+    window.addEventListener('appinstalled', onInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+      window.removeEventListener('appinstalled', onInstalled);
+    };
+  }, []);
+
+  const triggerPwaInstall = async () => {
+    if (!installPrompt) return;
+    try {
+      await installPrompt.prompt();
+      await installPrompt.userChoice;
+    } catch {
+      // ignore cancelled prompt
+    } finally {
+      setInstallPrompt(null);
+    }
+  };
+
   const copyBaseUrl = async () => {
     try {
       const url = window.location.href.split('#')[0];
@@ -367,7 +405,7 @@ export const Layout: React.FC<LayoutProps> = ({
             title="Exam Studio Hub"
           >
             <img
-              src="./logo.png"
+              src="./logo.png?v=51"
               alt="Exam Studio Logo"
               className="w-8 h-8 rounded-xl object-cover shadow-xs ring-1 ring-indigo-500/35 shrink-0"
             />
@@ -468,7 +506,21 @@ export const Layout: React.FC<LayoutProps> = ({
                 <Layers className="w-4 h-4 text-sky-500 shrink-0" />
                 {!collapsed && <span>Flashcards</span>}
               </span>
-              {!collapsed && <span className="text-[10px] font-mono text-slate-400">Recall</span>}
+              {!collapsed && <span className="text-[10px] font-mono text-slate-400">SRS</span>}
+            </button>
+
+            <button
+              onClick={() => setA4Open(true)}
+              className={`w-full flex items-center ${
+                collapsed ? 'justify-center px-2 py-2' : 'justify-between px-2.5 py-1.5'
+              } rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-white/[0.05] transition-colors cursor-pointer`}
+              title="2-Page A4 Cheat-Sheet Builder"
+            >
+              <span className="flex items-center gap-2">
+                <Printer className="w-4 h-4 text-amber-500 shrink-0" />
+                {!collapsed && <span>A4 Sheet Builder</span>}
+              </span>
+              {!collapsed && <span className="text-[10px] font-mono text-slate-400">PDF</span>}
             </button>
 
             <button
@@ -570,6 +622,17 @@ export const Layout: React.FC<LayoutProps> = ({
                 </button>
               </div>
 
+              {installPrompt && (
+                <button
+                  type="button"
+                  onClick={() => void triggerPwaInstall()}
+                  className="w-full px-2.5 py-1.5 rounded-lg bg-emerald-500/12 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/25 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Install App (PWA)
+                </button>
+              )}
+
               {firebaseUser && (
                 <div className="pt-1.5 border-t border-slate-200/70 dark:border-white/[0.07] flex items-center justify-between gap-2 text-[11px]">
                   <div className="min-w-0">
@@ -652,7 +715,7 @@ export const Layout: React.FC<LayoutProps> = ({
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <img
-              src="./logo.png"
+              src="./logo.png?v=51"
               alt="Exam Studio Logo"
               className="w-8 h-8 rounded-xl object-cover ring-1 ring-indigo-500/35 shrink-0"
             />
@@ -870,10 +933,38 @@ export const Layout: React.FC<LayoutProps> = ({
             >
               <span className="flex items-center gap-2">
                 <Layers className="w-4 h-4 text-sky-500" />
-                Quick &amp; Custom Flashcards
+                SM-2 Flashcards &amp; My Deck
               </span>
-              <span className="text-[10px] font-mono text-slate-400">Recall</span>
+              <span className="text-[10px] font-mono text-slate-400">SRS</span>
             </button>
+
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setA4Open(true);
+              }}
+              className="w-full px-3 py-2 rounded-xl text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/25 flex items-center justify-between"
+            >
+              <span className="flex items-center gap-2">
+                <Printer className="w-4 h-4 text-amber-500" />
+                2-Page A4 Cheat-Sheet Builder
+              </span>
+              <span className="text-[10px] font-mono text-amber-500">PDF</span>
+            </button>
+
+            {installPrompt && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  void triggerPwaInstall();
+                }}
+                className="w-full px-3 py-2 rounded-xl text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center justify-center gap-1.5"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Install Exam Studio App
+              </button>
+            )}
 
             <button
               onClick={() => {
@@ -982,7 +1073,7 @@ export const Layout: React.FC<LayoutProps> = ({
       <div
         className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-200 ${
           collapsed ? 'md:pl-[68px]' : 'md:pl-60'
-        }`}
+        } ${a4Open ? 'a4-hide-on-print' : ''}`}
       >
         {/* Desktop Top Command Bar */}
         <header className="no-print hidden md:flex sticky top-0 z-20 h-14 studio-glass border-b border-slate-200/70 dark:border-white/[0.08] items-center justify-between gap-3 px-4 lg:px-6">
@@ -1539,6 +1630,14 @@ export const Layout: React.FC<LayoutProps> = ({
           <FlashcardsModal
             open={flashcardsOpen}
             onClose={() => setFlashcardsOpen(false)}
+            initialSubject={subject}
+          />
+        )}
+
+        {a4Open && (
+          <A4BuilderModal
+            open={a4Open}
+            onClose={() => setA4Open(false)}
             initialSubject={subject}
           />
         )}

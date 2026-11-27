@@ -255,18 +255,18 @@ export const StudyRoomsModal: React.FC<StudyRoomsModalProps> = ({
 
   return (
     <div
-      className="no-print fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center p-4"
+      className="no-print fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
-        className="animate-fade-in bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-3xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="animate-fade-in studio-card rounded-3xl max-w-3xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label="Live Class Study Rooms"
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+        <div className="px-5 py-4 border-b border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             {activeRoomCode && (
               <button
@@ -278,18 +278,18 @@ export const StudyRoomsModal: React.FC<StudyRoomsModalProps> = ({
                   setErrorMsg(null);
                   void loadLobby();
                 }}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer shrink-0"
+                className="p-1.5 rounded-lg border border-slate-200/80 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.06] cursor-pointer shrink-0"
                 title="Back to Study Rooms Lobby"
                 aria-label="Back to Study Rooms Lobby"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/70 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/12 text-emerald-600 dark:text-emerald-300 border border-emerald-500/25 flex items-center justify-center shrink-0">
               <Users className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <h2 className="font-bold text-sm text-slate-900 dark:text-white truncate">
+              <h2 className="font-display font-bold text-sm text-slate-900 dark:text-white truncate">
                 {activeRoomCode ? roomDoc?.title || `Room ${activeRoomCode}` : 'Live Class Study Rooms'}
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
@@ -303,7 +303,7 @@ export const StudyRoomsModal: React.FC<StudyRoomsModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-500 cursor-pointer"
             aria-label="Close Study Rooms"
           >
             <X className="w-4 h-4" />

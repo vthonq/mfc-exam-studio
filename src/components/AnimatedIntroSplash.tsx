@@ -105,7 +105,7 @@ export const AnimatedIntroSplash: React.FC = () => {
       {/* Calm Minimal Center Stack */}
       <div className="relative z-10 max-w-md mx-auto px-6 text-center flex flex-col items-center space-y-4">
         <img
-          src="./logo.png"
+          src="./logo.png?v=51"
           alt="Exam Studio Hub"
           className="intro-logo-fade w-16 h-16 rounded-2xl object-cover shadow-lg ring-1 ring-white/15 bg-zinc-900"
         />

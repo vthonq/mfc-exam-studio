@@ -50,7 +50,7 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6">
         <div className="text-center space-y-3">
           <img
-            src="./logo.png"
+            src="./logo.png?v=51"
             alt="Exam Studio Hub"
             className="w-14 h-14 rounded-2xl mx-auto object-cover ring-2 ring-indigo-500/40"
           />
@@ -84,7 +84,7 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
 
             <div className="flex items-start gap-4">
               <img
-                src="./logo.png"
+                src="./logo.png?v=51"
                 alt="Exam Studio Hub"
                 className="w-14 h-14 rounded-2xl object-cover ring-1 ring-white/15 shadow-lg shrink-0"
               />
@@ -178,7 +178,7 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
             <div className="w-full rounded-2xl bg-[#111115]/95 backdrop-blur-xl border border-white/[0.1] shadow-2xl p-6 space-y-5">
               <div className="flex items-center gap-3">
                 <img
-                  src="./logo.png"
+                  src="./logo.png?v=51"
                   alt="Exam Studio Hub"
                   className="w-11 h-11 rounded-xl object-cover ring-1 ring-white/15 shrink-0"
                 />

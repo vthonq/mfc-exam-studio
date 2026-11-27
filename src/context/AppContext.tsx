@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import { useAuth } from './AuthContext';
 import { fetchCloudProgress, saveCloudProgress } from '../services/accessControl';
 import { DEFAULT_PALETTE, getPaletteMeta, resolvePalette } from '../utils/studioTheme';
+import { reviewSrsCard } from '../utils/spacedRepetition';
 import type {
   AppSettings,
   ChapterId,
@@ -13,6 +14,7 @@ import type {
   MistakeItem,
   ProbTopicId,
   ProgressState,
+  SrsRating,
   StudioPalette,
   SubjectId,
   ThemeMode,
@@ -89,6 +91,7 @@ function hasMeaningfulProgress(p: ProgressState): boolean {
   if (p.examDates && Object.values(p.examDates).some((v) => Boolean(v?.trim()))) return true;
   if ((p.studyStreak?.count ?? 0) > 0) return true;
   if ((p.customCards?.length ?? 0) > 0) return true;
+  if (p.flashcardSrs && Object.keys(p.flashcardSrs).length > 0) return true;
   return (
     p.completedAssignments.length > 0 ||
     p.completedProofs.length > 0 ||
@@ -145,6 +148,7 @@ const DEFAULT_PROGRESS: ProgressState = {
   probExamHistory: [],
   mistakes: [],
   customCards: [],
+  flashcardSrs: {},
   examDates: {},
   studyStreak: { count: 0, lastDate: '' },
 };
@@ -176,6 +180,7 @@ interface AppContextValue {
   importCustomCards: (cards: CustomFlashcard[]) => number;
   removeCustomCard: (id: string) => void;
   clearCustomCards: (subject?: SubjectId) => void;
+  rateFlashcard: (cardId: string, rating: SrsRating) => void;
   setExamDate: (subject: SubjectId, dateIso: string) => void;
   recordStudyActivity: () => void;
   exportProgressJson: () => string;
@@ -206,6 +211,10 @@ function hydrateProgress(rawObj: Partial<ProgressState> | null | undefined): Pro
     probExamHistory: Array.isArray(rawObj.probExamHistory) ? rawObj.probExamHistory : [],
     mistakes: Array.isArray(rawObj.mistakes) ? rawObj.mistakes : [],
     customCards: Array.isArray(rawObj.customCards) ? rawObj.customCards : [],
+    flashcardSrs:
+      rawObj.flashcardSrs && typeof rawObj.flashcardSrs === 'object'
+        ? { ...rawObj.flashcardSrs }
+        : {},
     examDates:
       rawObj.examDates && typeof rawObj.examDates === 'object' ? { ...rawObj.examDates } : {},
     studyStreak:
@@ -588,6 +597,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  const rateFlashcard = (cardId: string, rating: SrsRating) => {
+    setProgress((p) => {
+      const currentMap = p.flashcardSrs ?? {};
+      const nextState = reviewSrsCard(currentMap[cardId], rating);
+      return {
+        ...p,
+        studyStreak: bumpStudyStreak(p.studyStreak),
+        flashcardSrs: {
+          ...currentMap,
+          [cardId]: nextState,
+        },
+      };
+    });
+  };
+
   const exportProgressJson = () => JSON.stringify(progress, null, 2);
 
   const importProgressJson = (json: string): boolean => {
@@ -632,6 +656,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         importCustomCards,
         removeCustomCard,
         clearCustomCards,
+        rateFlashcard,
         setExamDate,
         recordStudyActivity,
         exportProgressJson,
