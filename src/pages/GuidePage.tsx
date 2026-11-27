@@ -50,7 +50,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({
           <div className="space-y-1.5 max-w-2xl">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950">
               <Compass className="w-3.5 h-3.5" />
-              {bi ? 'HƯỚNG DẪN ĐẦY ĐỦ · EXAM STUDIO v4.1' : 'COMPLETE STUDIO GUIDE · v4.1'}
+              {bi ? 'HƯỚNG DẪN ĐẦY ĐỦ · STUDIO 5.0' : 'COMPLETE GUIDE · STUDIO 5.0'}
             </span>
             <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               {bi
@@ -59,8 +59,8 @@ export const GuidePage: React.FC<GuidePageProps> = ({
             </h1>
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               {bi
-                ? 'Cập nhật đầy đủ công cụ mới: Study Rooms thi nhóm trực tiếp, Smart Focus Drill, Máy tính giải bước Exam Calc, Flashcards & My Deck tự nhập, AI Tutor (có Key & No-Key) cùng 3 phòng lab tương tác.'
-                : 'Updated walkthrough covering every feature across v1–v4.1: Live Study Rooms, Smart Focus Drills, Show-Your-Work Exam Calc, Quick & Custom Flashcards, Built-in Gemini AI & Auto-Fill, plus all 3 course studios.'}
+                ? 'Cập nhật Studio 5.0: Top Command Bar, 4 bảng màu (Obsidian, Paper, Forest, Indigo), Study Rooms thi nhóm trực tiếp, Smart Focus Drill, Exam Calc, Flashcards & My Deck, AI Tutor (có Key & No-Key) cùng 3 phòng lab.'
+                : 'Updated Studio 5.0 walkthrough: Top Command Bar + 4 live palettes, Live Study Rooms, Smart Focus Drills, Show-Your-Work Exam Calc, Quick & Custom Flashcards, Built-in Gemini AI & Auto-Fill, plus all 3 course studios.'}
             </p>
           </div>
         </div>
@@ -114,7 +114,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({
       {/* 1. Studio Power Tools */}
       <section
         id="guide-tools"
-        className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-4 scroll-mt-4"
+        className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-4 scroll-mt-28 md:scroll-mt-20"
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-bold text-slate-900 dark:text-white">
@@ -220,7 +220,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({
       {/* 2. My Gemini AI & No-Key AI */}
       <section
         id="guide-ai"
-        className="rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/60 via-white to-sky-50/50 dark:from-indigo-950/30 dark:via-slate-900 dark:to-slate-900 p-5 space-y-3 scroll-mt-4"
+        className="rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/60 via-white to-sky-50/50 dark:from-indigo-950/30 dark:via-slate-900 dark:to-slate-900 p-5 space-y-3 scroll-mt-28 md:scroll-mt-20"
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-bold flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
@@ -284,7 +284,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({
       {/* 3. MFC */}
       <section
         id="guide-mfc"
-        className="rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-white dark:bg-slate-900 p-5 space-y-3 scroll-mt-4"
+        className="rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-white dark:bg-slate-900 p-5 space-y-3 scroll-mt-28 md:scroll-mt-20"
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-bold flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
@@ -349,7 +349,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({
       {/* 4. Economics */}
       <section
         id="guide-econ"
-        className="rounded-2xl border border-emerald-200 dark:border-emerald-900/60 bg-white dark:bg-slate-900 p-5 space-y-3 scroll-mt-4"
+        className="rounded-2xl border border-emerald-200 dark:border-emerald-900/60 bg-white dark:bg-slate-900 p-5 space-y-3 scroll-mt-28 md:scroll-mt-20"
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -405,7 +405,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({
       {/* 5. Prob & Statistics */}
       <section
         id="guide-probstat"
-        className="rounded-2xl border border-sky-200 dark:border-sky-900/60 bg-white dark:bg-slate-900 p-5 space-y-3 scroll-mt-4"
+        className="rounded-2xl border border-sky-200 dark:border-sky-900/60 bg-white dark:bg-slate-900 p-5 space-y-3 scroll-mt-28 md:scroll-mt-20"
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-bold flex items-center gap-2 text-sky-700 dark:text-sky-300">
@@ -482,7 +482,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({
       {/* 6. Playbook & Shortcuts */}
       <section
         id="guide-playbook"
-        className="rounded-2xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/20 p-5 space-y-3 scroll-mt-4"
+        className="rounded-2xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/20 p-5 space-y-3 scroll-mt-28 md:scroll-mt-20"
       >
         <div className="flex items-start gap-3">
           <Lightbulb className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
@@ -508,6 +508,9 @@ export const GuidePage: React.FC<GuidePageProps> = ({
           </span>
           <span className="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-700 font-mono">
             Ctrl/⌘+K · Global Search
+          </span>
+          <span className="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-700 font-mono">
+            Ctrl/⌘+B · Toggle Sidebar
           </span>
           <span className="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-700 font-mono">
             Space · Flip Flashcard

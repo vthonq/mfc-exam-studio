@@ -479,4 +479,59 @@ describe('Changelog & Cross-Subject Data Integrity', () => {
     expect(getNextPalette('obsidian')).toBe('paper');
     expect(getNextPalette('indigo')).toBe('obsidian');
   });
+
+  it('keeps Smart Focus Drill choices unique, integer for full m-ary trees, and shuffled across seeds', () => {
+    const cleanProgress = {
+      mastery: {
+        ch1: { correct: 0, attempts: 0 },
+        ch4: { correct: 0, attempts: 0 },
+        ch9: { correct: 0, attempts: 0 },
+        ch10: { correct: 0, attempts: 0 },
+        ch11: { correct: 0, attempts: 0 },
+        ch12: { correct: 0, attempts: 0 },
+      },
+      econMastery: {
+        part6: { correct: 0, attempts: 0 },
+        part7: { correct: 0, attempts: 0 },
+        part8: { correct: 0, attempts: 0 },
+        part9: { correct: 0, attempts: 0 },
+      },
+      probMastery: {
+        'ps-ch1': { correct: 0, attempts: 0 },
+        'ps-ch2': { correct: 0, attempts: 0 },
+        'ps-ch3': { correct: 0, attempts: 0 },
+        'ps-ch4': { correct: 0, attempts: 0 },
+        'ps-ch5': { correct: 0, attempts: 0 },
+      },
+      completedAssignments: [],
+      completedProofs: [],
+      completedEconScenarios: [],
+      completedProbProblems: [],
+      examHistory: [],
+      econExamHistory: [],
+      probExamHistory: [],
+      mistakes: [],
+    };
+
+    const mfcCorrectIndices = new Set<number>();
+    for (let i = 0; i < 20; i++) {
+      const seed = `SEED_${i}`;
+      for (const subj of ['mfc', 'probstat'] as const) {
+        const questions = buildSmartDrillQuestions(subj, cleanProgress, 12, seed);
+        for (const q of questions) {
+          expect(new Set(q.choices).size).toBe(q.choices.length);
+          expect(q.correctIndex).toBeGreaterThanOrEqual(0);
+          expect(q.correctIndex).toBeLessThan(q.choices.length);
+          if (q.id === 'mfc-ch11-mary') {
+            for (const c of q.choices) {
+              expect(c).not.toContain('.');
+              expect(Number.isInteger(Number(c))).toBe(true);
+            }
+          }
+          if (subj === 'mfc') mfcCorrectIndices.add(q.correctIndex);
+        }
+      }
+    }
+    expect(mfcCorrectIndices.size).toBeGreaterThan(1);
+  });
 });

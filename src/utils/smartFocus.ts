@@ -39,6 +39,48 @@ export interface SmartDrillQuestion {
   explanation: string;
 }
 
+function uniqueNumericChoices(correct: number, candidates: number[]): string[] {
+  const seen = new Set<number>([correct]);
+  const out = [String(correct)];
+  for (const val of candidates) {
+    if (out.length >= 4) break;
+    const rounded = Math.round(val);
+    if (!seen.has(rounded)) {
+      seen.add(rounded);
+      out.push(String(rounded));
+    }
+  }
+  let offset = 1;
+  while (out.length < 4) {
+    const candidate = correct + offset;
+    if (!seen.has(candidate)) {
+      seen.add(candidate);
+      out.push(String(candidate));
+    }
+    offset++;
+  }
+  return out;
+}
+
+function shuffleQuestionChoices(
+  q: SmartDrillQuestion,
+  rng: ReturnType<typeof createRng>,
+): SmartDrillQuestion {
+  const indexed = q.choices.map((text, idx) => ({
+    text,
+    isCorrect: idx === q.correctIndex,
+  }));
+  const shuffled = rng.shuffle(indexed);
+  return {
+    ...q,
+    choices: shuffled.map((item) => item.text),
+    correctIndex: Math.max(
+      0,
+      shuffled.findIndex((item) => item.isCorrect),
+    ),
+  };
+}
+
 function buildMfcAdaptivePool(seed: string): SmartDrillQuestion[] {
   const rng = createRng(`mfc-focus-${seed}`);
   const primes = [7, 11, 13, 17];
@@ -54,8 +96,9 @@ function buildMfcAdaptivePool(seed: string): SmartDrillQuestion[] {
   const gVal = gcd(gA, gB);
   const treeN = rng.int(8, 15);
   const mTree = rng.pick([2, 3]);
-  const leavesTree = rng.int(4, 9);
-  const totalVertices = (mTree * leavesTree - 1) / (mTree - 1);
+  const internalNodes = rng.int(2, 6);
+  const leavesTree = (mTree - 1) * internalNodes + 1;
+  const totalVertices = mTree * internalNodes + 1;
 
   return [
     {
@@ -92,12 +135,11 @@ function buildMfcAdaptivePool(seed: string): SmartDrillQuestion[] {
       topicCode: 'Ch. 4',
       source: 'adaptive',
       question: `Compute $${aPow}^{${exp}} \\bmod ${p}$ using modular exponentiation.`,
-      choices: [
-        String(modRes),
-        String((modRes + 1) % p),
-        String((modRes + 2) % p),
-        String((modRes + p - 1) % p),
-      ],
+      choices: uniqueNumericChoices(modRes, [
+        (modRes + 1) % p,
+        (modRes + 2) % p,
+        (modRes + p - 1) % p,
+      ]),
       correctIndex: 0,
       explanation: `Squaring and multiplying binary bits modulo ${p} gives ${aPow}^${exp} ≡ ${modRes} (mod ${p}).`,
     },
@@ -108,12 +150,11 @@ function buildMfcAdaptivePool(seed: string): SmartDrillQuestion[] {
       topicCode: 'Ch. 4',
       source: 'adaptive',
       question: `What is the modular inverse of $${invA}$ modulo $${invM}$?`,
-      choices: [
-        String(invVal),
-        String((invVal + 1) % invM),
-        String((invVal + 3) % invM),
-        String(invM - invVal),
-      ],
+      choices: uniqueNumericChoices(invVal, [
+        (invVal + 1) % invM,
+        (invVal + 3) % invM,
+        invM - invVal,
+      ]),
       correctIndex: 0,
       explanation: `Since $\\gcd(${invA}, ${invM}) = 1$, $${invA} \\cdot ${invVal} \\equiv 1 \\pmod{${invM}}$.`,
     },
@@ -124,7 +165,7 @@ function buildMfcAdaptivePool(seed: string): SmartDrillQuestion[] {
       topicCode: 'Ch. 4',
       source: 'adaptive',
       question: `Find $\\gcd(${gA}, ${gB})$ via Euclidean division.`,
-      choices: [String(gVal), String(gVal + 1), String(gVal * 2), String(gVal + 3)],
+      choices: uniqueNumericChoices(gVal, [gVal + 1, gVal * 2, gVal + 3]),
       correctIndex: 0,
       explanation: `Running Euclidean algorithm on (${gA}, ${gB}) yields gcd = ${gVal}.`,
     },
@@ -205,12 +246,11 @@ function buildMfcAdaptivePool(seed: string): SmartDrillQuestion[] {
       topicCode: 'Ch. 11',
       source: 'adaptive',
       question: `A full $${mTree}$-ary tree has $${leavesTree}$ leaves. How many total vertices does it have?`,
-      choices: [
-        String(totalVertices),
-        String(totalVertices + 1),
-        String(leavesTree * mTree),
-        String(leavesTree - 1),
-      ],
+      choices: uniqueNumericChoices(totalVertices, [
+        totalVertices + 1,
+        leavesTree * mTree,
+        leavesTree - 1,
+      ]),
       correctIndex: 0,
       explanation: `For a full $m$-ary tree with $l$ leaves, $n = \\frac{ml - 1}{m - 1} = ${totalVertices}$.`,
     },
@@ -364,7 +404,7 @@ export function buildSmartDrillQuestions(
     const key = q.question.trim().toLowerCase();
     if (usedPromptKeys.has(key)) continue;
     usedPromptKeys.add(key);
-    out.push(q);
+    out.push(shuffleQuestionChoices(q, rng));
   }
 
   return out;

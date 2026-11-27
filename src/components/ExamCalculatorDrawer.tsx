@@ -75,6 +75,13 @@ export const ExamCalculatorDrawer: React.FC<ExamCalculatorDrawerProps> = ({
     }
   };
 
+  const parseNum = (raw: string, fallback: number) => {
+    const trimmed = raw.trim();
+    if (trimmed === '') return fallback;
+    const n = Number(trimmed);
+    return Number.isFinite(n) ? n : fallback;
+  };
+
   // Derived ProbStat computations
   const nums = parseNumberList(sampleInput);
   const stats = computeSampleStats(nums);
@@ -82,27 +89,27 @@ export const ExamCalculatorDrawer: React.FC<ExamCalculatorDrawerProps> = ({
     stats.n >= 2
       ? computeQuickOneSampleT(
           stats.mean,
-          Number(mu0Input) || 0,
+          parseNum(mu0Input, 0),
           stats.sampleSd,
           stats.n,
           confLevel,
         )
       : null;
-  const comb = computeCombinatorics(Number(nComb) || 0, Number(rComb) || 0);
+  const comb = computeCombinatorics(parseNum(nComb, 0), parseNum(rComb, 0));
 
   // Derived MFC computations
-  const modCalc = computeModularCalc(Number(modA) || 0, Number(modB) || 0, Number(modM) || 1);
+  const modCalc = computeModularCalc(parseNum(modA, 0), parseNum(modB, 0), parseNum(modM, 1));
   const baseRes = convertIntegerBases(baseInput, fromBase);
 
   // Derived Econ computations
   const econCalc = computeEconQuickCalc({
-    oldVal: Number(oldVal) || 0,
-    newVal: Number(newVal) || 0,
-    nominalRate: Number(nomRate) || 0,
-    inflationRate: Number(infRate) || 0,
-    mpc: Number(mpcInput) || 0.8,
-    deltaG: Number(deltaGInput) || 0,
-    reserveRatioPct: Number(reservePct) || 10,
+    oldVal: parseNum(oldVal, 0),
+    newVal: parseNum(newVal, 0),
+    nominalRate: parseNum(nomRate, 0),
+    inflationRate: parseNum(infRate, 0),
+    mpc: parseNum(mpcInput, 0.8),
+    deltaG: parseNum(deltaGInput, 0),
+    reserveRatioPct: parseNum(reservePct, 10),
   });
 
   return (

@@ -52,7 +52,7 @@ export const ExamStickyBar: React.FC<ExamStickyBarProps> = ({
   const styles = ACCENT_STYLES[accent];
 
   return (
-    <div className="no-print sticky top-[94px] md:top-3 z-10 rounded-xl border border-slate-200/90 dark:border-slate-700/90 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm px-3.5 py-2 flex flex-wrap items-center justify-between gap-2.5">
+    <div className="no-print sticky top-[98px] md:top-[68px] z-10 rounded-xl studio-glass border border-slate-200/90 dark:border-white/[0.1] shadow-md px-3.5 py-2 flex flex-wrap items-center justify-between gap-2.5">
       <div className="flex items-center gap-2.5">
         <div
           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-mono text-xs font-bold tabular-nums ${timerTone}`}

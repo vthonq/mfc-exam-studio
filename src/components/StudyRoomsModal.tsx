@@ -134,6 +134,9 @@ export const StudyRoomsModal: React.FC<StudyRoomsModalProps> = ({
 
   useEffect(() => {
     if (!open || !activeRoomCode) return;
+    setErrorMsg(null);
+    setSubmissions([]);
+    setRoomDoc((prev) => (prev && prev.roomCode === activeRoomCode ? prev : null));
     const unsubRoom = subscribeStudyRoom(
       activeRoomCode,
       (r) => {

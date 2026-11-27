@@ -641,14 +641,14 @@ export const Layout: React.FC<LayoutProps> = ({
       {/* Mobile Menu Drawer Backdrop */}
       {mobileMenuOpen && (
         <div
-          className="no-print fixed inset-0 z-10 bg-black/45 backdrop-blur-[2px] md:hidden"
+          className="no-print fixed inset-0 z-30 bg-black/45 backdrop-blur-[2px] md:hidden"
           onClick={() => setMobileMenuOpen(false)}
           aria-hidden="true"
         />
       )}
 
       {/* Mobile Header */}
-      <header className="no-print md:hidden sticky top-0 z-20 studio-glass border-b border-slate-200/80 dark:border-white/[0.08] px-3 py-2 space-y-2">
+      <header className="no-print md:hidden sticky top-0 z-40 studio-glass border-b border-slate-200/80 dark:border-white/[0.08] px-3 py-2 space-y-2">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <img
@@ -1612,8 +1612,8 @@ export const Layout: React.FC<LayoutProps> = ({
         )}
       </Suspense>
 
-      {!tutorOpen && !calcOpen && (
-        <div className="no-print fixed bottom-20 md:bottom-5 right-4 md:right-6 z-30 flex items-center gap-2">
+      {!tutorOpen && !calcOpen && !mobileMenuOpen && (
+        <div className="no-print fixed bottom-20 md:bottom-5 right-4 md:right-6 z-20 md:z-30 flex items-center gap-2">
           <button
             type="button"
             onClick={() => setCalcOpen(true)}

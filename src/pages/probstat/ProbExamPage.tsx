@@ -108,13 +108,35 @@ export const ProbExamPage: React.FC<ProbExamPageProps> = ({
   }, [initialRoomCode]);
 
   useEffect(() => {
-    if (initialSeed) {
-      setSeedInput(initialSeed);
-      setActiveSeed(initialSeed);
+    const nextSeed = initialSeed || activeSeed;
+    const nextMode = initialMode || mode;
+    if ((initialSeed && initialSeed !== activeSeed) || (initialMode && initialMode !== mode)) {
+      const saved = loadExamDraft<ProbExamDraft>(`probstat:${nextSeed}:${nextMode}`);
+      setSeedInput(nextSeed);
+      setActiveSeed(nextSeed);
+      setMode(nextMode);
+      if (saved && saved.started) {
+        setMcqAnswers(saved.mcqAnswers || {});
+        setNumInputs(saved.numInputs || {});
+        setWrittenAnswers(saved.writtenAnswers || {});
+        setSecondsLeft(saved.secondsLeft);
+        setStarted(true);
+        setDraftRestored(true);
+      } else {
+        setMcqAnswers({});
+        setNumInputs({});
+        setWrittenAnswers({});
+        setSecondsLeft(nextMode === 'final' ? 100 * 60 : 60 * 60);
+        setStarted(false);
+        setDraftRestored(false);
+      }
+      setSubmitted(false);
+      setLastResult(null);
+      setOfflineResults({});
+      setAiResults({});
+      setAiErrors({});
     }
-    if (initialMode) {
-      setMode(initialMode);
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSeed, initialMode]);
 
   const midtermPaper: ProbMcqItem[] = useMemo(() => {

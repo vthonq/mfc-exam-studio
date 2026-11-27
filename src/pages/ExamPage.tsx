@@ -303,11 +303,16 @@ export const ExamPage: React.FC<ExamPageProps> = ({
   }, [initialRoomCode]);
 
   useEffect(() => {
-    if (initialSeed && initialSeed !== seed) {
+    const targetSeed = initialSeed || seed;
+    const targetMode = initialMode || mode;
+    if ((initialSeed && initialSeed !== seed) || (initialMode && initialMode !== mode)) {
       const saved =
-        loadExamDraft<MfcExamDraft>(`mfc:${initialSeed}:full`) ??
-        loadExamDraft<MfcExamDraft>(`mfc:${initialSeed}:sprint`);
-      setSeed(initialSeed);
+        loadExamDraft<MfcExamDraft>(`mfc:${targetSeed}:${targetMode}`) ??
+        (!initialMode
+          ? loadExamDraft<MfcExamDraft>(`mfc:${targetSeed}:full`) ??
+            loadExamDraft<MfcExamDraft>(`mfc:${targetSeed}:sprint`)
+          : null);
+      setSeed(targetSeed);
       if (saved && Object.keys(saved.answers || {}).length > 0) {
         setMode(saved.mode);
         setAnswers(saved.answers);
@@ -315,13 +320,19 @@ export const ExamPage: React.FC<ExamPageProps> = ({
         setSecondsLeft(saved.secondsLeft);
         setDraftRestored(true);
       } else {
+        setMode(targetMode);
         setAnswers({});
         setProofSelfCheck({});
+        setSecondsLeft(targetMode === 'full' ? 90 * 60 : 30 * 60);
         setDraftRestored(false);
       }
       setSubmitted(false);
+      setLastResult(null);
+      setAiProofGrade(null);
+      setOfflineProofCheck(null);
     }
-  }, [initialSeed]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSeed, initialMode]);
 
   const secondsLeftRef = React.useRef(secondsLeft);
   secondsLeftRef.current = secondsLeft;
