@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import {
   ArrowRight,
   BarChart3,
@@ -9,6 +9,7 @@ import {
   Keyboard,
   Layers,
   Lightbulb,
+  PlayCircle,
   Scale,
   Search,
   Sparkles,
@@ -23,6 +24,10 @@ import { dispatchAskAi } from '../utils/askAiBridge';
 import { dispatchOpenFocus } from '../utils/smartFocusPlan';
 import { dispatchOpenRoom } from '../utils/studyRoomStats';
 import type { EconPageRoute, PageRoute, ProbPageRoute } from '../types';
+
+const PromoVideoModal = lazy(() =>
+  import('../components/PromoVideoModal').then((m) => ({ default: m.PromoVideoModal })),
+);
 
 interface GuidePageProps {
   onNavigateMfc: (route: PageRoute, query?: string) => void;
@@ -41,6 +46,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({
 }) => {
   const { settings } = useApp();
   const bi = settings.lang === 'bilingual';
+  const [videoOpen, setVideoOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -63,7 +69,21 @@ export const GuidePage: React.FC<GuidePageProps> = ({
                 : 'Updated Studio 5.0 walkthrough: Top Command Bar + 4 live palettes, Live Study Rooms, Smart Focus Drills, Show-Your-Work Exam Calc, Quick & Custom Flashcards, Built-in Gemini AI & Auto-Fill, plus all 3 course studios.'}
             </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setVideoOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-sky-600 to-emerald-600 hover:brightness-110 text-white text-xs font-bold shadow-md cursor-pointer shrink-0"
+          >
+            <PlayCircle className="w-4 h-4" />
+            {bi ? 'Xem Video Trailer & Guide (90s)' : 'Watch 90s Video Guide'}
+          </button>
         </div>
+
+        <Suspense fallback={null}>
+          {videoOpen && (
+            <PromoVideoModal open={videoOpen} onClose={() => setVideoOpen(false)} bilingual={bi} />
+          )}
+        </Suspense>
 
         <div className="flex flex-wrap gap-2">
           <button

@@ -86,6 +86,9 @@ const WelcomeIntroModal = lazy(() =>
 const A4BuilderModal = lazy(() =>
   import('./A4BuilderModal').then((m) => ({ default: m.A4BuilderModal })),
 );
+const PromoVideoModal = lazy(() =>
+  import('./PromoVideoModal').then((m) => ({ default: m.PromoVideoModal })),
+);
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -216,6 +219,7 @@ export const Layout: React.FC<LayoutProps> = ({
   const [roomsCodeOverride, setRoomsCodeOverride] = useState<string | null>(null);
   const [calcOpen, setCalcOpen] = useState(false);
   const [a4Open, setA4Open] = useState(false);
+  const [promoOpen, setPromoOpen] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [introOpen, setIntroOpen] = useState(false);
   const [pendingAi, setPendingAi] = useState<{
@@ -1585,7 +1589,7 @@ export const Layout: React.FC<LayoutProps> = ({
                   Replay the animated splash intro or the 3-step welcome walkthrough anytime.
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -1605,6 +1609,16 @@ export const Layout: React.FC<LayoutProps> = ({
                   className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold cursor-pointer"
                 >
                   3-Step Tour
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSettingsOpen(false);
+                    setPromoOpen(true);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-emerald-600 hover:brightness-110 text-white text-xs font-semibold cursor-pointer"
+                >
+                  Promo Film
                 </button>
               </div>
             </div>
@@ -1639,6 +1653,14 @@ export const Layout: React.FC<LayoutProps> = ({
             open={a4Open}
             onClose={() => setA4Open(false)}
             initialSubject={subject}
+          />
+        )}
+
+        {promoOpen && (
+          <PromoVideoModal
+            open={promoOpen}
+            onClose={() => setPromoOpen(false)}
+            bilingual={settings.lang === 'bilingual'}
           />
         )}
 

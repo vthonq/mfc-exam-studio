@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import {
   BarChart3,
   BookOpen,
@@ -8,6 +8,7 @@ import {
   Copy,
   ExternalLink,
   LogOut,
+  PlayCircle,
   RefreshCw,
   Scale,
   Search,
@@ -19,6 +20,10 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { isUehStudentEmail } from '../services/firebase';
 import { isInAppBrowser } from '../utils/browserDetect';
+
+const PromoVideoModal = lazy(() =>
+  import('./PromoVideoModal').then((m) => ({ default: m.PromoVideoModal })),
+);
 
 export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
@@ -33,6 +38,7 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
     refreshAccess,
   } = useAuth();
   const [copiedUrl, setCopiedUrl] = useState(false);
+  const [promoOpen, setPromoOpen] = useState(false);
   const inAppWebview = isInAppBrowser();
 
   const copyCurrentUrl = async () => {
@@ -159,19 +165,33 @@ export const AccessGate: React.FC<{ children: React.ReactNode }> = ({ children }
               </span>
             </div>
 
-            <div className="text-xs text-zinc-400 pt-1">
-              Created by{' '}
-              <a
-                href="https://github.com/vthonq"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-zinc-200 hover:text-indigo-400 transition-colors"
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setPromoOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-sky-600 to-emerald-600 hover:brightness-110 text-white text-xs font-bold shadow-lg shadow-indigo-500/20 cursor-pointer transition-all"
               >
-                vthonq
-              </a>{' '}
-              · UEH-ISB Exam Studio Hub
+                <PlayCircle className="w-4 h-4" />
+                Watch Studio 5.0 Trailer &amp; Guide (90s)
+              </button>
+              <div className="text-xs text-zinc-400">
+                Created by{' '}
+                <a
+                  href="https://github.com/vthonq"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-zinc-200 hover:text-indigo-400 transition-colors"
+                >
+                  vthonq
+                </a>{' '}
+                · UEH-ISB Exam Studio Hub
+              </div>
             </div>
           </div>
+
+          <Suspense fallback={null}>
+            {promoOpen && <PromoVideoModal open={promoOpen} onClose={() => setPromoOpen(false)} bilingual />}
+          </Suspense>
 
           {/* Right Column: Class Access Sign-In Card */}
           <div className="lg:col-span-5">

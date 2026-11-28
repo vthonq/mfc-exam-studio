@@ -7,9 +7,22 @@ export interface ChangelogEntry {
   items: Array<{ en: string; vi: string }>;
 }
 
-export const LATEST_UPDATE_ID = 'v5.1';
+export const LATEST_UPDATE_ID = 'v5.2';
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
+  {
+    id: 'v5.2',
+    version: 'v5.2',
+    date: 'Nov 2026',
+    title: 'Official 1080p Studio 5.0 Promo Trailer & Video Guide',
+    titleVi: 'Video Trailer & Hướng Dẫn Sử Dụng Chính Thức 1080p (v5.2)',
+    items: [
+      {
+        en: 'Added the 90-second 1080p intro film ("Neon 4-Model Trailer → Studio 5.0 Reveal → 3-Step Usage Guide → Features & Benefits") playable directly on the Sign-In Landing page, inside Study Guide, and in Settings → Website Intros.',
+        vi: 'Thêm video giới thiệu & hướng dẫn 90 giây chuẩn 1080p (mở màn 4 Engine Neon → Studio 5.0 → Hướng dẫn 3 bước & tổng hợp tính năng) xem trực tiếp tại màn hình Đăng nhập, trang Study Guide và Settings.',
+      },
+    ],
+  },
   {
     id: 'v5.1',
     version: 'v5.1',
